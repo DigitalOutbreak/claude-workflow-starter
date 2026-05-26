@@ -23,7 +23,11 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
    1. **Overview.** "In one short paragraph: what are we building/fixing, and why does it matter now?" → `## Overview`
    2. **Requirements.** "What must be true when this ships? Bullets are fine — include file paths, library/driver choices, behavior, and any hard constraints." → `## Requirements`
    3. **Out of scope / non-goals.** "What are we explicitly NOT doing in this slice? (Anything deferred, anything tempting that we're consciously skipping.)" → folded into `## Notes` as scope-cutout bullets
-   4. **References.** "Which existing files, specs, components, screenshots, or external docs should the implementer read or build on?" → `## References`
+   4. **References — code & design.** Ask both parts in one question; if the user only answers one, prompt for the other before moving on:
+      - **Code & docs** — "Which existing files, specs, components, or external docs should the implementer read or build on?"
+      - **Design** — "Got any visual references? Screenshots, Figma URLs, Linear tickets, Notion pages, Loom videos — anything that shows what this should look or feel like. If you have screenshots to drop in, I'll create `docs/context/screenshots/<slug>/` so they live next to the spec."
+
+      → `## References` (code/docs as flat bullets) + `### Design references` subheading (Figma/Linear/Notion URLs + screenshot folder path, if any)
    5. **Notes / gotchas.** "Anything else: constraints, performance targets, footguns to avoid, patterns to preserve, env or migration considerations?" → merged into `## Notes`
 
    If the user's first reply already hands you most of this (e.g. they pasted a long description), skip the questions they've already answered — only ask for what's actually missing.
@@ -37,6 +41,16 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
    - **No roadmap match for new feature** — if the user describes work that's NOT on the roadmap and `Now` has space, gently ask: "This isn't on the current roadmap. Should it be? Which phase fits — Now, Next, or Later?" The agent doesn't auto-add to roadmap; the user decides.
 
    If a roadmap/backlog link was confirmed, include it in the spec's References section under a `### Roadmap` or `### Backlog` heading.
+
+   **If the user said yes to screenshots in Q4**, create the directory before drafting the spec so the path in `### Design references` actually exists:
+
+   ```bash
+   mkdir -p docs/context/screenshots/<slug>
+   ```
+
+   The user can drop files in any time after — they don't have to be present when the spec is written. The directory's existence is the cue.
+
+   **If the user pasted Figma / Linear / Notion URLs**, list them as bare URLs in the spec's `### Design references` section. The agent may, at `/feature start` time, use the Figma MCP (if installed) to pull design context from those URLs — but the spec just captures the link, no MCP calls during spec authoring.
 
 4. **Pick the title and slug.**
    - Title: short, title-case, no trailing "Spec" (e.g. `Inbox: Real Data`, `Workspace Switcher Wiring`, `Fix Duplicate Contact Race`).
@@ -57,7 +71,15 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
 
    ## References
 
-   - <bullets from Q4>
+   - <code & docs bullets from Q4 part 1>
+
+   ### Design references
+   <only include this subheading if the user provided design refs in Q4 part 2>
+   - Screenshots: `docs/context/screenshots/<slug>/` (drop files here)
+   - Figma: https://figma.com/file/...
+   - Linear: https://linear.app/...
+   - Notion: https://notion.so/...
+   - Loom: https://loom.com/share/...
 
    ### Roadmap
    <only include this subheading if the user confirmed a roadmap link in step 3>
@@ -87,10 +109,13 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
    - **Save** → `Write` the file to the resolved path. Print:
      ```
      Saved: docs/context/<features|fixes>/<slug>-spec.md
+     <if screenshots dir was created>
+     Screenshots: docs/context/screenshots/<slug>/ (drop files here when ready)
+     </if>
      Next:  /feature load <slug>-spec
      ```
    - **Revise** → ask which section to change, regenerate just that section, then re-show + re-prompt.
-   - **Discard** → say so and stop. Do not write the file.
+   - **Discard** → say so and stop. Do not write the file. If a screenshots directory was created and is still empty, remove it on discard so we don't leave orphan dirs.
 
 7. **Do NOT touch `current-feature.md`.** No status change, no goals update, no branch creation. The spec file stands alone until the user runs `/feature load <slug>-spec`.
 
@@ -98,4 +123,7 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
 
 - If the resolved spec path already exists, do not overwrite silently. Show the existing content and ask: **Overwrite** / **New slug** / **Cancel**.
 - Never invent references the user didn't supply. If a section is thin, leave it thin — the user can flesh it out on revise.
-- This action is read-mostly; the only filesystem write is the final spec file (and `mkdir -p docs/context/fixes/` if it's a fix and the dir is missing).
+- This action is read-mostly; the only filesystem writes are:
+  - The final spec file
+  - `mkdir -p docs/context/fixes/` if it's a fix and the dir is missing
+  - `mkdir -p docs/context/screenshots/<slug>/` if the user confirmed design refs in Q4 (removed on Discard if still empty)
