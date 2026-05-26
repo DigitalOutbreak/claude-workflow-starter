@@ -1,0 +1,44 @@
+---
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div class="grid lg:grid-cols-12 gap-10 lg:gap-16">
+      <!-- Left: eyebrow + heading -->
+      <div class="lg:col-span-5">
+        <span class="eyebrow">What is this</span>
+        <h2
+          class="mt-3 text-[var(--color-ink)] text-balance font-semibold"
+          style="font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; letter-spacing: -0.025em;"
+        >
+          21 markdown files your AI agent reads every session.
+        </h2>
+      </div>
+
+      <!-- Right: prose + the surface list -->
+      <div class="lg:col-span-7">
+        <div class="space-y-5 text-[var(--color-ink-muted)] max-w-[55ch]" style="font-size: 17px; line-height: 1.6; letter-spacing: -0.005em;">
+          <p>
+            <code class="font-mono text-[0.94em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">@digitaloutbreak/workflow</code>
+            is a scaffold — twenty-one files that get installed into your project.
+            The files do three things: tell every AI agent how to read your project, give
+            you slash commands for shipping work, and add a code-review subagent you can
+            call when you need one.
+          </p>
+          <p>
+            It is not a chatbot, not a daemon, not a runtime. The files just sit in your
+            repo. The agent reads them every session, walks into every conversation
+            already briefed on your stack, your conventions, and what you're working on.
+          </p>
+          <p>
+            Install once with
+            <code class="font-mono text-[0.94em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">npx skills add DigitalOutbreak/workflow -g</code>.
+            Then in any project, run <code class="font-mono text-[0.94em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">/workflow-init</code>
+            and answer a few questions. That's it.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
