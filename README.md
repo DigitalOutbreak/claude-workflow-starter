@@ -4,22 +4,42 @@ A drop-in workflow scaffold for Claude Code projects. Includes the `CLAUDE.md` a
 
 Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
 
-## Install
-
-One-time per machine, install the global slash command:
+## Two-step setup, one for life
 
 ```sh
-npx @digitaloutbreak/workflow-init --install-skill
+# 1. Run ONCE per machine — teaches your agent the /workflow-init slash command
+npx @digitaloutbreak/workflow-init
+
+# 2. From any project dir, in your agent:
+/workflow-init
 ```
 
-This drops the skill into all supported global locations at once:
+The first command is interactive — asks which agents you want the slash command installed for. The second is what you'll actually use every time you start a project.
+
+### What `/workflow-init` does
+
+- Optional Next.js / Astro / SvelteKit / TanStack Start scaffold (with shadcn opt-in)
+- Drops CLAUDE.md + AGENTS.md + GEMINI.md + `docs/context/` + `.claude/` into the project
+- Discovery interview with elaboration loops (identity / stack / strategy / surfaces)
+- Fills the templates with your actual answers
+- Recommends a first feature and offers to `/feature spec` it
+
+### Non-interactive install
+
+```sh
+npx @digitaloutbreak/workflow-init --all                       # all three agents
+npx @digitaloutbreak/workflow-init --claude                    # just Claude Code
+npx @digitaloutbreak/workflow-init --claude --gemini           # specific combo
+npx @digitaloutbreak/workflow-init --codex                     # add Codex later, leave others
+```
+
+### Where the slash command lives, per agent
+
 - `~/.claude/skills/workflow-init/skill.md` — Claude Code (markdown + YAML frontmatter)
 - `~/.agents/skills/workflow-init/SKILL.md` — Codex CLI / IDE / app (markdown + YAML frontmatter)
 - `~/.gemini/commands/workflow-init.toml` — Gemini CLI (TOML)
 
 The CLI generates each tool's expected format from the same source skill (markdown for Claude/Codex, TOML for Gemini), so the content stays in sync.
-
-Then from any session in any of these:
 
 | Tool | Invoke with |
 |---|---|
@@ -146,9 +166,14 @@ The starter installs all three so collaborators can use whatever tool they prefe
 ## CLI reference
 
 ```
-npx @digitaloutbreak/workflow-init [target]   Install starter into target (default: cwd)
-npx @digitaloutbreak/workflow-init --install-skill         Install the /workflow-init global skill
-npx @digitaloutbreak/workflow-init --help          Show usage
+npx @digitaloutbreak/workflow-init                       Interactive — install slash command for chosen agents
+npx @digitaloutbreak/workflow-init --all                 Install for all three agents, no prompts
+npx @digitaloutbreak/workflow-init --claude --gemini     Install for specific agents
+npx @digitaloutbreak/workflow-init init [target]         (advanced) Drop workflow files directly into target
+npx @digitaloutbreak/workflow-init --help                Show usage
+
+# Backwards compat
+npx @digitaloutbreak/workflow-init --install-skill       Same as bare invocation (kept as alias)
 ```
 
 ## Don't have npx?

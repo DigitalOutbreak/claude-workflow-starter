@@ -217,7 +217,7 @@ Sanity checks:
 Run the install:
 
 ```bash
-npx @digitaloutbreak/workflow-init "$TARGET"
+npx @digitaloutbreak/workflow-init init "$TARGET"
 ```
 
 Quote the CLI's file list and next-steps output back to the user. Then tell them: **"Files are in. Let me ask you a few questions so we can fill them with real content instead of placeholders."**

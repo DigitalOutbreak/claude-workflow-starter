@@ -354,17 +354,19 @@ async function cmdInstallSkill(args) {
   }
   console.log("");
   console.log(
-    dim("The skill delegates to `npx @digitaloutbreak/workflow-init` —")
+    dim(
+      "The slash command itself calls `npx @digitaloutbreak/workflow-init init <target>`"
+    )
   );
   console.log(
     dim(
-      "no absolute paths to maintain, no need to re-run install when you move things."
+      "under the hood — no absolute paths to maintain, no re-install needed if you move things."
     )
   );
   console.log("");
   console.log(
     dim(
-      "To add another agent later, re-run with that flag (e.g. `npx @digitaloutbreak/workflow-init --install-skill --gemini`)."
+      "To add another agent later, re-run with just that flag (e.g. `npx @digitaloutbreak/workflow-init --gemini`)."
     )
   );
 }
@@ -375,55 +377,42 @@ function cmdHelp() {
   const help = `
 ${bold("@digitaloutbreak/workflow-init")} — drop-in workflow scaffold for Claude Code / Codex / Gemini
 
+${bold("Two-step setup, one for life:")}
+
+  ${green("1.")} Run once: ${green("npx @digitaloutbreak/workflow-init")}
+     ${dim("Teaches your agent the /workflow-init slash command.")}
+
+  ${green("2.")} From any project dir, in your agent: ${green("/workflow-init")}
+     ${dim("Runs the full bootstrap — interview, scaffold, install, fill, first feature.")}
+
 ${bold("Usage:")}
-  npx @digitaloutbreak/workflow-init ${dim("[target]")}                Install starter into target (default: cwd)
-  npx @digitaloutbreak/workflow-init ${green("--install-skill")} ${dim("[flags]")}    Install the global /workflow-init slash command
-  npx @digitaloutbreak/workflow-init ${green("--help")}                  Show this message
+  npx @digitaloutbreak/workflow-init                       Interactive — install slash command for chosen agents
+  npx @digitaloutbreak/workflow-init ${green("--all")}                 Install for all three agents, no prompts
+  npx @digitaloutbreak/workflow-init ${green("--claude")} ${green("--gemini")}      Install for specific agents
+  npx @digitaloutbreak/workflow-init ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop workflow files directly into target
+  npx @digitaloutbreak/workflow-init ${green("--help")}                Show this message
 
-${bold("Project install — drop the starter files into a project")}
-  ${dim("# From a fresh project directory")}
-  npx @digitaloutbreak/workflow-init
-
-  ${dim("# Targeting a specific path")}
-  npx @digitaloutbreak/workflow-init ./my-app
-
-${bold("Skill install — install the /workflow-init slash command per agent")}
-  ${dim("# Interactive: asks Y/n for each agent")}
-  npx @digitaloutbreak/workflow-init --install-skill
-
-  ${dim("# All agents, non-interactive")}
-  npx @digitaloutbreak/workflow-init --install-skill --all
-
-  ${dim("# Just one or two specific agents")}
-  npx @digitaloutbreak/workflow-init --install-skill --claude
-  npx @digitaloutbreak/workflow-init --install-skill --claude --gemini
-
-  ${dim("# Add another agent later — same command, just the flag for it")}
-  npx @digitaloutbreak/workflow-init --install-skill --codex
-
-${bold("Available agent flags:")}
+${bold("Agent flags:")}
   ${green("--claude")}     →  ~/.claude/skills/workflow-init/skill.md
   ${green("--codex")}      →  ~/.agents/skills/workflow-init/SKILL.md
   ${green("--gemini")}     →  ~/.gemini/commands/workflow-init.toml
   ${green("--all")}        →  all three
 
-${bold("Then from any agent session:")}
-  ${dim("# Claude Code")}
-  /workflow-init
-  /workflow-init ./my-app
+${bold("Then from any agent session, /workflow-init runs:")}
+  • Optional Next.js / Astro / SvelteKit / TanStack Start scaffold (with shadcn opt-in)
+  • Drops CLAUDE.md + AGENTS.md + GEMINI.md + docs/context/ + .claude/ into the project
+  • Discovery interview with elaboration loops (identity / stack / strategy / surfaces)
+  • Fills the templates with your actual answers
+  • Recommends a first feature and offers to /feature spec it
 
-  ${dim("# Codex")}
-  $workflow-init
+${bold("Add another agent later:")}
+  npx @digitaloutbreak/workflow-init --codex     ${dim("# adds Codex, leaves others alone")}
 
-  ${dim("# Gemini CLI")}
-  /workflow-init
+${bold("Direct file install — no agent involvement:")}
+  npx @digitaloutbreak/workflow-init init ./my-app
 
-${bold("What the starter installs into a project:")}
-  CLAUDE.md, AGENTS.md, GEMINI.md, docs/context/* (5 docs),
-  docs/specs/project-spec.md, .claude/agents/code-scanner.md,
-  .claude/skills/feature/, .claude/skills/cleanup/
-
-The project install refuses to overwrite existing files — safe to run anywhere.
+  ${dim("This is what the slash command calls internally. Useful if your terminal")}
+  ${dim("doesn't have one of the supported agents and you want the docs anyway.")}
 
 ${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
 `;
@@ -431,6 +420,16 @@ ${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
 }
 
 // ────────────────────────────────────────────────────────────────────── main
+
+const SKILL_FLAGS = new Set([
+  "--install-skill",
+  "install-skill",
+  "install",
+  "--all",
+  "--claude",
+  "--codex",
+  "--gemini",
+]);
 
 async function main() {
   const args = process.argv.slice(2);
@@ -442,9 +441,26 @@ async function main() {
     return;
   }
 
-  // Install-skill flag (optionally followed by per-agent flags or --all)
-  if (first === "--install-skill" || first === "install-skill" || first === "install") {
-    await cmdInstallSkill(args.slice(1));
+  // Explicit init subcommand: install files into a target project.
+  // This is the path the slash command itself calls under the hood.
+  if (first === "init") {
+    cmdInit(args[1]);
+    return;
+  }
+
+  // Skill-install flow — triggered if any agent flag is present,
+  // OR if no args at all (new default UX).
+  const isSkillFlag = (a) => SKILL_FLAGS.has(a);
+  const skillFlags = args.filter(isSkillFlag);
+  const nonFlagArgs = args.filter((a) => !a.startsWith("-") && a !== "init");
+
+  if (args.length === 0 || skillFlags.length > 0) {
+    // Pure skill-install mode. Strip the legacy --install-skill prefix
+    // if present so the remaining flags drive agent selection.
+    const flagsForInstall = args.filter(
+      (a) => a !== "--install-skill" && a !== "install-skill" && a !== "install"
+    );
+    await cmdInstallSkill(flagsForInstall);
     return;
   }
 
@@ -455,13 +471,15 @@ async function main() {
     process.exit(1);
   }
 
-  // Default action: init. Optional first arg is the target path.
-  // Also accept "init" as an explicit subcommand for backwards compat.
-  if (first === "init") {
-    cmdInit(args[1]);
-  } else {
-    cmdInit(first);
+  // Anything else with a positional arg → treat as a target path for init.
+  // This is the escape hatch for non-agent users (and what the skill calls).
+  if (nonFlagArgs.length > 0) {
+    cmdInit(nonFlagArgs[0]);
+    return;
   }
+
+  // Shouldn't reach here, but fallback to interactive skill install.
+  await cmdInstallSkill([]);
 }
 
 main().catch((err) => {
