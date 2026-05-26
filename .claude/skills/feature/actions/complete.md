@@ -17,14 +17,26 @@
    - Update the "Last updated:" line at the top of `backlog.md`.
 
 6. Update `docs/context/roadmap.md` (if it exists and the spec references a roadmap milestone):
-   - **Read the feature spec's `## References > ### Roadmap` section.** If it points to a milestone, find that milestone in `roadmap.md`.
-   - **Count remaining feature specs targeting that milestone.** Scan `docs/context/features/` for other specs that reference the same milestone.
-   - **Decide the next state:**
-     - **More specs left** → leave the milestone where it is (likely "Now"). No change.
-     - **This was the last spec for the milestone** → ask user: "This completes the *<milestone>* milestone. Move it to `Shipped` with today's date? (Optionally promote the next milestone from Next → Now too.)"
-     - **First spec of a "Next" milestone shipped** → ask user: "This was the first feature of the *<milestone>* milestone. Want to mark it as moved from Next → Now in the roadmap?"
-   - **Edit roadmap.md** based on the user's confirmation. Add the shipped milestone to the Shipped section with the date and link to the feature specs that made it real.
-   - **If no roadmap link in the spec** → skip this step entirely, don't touch roadmap.md.
+   - **Read the feature spec's `## References > ### Roadmap` section.** If the section doesn't exist or has no `Part of:` link, **skip this step entirely** — don't touch roadmap.md.
+   - **Extract the milestone name** from the `Part of:` line. Example: `Part of: [Phase 1 — Inbox MVP](../roadmap.md)` → milestone name is `Phase 1 — Inbox MVP`.
+   - **Count remaining feature specs targeting that milestone.** Run this from the project root:
+     ```bash
+     grep -l "Part of:.*<milestone-name>" docs/context/features/*-spec.md \
+       | grep -v "<current-spec-slug>" \
+       | wc -l
+     ```
+     (Quote the milestone name if it contains spaces or special chars. The `grep -v` excludes the spec just completed.)
+   - **Find current phase** of the milestone in roadmap.md (`## Now`, `## Next`, `## Later`).
+   - **Decide the next state from the count:**
+     - **Count > 0 AND milestone is in "Now"** → More specs left, leave the milestone where it is. No change to roadmap.md.
+     - **Count > 0 AND milestone is in "Next"** → First feature of a "Next" milestone shipped. Ask: "This was the first feature of *<milestone>*. Mark it as moved from Next → Now in the roadmap?"
+     - **Count = 0** → This was the last spec for the milestone. Ask: "This completes *<milestone>*. Move it to `Shipped` with today's date?"
+       - If yes, also ask: "Promote the top milestone from Next → Now to fill the gap?"
+   - **Edit roadmap.md** based on the user's confirmation. When moving to Shipped, format the entry:
+     ```markdown
+     ## Shipped
+     - **2026-05-27** — <milestone name> ([spec1](features/spec1-spec.md), [spec2](features/spec2-spec.md))
+     ```
 
 7. Commit the reset + backlog + roadmap updates in a single commit: `chore: reset current-feature.md + update backlog + roadmap after completing [feature]`
 8. Push main to origin ONCE (single push with all changes)

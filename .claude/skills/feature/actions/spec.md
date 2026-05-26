@@ -59,11 +59,21 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
 
    - <bullets from Q4>
 
+   ### Roadmap
+   <only include this subheading if the user confirmed a roadmap link in step 3>
+   - Part of: [<milestone name>](../roadmap.md)
+
+   ### Backlog
+   <only include this subheading if the user confirmed a backlog promotion in step 3>
+   - Promoted from: <backlog item name> (entry from <date>)
+
    ## Notes
 
    - <non-goal bullets from Q3, prefixed with **Out of scope:** where helpful>
    - <gotcha bullets from Q5>
    ```
+
+   **Critical:** the `### Roadmap` and `### Backlog` subheadings live INSIDE `## References` and are what `/feature complete` greps for when deciding whether to update roadmap.md or remove a backlog item. If you flatten them into the top-level References bullets, the post-ship automation will silently fail to find them.
 
    Style rules (match the existing specs):
    - Inline-link other specs with relative paths: `` [`database-spec.md`](./database-spec.md) ``.

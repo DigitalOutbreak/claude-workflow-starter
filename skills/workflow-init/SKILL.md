@@ -12,8 +12,8 @@ End-to-end project bootstrap. Ten stages, executed sequentially:
 
 ```
 0  Idempotency check       (skip stages already done if re-run)
-1  Pre-flight              (target dir + scaffold/existing + framework + shadcn)
-2  Scaffold                (if a framework was picked — run create-* commands)
+1  Pre-flight              (project type → target dir → scaffold/existing → framework → shadcn)
+2  Scaffold                (only for new Web projects — run create-* commands)
 3  Install workflow files  (drop CLAUDE.md / AGENTS.md / GEMINI.md / docs/ / .claude/)
 4  Discovery interview     (identity → stack → strategy → surfaces, with elaboration)
 5  MCP suggestion          (recommend MCPs based on stack — skipped for simple projects)
@@ -22,6 +22,8 @@ End-to-end project bootstrap. Ten stages, executed sequentially:
 8  Recommend first feature (pick from roadmap's "Now" milestone)
 9  Hand off                (next-steps message)
 ```
+
+> **The workflow is project-agnostic.** Web app, backend service, mobile, CLI tool, library — the docs (thesis, overview, roadmap, feature specs) work for any codebase. Only **Stage 2 (scaffold)** is web-specific because that's the only category with reliable, tested scaffolders. Non-web projects skip Stage 2 and get the docs installed in their existing/empty directory; the user runs whatever init their stack needs (e.g. `cargo init`, `python -m venv`, `flutter create`) themselves.
 
 Don't dump templates and walk away. The template files (thesis, overview, spec, CLAUDE.md, roadmap) have `{{Placeholders}}` and `[Replace with...]` prompts — those need real content to be useful, and the user has the answers in their head right now. The interview surfaces them.
 
@@ -51,18 +53,36 @@ Decide the working location:
 1. If the user provided a target directory after the command name → that's the **parent** directory (where the new project lives or will live). Resolve relative paths against the user's current working directory.
 2. If no target was provided → use the current working directory as the parent.
 
-Ask the user three sub-questions in sequence (each is a separate structured-question prompt because options differ).
+Ask the user 4 sub-questions in sequence (each is a separate structured-question prompt because options differ).
 
-### 1.1 New project or existing?
+### 1.1 What kind of project?
+
+Four options:
+
+| Option | Examples |
+|---|---|
+| **Web app or site** *(recommended for most)* | Dashboard, marketing site, docs site, web app, e-commerce |
+| **Backend / API / service** | REST API, GraphQL service, worker, daemon, microservice |
+| **Mobile or desktop app** | iOS / Android / React Native / Expo / Flutter / Tauri / Electron |
+| **Other** | CLI tool, library/package, data/ML project, custom stack |
+
+This decides whether Stage 2 (scaffold) runs:
+
+- **Web** → continue to 1.2 (we have tested scaffolders for Next.js / Astro / SvelteKit / TanStack Start).
+- **Backend / Mobile / Desktop / Other** → SKIP Stages 1.2, 1.3, 1.4, and Stage 2 entirely. The workflow installs the docs into the parent directory; the user runs whatever init their stack needs themselves (e.g. `cargo init`, `python -m venv`, `flutter create`, `npx create-hono`). Continue with Stage 1.2-as-existing-project below — i.e. go directly to Stage 3.
+
+> **Why no backend/mobile scaffolders?** Those ecosystems have many equally valid tools and the "right" choice varies by team. Rather than pick one and be wrong half the time, we let the user run their stack's idiomatic init command separately. The workflow's value (docs + skills + agents) applies regardless.
+
+### 1.2 New project or existing? *(only if Web in 1.1)*
 
 Two options:
 
 - **Scaffold a new project** — agent runs a `create-*` command in Stage 2
 - **Use existing project** — agent skips scaffolding entirely
 
-If "Use existing project" → jump straight to Stage 3 (install workflow files). Skip 1.2, 1.3, and Stage 2 entirely.
+If "Use existing project" → jump straight to Stage 3 (install workflow files). Skip 1.3, 1.4, and Stage 2 entirely.
 
-### 1.2 Which framework? (only if scaffolding)
+### 1.3 Which framework? *(only if scaffolding a new Web project)*
 
 Four options:
 
@@ -75,7 +95,7 @@ Four options:
 
 Frame: "Which framework?" — recommend Next.js as the default for new React UI projects.
 
-### 1.3 Add shadcn? (only if a framework was picked)
+### 1.4 Add shadcn? *(only if a framework was picked)*
 
 Two options. Contextual framing per framework:
 
@@ -85,13 +105,14 @@ Two options. Contextual framing per framework:
 
 ### Branch summary
 
-| Choice | Path |
-|---|---|
-| Existing project | → Stage 3 |
-| Next.js (± shadcn) | → Stage 2 → Stage 3 |
-| Astro (± shadcn) | → Stage 2 → Stage 3 |
-| SvelteKit (± shadcn-svelte) | → Stage 2 → Stage 3 |
-| TanStack Start (± shadcn) | → Stage 2 → Stage 3 |
+| 1.1 type | 1.2 new/existing | Path |
+|---|---|---|
+| Backend / Mobile / Desktop / Other | (skipped) | → Stage 3 (docs only) |
+| Web | Existing project | → Stage 3 (docs only) |
+| Web | New + Next.js (± shadcn) | → Stage 2 → Stage 3 |
+| Web | New + Astro (± shadcn) | → Stage 2 → Stage 3 |
+| Web | New + SvelteKit (± shadcn-svelte) | → Stage 2 → Stage 3 |
+| Web | New + TanStack Start (± shadcn) | → Stage 2 → Stage 3 |
 
 ## Stage 2 — Scaffold
 
@@ -268,6 +289,10 @@ For each: ask → first answer → elaboration loop. The one-sentence descriptio
 
 ### Round 2 — Tech stack (structured-question prompt)
 
+**The exact questions depend on the project type from Stage 1.1.** Pick the matching block.
+
+#### If project type = Web
+
 If Stage 2 scaffolded a project, **skip the framework question** — you already know. Just ask the rest.
 
 Otherwise ask 4 sub-questions in one prompt:
@@ -277,7 +302,35 @@ Otherwise ask 4 sub-questions in one prompt:
 3. **ORM** — I'll add it later *(default)* / Drizzle *(recommended)* / Prisma / None
 4. **Auth** — I'll add it later *(default)* / Better Auth *(recommended)* / Clerk / None
 
-Semantic distinction:
+#### If project type = Backend / API / service
+
+Ask 4 sub-questions in one prompt:
+
+1. **Runtime / language** — Node *(TypeScript)* / Bun *(TypeScript)* / Python / Go / Rust / Other
+2. **Server framework** — I'll add it later *(default)* / Hono / Express / NestJS / FastAPI / Other
+3. **Database** — I'll add it later *(default)* / Postgres / SQLite / MongoDB / None
+4. **Auth** — I'll add it later *(default)* / JWT-only / Better Auth / Clerk / Auth0 / None
+
+#### If project type = Mobile or desktop
+
+Ask 3 sub-questions in one prompt:
+
+1. **Platform** — Expo / React Native CLI / Flutter / Tauri / Electron / Native (iOS/Android) / Other
+2. **Local storage** — I'll add it later *(default)* / SQLite / Realm / AsyncStorage/Hive / None
+3. **Auth** — I'll add it later *(default)* / Better Auth / Clerk / Firebase Auth / Native sign-in only / None
+
+#### If project type = Other (CLI, library, ML/data, custom)
+
+Ask 2 sub-questions in one prompt:
+
+1. **Language / runtime** — Node *(TypeScript)* / Bun / Python / Go / Rust / Other
+2. **Purpose** — CLI tool / Library or SDK / ML or data project / Other
+
+Skip Database, ORM, Auth — these usually don't apply. If they do for a niche case, the user can mention it in the freeform Strategy round.
+
+---
+
+Semantic distinction (applies to all blocks):
 - **"I'll add it later"** = wants one, just hasn't decided. Docs stay generic.
 - **"None"** = doesn't need this layer at all.
 
@@ -291,13 +344,26 @@ Longest round. Ask in prose, one at a time, elaboration loop after each:
 - **"What's your unfair advantage here?"**
 - **"What's the smallest thing that proves the bet?"**
 
-### Round 4 — Surfaces (structured-question prompt + elaboration if needed)
+### Round 4 — Surfaces or entry points (structured-question prompt + elaboration if needed)
 
-Based on the description, suggest 2-4 plausible v1 surfaces. Use multi-select with "let me describe in my own words" fallback. If pushed back, drop into elaboration.
+The framing depends on project type from Stage 1.1:
+
+- **Web or Mobile/Desktop** — ask about *surfaces* (screens, pages, views). Based on the description, suggest 2-4 plausible v1 surfaces. Multi-select with "let me describe in my own words" fallback.
+- **Backend / API / service** — ask about *endpoints or capabilities* instead. "What are the 2-4 most important endpoints or capabilities for v1? (e.g. `POST /users`, webhook receiver, background job, etc.)"
+- **CLI tool** — ask about *commands*. "What are the 2-4 most important commands for v1?"
+- **Library / SDK** — ask about *public API surface*. "What are the 2-4 most important functions/classes the library will expose in v1?"
+- **ML or data project** — ask about *pipelines or notebooks*. "What are the 2-4 most important pipelines, notebooks, or analyses for v1?"
+
+If pushed back, drop into elaboration. Whichever framing you use, capture 2-4 items — those drive the roadmap proposal and the first-feature recommendation.
 
 ## Stage 5 — MCP suggestion
 
-> **Skip this stage entirely if the project is "simple"** — defined as: Database = None AND Auth = None AND no clear API/data surfaces. Examples that skip: portfolio sites, landing pages, content-only Astro sites. MCPs don't help much when there's no data layer or backend behavior.
+> **Skip this stage entirely if the project is "simple"** — defined as ALL of:
+> - Database = None
+> - Auth = None
+> - User answered "no" to: "Will you call any external services from code? (Stripe, OpenAI, GHL, deploys, etc.)"
+>
+> Examples that skip: portfolio sites, static content pages, pure CLI utilities with no external calls, libraries with no external integrations. MCPs don't help much when there's no data layer or external behavior to talk to.
 
 For non-simple projects, based on Round 2 stack picks, propose MCPs that make agent work meaningfully faster on this stack. Explain MCP concept first if the user looks unfamiliar:
 
@@ -311,7 +377,7 @@ Then suggest based on stack:
 | Postgres self-hosted | `postgres` MCP | Generic Postgres queries + inspection |
 | Supabase | `supabase` MCP | DB + auth + storage |
 | Any project with library docs needs | `context7` MCP | Up-to-date docs for any library |
-| Any UI project (Round 4 surfaces ≠ empty) | `playwright` MCP | Drive browser, screenshots, E2E |
+| Web project with UI surfaces (1.1 = Web AND Round 4 ≠ empty) | `playwright` MCP | Drive browser, screenshots, E2E |
 | User mentions Figma | Figma MCP | Pull design files, Code Connect |
 | Vercel deployments | `vercel` MCP | Deploys, logs, env vars |
 | Stripe billing | `stripe` MCP | Subscriptions, test webhooks |

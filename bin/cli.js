@@ -142,12 +142,12 @@ function cmdInit(targetArg) {
 
   console.log("");
   console.log(bold("Done. Next:"));
-  console.log("  1. Edit CLAUDE.md — replace {{Project Name}} and the project layout.");
-  console.log("  2. Fill in docs/context/thesis.md — your strategic memo.");
-  console.log("  3. Fill in docs/context/project-overview.md — what you're building.");
-  console.log("  4. Adjust docs/context/coding-standards.md if your stack differs.");
-  console.log("  5. Sketch docs/specs/project-spec.md when implementation needs deeper detail.");
-  console.log("  6. Start a Claude session — CLAUDE.md and the @-imports load automatically.");
+  console.log("  Recommended — open your agent in this directory and run /workflow-init.");
+  console.log("  It runs a guided interview and fills the templates with your real context.");
+  console.log("");
+  console.log(`  ${dim("Or, to fill templates by hand:")}`);
+  console.log(`  ${dim("  • Edit CLAUDE.md / docs/context/thesis.md / docs/context/project-overview.md / etc.")}`);
+  console.log(`  ${dim("  • Replace {{Project Name}} and the placeholder content with yours.")}`);
 }
 
 // ────────────────────────────────────────────────────────────────────── install-skill
@@ -424,13 +424,27 @@ function cmdHelp() {
   const help = `
 ${bold("@digitaloutbreak/workflow")} — drop-in workflow scaffold for AI-assisted coding
 
-${bold("Two-step setup, one for life:")}
+${bold("Two ways to install the /workflow-init slash command:")}
 
-  ${green("1.")} Run once: ${green("npx @digitaloutbreak/workflow")}
-     ${dim("Teaches your agent the /workflow-init slash command.")}
+  ${green("Recommended")} — via the open-skills ecosystem CLI:
+    ${green("npx skills add DigitalOutbreak/workflow -g")}
+    ${dim("Installs into Claude / Codex / Gemini in one shot.")}
+    ${dim("Re-run anytime to refresh against the latest release.")}
 
-  ${green("2.")} From any project dir, in your agent: ${green("/workflow-init")}
-     ${dim("Runs the full bootstrap — interview, scaffold, install, fill, first feature.")}
+  ${dim("Or via this CLI directly (legacy / fallback):")}
+    ${dim("npx @digitaloutbreak/workflow             # interactive picker")}
+    ${dim("npx @digitaloutbreak/workflow --all       # install for all 3 agents")}
+
+${bold("Then from any project dir, in your agent:")}
+  ${green("/workflow-init")}
+  ${dim("Runs the full bootstrap — project type, scaffold (web only), install,")}
+  ${dim("discovery interview, MCPs, roadmap, fill templates, first feature.")}
+
+${bold("Project types supported:")}
+  • Web app or site — Next.js / Astro / SvelteKit / TanStack Start scaffolders
+  • Backend / API / service — docs install only, you bring the scaffolder
+  • Mobile / desktop — docs install only, you bring the scaffolder
+  • Other (CLI, library, ML/data) — docs install only
 
 ${bold("Usage:")}
   npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
@@ -445,20 +459,10 @@ ${bold("Agent flags:")}
   ${green("--gemini")}     →  ~/.gemini/commands/workflow-init.toml
   ${green("--all")}        →  all three
 
-${bold("Then from any agent session, /workflow-init runs:")}
-  • Optional Next.js / Astro / SvelteKit / TanStack Start scaffold (with shadcn opt-in)
-  • Drops CLAUDE.md + AGENTS.md + GEMINI.md + docs/context/ + .claude/ into the project
-  • Discovery interview with elaboration loops (identity / stack / strategy / surfaces)
-  • Fills the templates with your actual answers
-  • Recommends a first feature and offers to /feature spec it
-
-${bold("Add another agent later:")}
-  npx @digitaloutbreak/workflow --codex     ${dim("# adds Codex, leaves others alone")}
-
 ${bold("Direct file install — no agent involvement:")}
   npx @digitaloutbreak/workflow init ./my-app
 
-  ${dim("This is what the slash command calls internally. Useful if your terminal")}
+  ${dim("This is what /workflow-init calls internally. Useful if your terminal")}
   ${dim("doesn't have one of the supported agents and you want the docs anyway.")}
 
 ${bold("Repo:")} https://github.com/DigitalOutbreak/workflow
