@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// workflow-init — Node CLI for @digitaloutbreak/workflow-init
+// workflow-init — Node CLI for @digitaloutbreak/workflow
 //
 // Usage:
-//   npx @digitaloutbreak/workflow-init                  Install starter into current dir
-//   npx @digitaloutbreak/workflow-init ./my-app         Install into ./my-app
-//   npx @digitaloutbreak/workflow-init --install-skill  Install /workflow-init global slash command
-//   npx @digitaloutbreak/workflow-init --help
+//   npx @digitaloutbreak/workflow                  Install starter into current dir
+//   npx @digitaloutbreak/workflow ./my-app         Install into ./my-app
+//   npx @digitaloutbreak/workflow --install-skill  Install /workflow-init global slash command
+//   npx @digitaloutbreak/workflow --help
 //
 // No external deps — uses Node's built-in fs/path/os only.
 
@@ -401,7 +401,7 @@ async function cmdInstallSkill(args) {
   console.log("");
   console.log(
     dim(
-      "The slash command itself calls `npx @digitaloutbreak/workflow-init init <target>`"
+      "The slash command itself calls `npx @digitaloutbreak/workflow init <target>`"
     )
   );
   console.log(
@@ -412,7 +412,7 @@ async function cmdInstallSkill(args) {
   console.log("");
   console.log(
     dim(
-      "To add another agent later, re-run with just that flag (e.g. `npx @digitaloutbreak/workflow-init --gemini`)."
+      "To add another agent later, re-run with just that flag (e.g. `npx @digitaloutbreak/workflow --gemini`)."
     )
   );
 }
@@ -421,22 +421,22 @@ async function cmdInstallSkill(args) {
 
 function cmdHelp() {
   const help = `
-${bold("@digitaloutbreak/workflow-init")} — drop-in workflow scaffold for AI-assisted coding
+${bold("@digitaloutbreak/workflow")} — drop-in workflow scaffold for AI-assisted coding
 
 ${bold("Two-step setup, one for life:")}
 
-  ${green("1.")} Run once: ${green("npx @digitaloutbreak/workflow-init")}
+  ${green("1.")} Run once: ${green("npx @digitaloutbreak/workflow")}
      ${dim("Teaches your agent the /workflow-init slash command.")}
 
   ${green("2.")} From any project dir, in your agent: ${green("/workflow-init")}
      ${dim("Runs the full bootstrap — interview, scaffold, install, fill, first feature.")}
 
 ${bold("Usage:")}
-  npx @digitaloutbreak/workflow-init                       Interactive — install slash command for chosen agents
-  npx @digitaloutbreak/workflow-init ${green("--all")}                 Install for all three agents, no prompts
-  npx @digitaloutbreak/workflow-init ${green("--claude")} ${green("--gemini")}      Install for specific agents
-  npx @digitaloutbreak/workflow-init ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop workflow files directly into target
-  npx @digitaloutbreak/workflow-init ${green("--help")}                Show this message
+  npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
+  npx @digitaloutbreak/workflow ${green("--all")}                 Install for all three agents, no prompts
+  npx @digitaloutbreak/workflow ${green("--claude")} ${green("--gemini")}      Install for specific agents
+  npx @digitaloutbreak/workflow ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop workflow files directly into target
+  npx @digitaloutbreak/workflow ${green("--help")}                Show this message
 
 ${bold("Agent flags:")}
   ${green("--claude")}     →  ~/.claude/skills/workflow-init/skill.md
@@ -452,15 +452,15 @@ ${bold("Then from any agent session, /workflow-init runs:")}
   • Recommends a first feature and offers to /feature spec it
 
 ${bold("Add another agent later:")}
-  npx @digitaloutbreak/workflow-init --codex     ${dim("# adds Codex, leaves others alone")}
+  npx @digitaloutbreak/workflow --codex     ${dim("# adds Codex, leaves others alone")}
 
 ${bold("Direct file install — no agent involvement:")}
-  npx @digitaloutbreak/workflow-init init ./my-app
+  npx @digitaloutbreak/workflow init ./my-app
 
   ${dim("This is what the slash command calls internally. Useful if your terminal")}
   ${dim("doesn't have one of the supported agents and you want the docs anyway.")}
 
-${bold("Repo:")} https://github.com/DigitalOutbreak/workflow-init
+${bold("Repo:")} https://github.com/DigitalOutbreak/workflow
 `;
   console.log(help);
 }
@@ -513,7 +513,7 @@ async function main() {
   // Reject unknown flags
   if (first && first.startsWith("-")) {
     console.error(red(`unknown flag: ${first}`));
-    console.error(`Run ${green("npx @digitaloutbreak/workflow-init --help")} for usage.`);
+    console.error(`Run ${green("npx @digitaloutbreak/workflow --help")} for usage.`);
     process.exit(1);
   }
 

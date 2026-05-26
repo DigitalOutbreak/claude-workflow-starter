@@ -10,7 +10,7 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ```sh
 # 1. Install GLOBALLY — adds /workflow-init to every agent on your machine
-npx skills add DigitalOutbreak/workflow-init -g -y
+npx skills add DigitalOutbreak/workflow -g -y
 
 # 2. From any project dir, in your agent:
 /workflow-init
@@ -23,7 +23,7 @@ The first command uses the open [agent skills](https://www.skills.sh) ecosystem 
 The repo ships three skills total: `workflow-init` (the bootstrap command), `feature` (lifecycle workflow), and `cleanup` (housekeeping). By default `-g -y` installs all three. If you only want `/workflow-init`:
 
 ```sh
-npx skills add DigitalOutbreak/workflow-init -g -y -s workflow-init
+npx skills add DigitalOutbreak/workflow -g -y -s workflow-init
 ```
 
 ### Install project-local instead of global
@@ -31,13 +31,13 @@ npx skills add DigitalOutbreak/workflow-init -g -y -s workflow-init
 Omit `-g` to install into the current project's `.agents/skills/` (so the skills are checked into version control with the project):
 
 ```sh
-npx skills add DigitalOutbreak/workflow-init -y
+npx skills add DigitalOutbreak/workflow -y
 ```
 
 > Prefer our own CLI? Backwards-compat fallback:
 > ```sh
-> npx @digitaloutbreak/workflow-init        # interactive: pick from Claude/Codex/Gemini
-> npx @digitaloutbreak/workflow-init --all  # all three, no prompts
+> npx @digitaloutbreak/workflow        # interactive: pick from Claude/Codex/Gemini
+> npx @digitaloutbreak/workflow --all  # all three, no prompts
 > ```
 > Same end result but smaller agent set (3 vs ~15+). `npx skills add` is preferred.
 
@@ -52,10 +52,10 @@ npx skills add DigitalOutbreak/workflow-init -y
 ### Non-interactive install
 
 ```sh
-npx @digitaloutbreak/workflow-init --all                       # all three agents
-npx @digitaloutbreak/workflow-init --claude                    # just Claude Code
-npx @digitaloutbreak/workflow-init --claude --gemini           # specific combo
-npx @digitaloutbreak/workflow-init --codex                     # add Codex later, leave others
+npx @digitaloutbreak/workflow --all                       # all three agents
+npx @digitaloutbreak/workflow --claude                    # just Claude Code
+npx @digitaloutbreak/workflow --claude --gemini           # specific combo
+npx @digitaloutbreak/workflow --codex                     # add Codex later, leave others
 ```
 
 ### Where the slash command lives, per agent
@@ -79,7 +79,7 @@ The `/workflow-init` flow is the full experience: it optionally scaffolds a fres
 Each agent's slash-command mechanism uses a different folder/format. Confirmed support so far is Claude Code + Codex (above). For other tools, the raw CLI works in any terminal:
 
 ```sh
-npx @digitaloutbreak/workflow-init
+npx @digitaloutbreak/workflow
 ```
 
 That drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + the five context docs + `.claude/` into the target directory. Your agent then reads its respective root file (`AGENTS.md` for Cursor/Cline/Aider, `GEMINI.md` for Gemini Code Assist, `CLAUDE.md` for Claude Code) and follows it to `docs/context/`.
@@ -91,12 +91,12 @@ You won't get the auto-interview / template-fill / first-feature pitch in those 
 ### Target a specific path
 
 ```sh
-npx @digitaloutbreak/workflow-init ./my-new-app
+npx @digitaloutbreak/workflow ./my-new-app
 ```
 
 > Until the package was published, you could run it straight from GitHub. That still works as a fallback:
 > ```sh
-> npx github:DigitalOutbreak/workflow-init
+> npx github:DigitalOutbreak/workflow
 > ```
 
 ## Use the slash command (optional)
@@ -104,7 +104,7 @@ npx @digitaloutbreak/workflow-init ./my-new-app
 Install once per machine to add `/workflow-init` to every Claude Code session:
 
 ```sh
-npx @digitaloutbreak/workflow-init --install-skill
+npx @digitaloutbreak/workflow --install-skill
 ```
 
 Then from any Claude Code session, in any project directory:
@@ -191,14 +191,14 @@ The starter installs all three so collaborators can use whatever tool they prefe
 ## CLI reference
 
 ```
-npx @digitaloutbreak/workflow-init                       Interactive — install slash command for chosen agents
-npx @digitaloutbreak/workflow-init --all                 Install for all three agents, no prompts
-npx @digitaloutbreak/workflow-init --claude --gemini     Install for specific agents
-npx @digitaloutbreak/workflow-init init [target]         (advanced) Drop workflow files directly into target
-npx @digitaloutbreak/workflow-init --help                Show usage
+npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
+npx @digitaloutbreak/workflow --all                 Install for all three agents, no prompts
+npx @digitaloutbreak/workflow --claude --gemini     Install for specific agents
+npx @digitaloutbreak/workflow init [target]         (advanced) Drop workflow files directly into target
+npx @digitaloutbreak/workflow --help                Show usage
 
 # Backwards compat
-npx @digitaloutbreak/workflow-init --install-skill       Same as bare invocation (kept as alias)
+npx @digitaloutbreak/workflow --install-skill       Same as bare invocation (kept as alias)
 ```
 
 ## Don't have npx?
@@ -207,7 +207,7 @@ Two fallback paths:
 
 1. **Clone the repo and run the bash scripts directly:**
    ```sh
-   git clone https://github.com/DigitalOutbreak/workflow-init.git ~/Developer/_starters/claude-workflow
+   git clone https://github.com/DigitalOutbreak/workflow.git ~/Developer/_starters/claude-workflow
    bash ~/Developer/_starters/claude-workflow/bin/init.sh ./my-app
    ```
 2. **Install Node.js first** (https://nodejs.org/) — `npx` is bundled with every Node install ≥ 5.2.
@@ -218,7 +218,7 @@ If you improve the workflow in a real project, copy the change back:
 
 ```sh
 # Example: improved /feature complete
-gh repo clone DigitalOutbreak/workflow-init
+gh repo clone DigitalOutbreak/workflow
 cp ~/projects/my-app/.claude/skills/feature/actions/complete.md \
    workflow-init/.claude/skills/feature/actions/complete.md
 cd workflow-init && git commit -am "improve /feature complete" && git push

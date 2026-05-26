@@ -12,7 +12,7 @@ End-to-end project bootstrap. In one flow:
 
 1. **Pre-flight** — ask which scaffolder (Next.js + shadcn / Next.js only / Astro / none).
 2. **Scaffold** (optional) — run the chosen `create-*` command, then `shadcn init` if applicable. Otherwise skip.
-3. **Install** the starter files via `npx @digitaloutbreak/workflow-init` (CLAUDE.md, AGENTS.md, GEMINI.md, the five context docs, the spec, skills, agents).
+3. **Install** the starter files via `npx @digitaloutbreak/workflow` (CLAUDE.md, AGENTS.md, GEMINI.md, the five context docs, the spec, skills, agents).
 4. **Interview + fill** — ask the user a handful of targeted questions with elaboration loops, then write the answers into the template files so the project starts with real context, not placeholders.
 5. **Recommend a first feature** and optionally `/feature spec` it.
 
@@ -217,7 +217,7 @@ Sanity checks:
 Run the install:
 
 ```bash
-npx @digitaloutbreak/workflow-init init "$TARGET"
+npx @digitaloutbreak/workflow init "$TARGET"
 ```
 
 Quote the CLI's file list and next-steps output back to the user. Then tell them: **"Files are in. Let me ask you a few questions so we can fill them with real content instead of placeholders."**
@@ -422,4 +422,4 @@ If the user explicitly says "skip the interview" or "just install the files," do
 
 ## If `npx` isn't available
 
-Fall back to `npx github:DigitalOutbreak/workflow-init` (works via the GitHub form even on machines that haven't been logged into npm). If neither npx form works, suggest they install Node.js (https://nodejs.org/).
+Fall back to `npx github:DigitalOutbreak/workflow` (works via the GitHub form even on machines that haven't been logged into npm). If neither npx form works, suggest they install Node.js (https://nodejs.org/).
