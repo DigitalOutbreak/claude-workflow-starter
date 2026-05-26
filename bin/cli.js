@@ -38,7 +38,7 @@ const FILES = [
 const DIRS = [".claude/skills/feature", ".claude/skills/cleanup"];
 
 // Empty placeholder dirs to create.
-const EMPTY_DIRS = ["docs/context/features", "docs/context/screenshots"];
+const EMPTY_DIRS = ["docs/context/features", "docs/context/designs"];
 
 // ────────────────────────────────────────────────────────────────────── helpers
 

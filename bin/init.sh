@@ -78,8 +78,8 @@ done
 # Empty placeholder dirs
 mkdir -p "$TARGET/docs/context/features"
 echo "  + docs/context/features/ (empty — per-feature specs land here)"
-mkdir -p "$TARGET/docs/context/screenshots"
-echo "  + docs/context/screenshots/ (empty — visual references for features)"
+mkdir -p "$TARGET/docs/context/designs"
+echo "  + docs/context/designs/ (empty — visual references for features: screenshots, Figma exports, mockups)"
 
 echo ""
 echo "Done. Files installed."

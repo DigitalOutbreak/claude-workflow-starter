@@ -642,7 +642,7 @@ You're set up.
 
 • docs/context/ has the docs filled with your real context. Edit as you learn more.
 • docs/context/roadmap.md has the proposed roadmap. Re-order, add, or remove as priorities shift.
-• docs/context/screenshots/ is empty — drop visual references for features in subfolders matching the feature slug.
+• docs/context/designs/ is empty — drop visual references (screenshots, Figma exports, mockups) for features in subfolders matching the feature slug.
 • Run `/feature spec` when you're ready to start the first feature.
 • Run `/feature load <slug>` to load a spec.
 • Run `/feature start` to cut the branch and start implementing.
