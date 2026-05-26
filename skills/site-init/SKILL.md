@@ -63,26 +63,33 @@ If no prior install detected, proceed.
 
 Before asking the user anything, inspect the current working directory and classify it. **Do not enumerate sibling project directories as bootstrap candidates** — those are unrelated projects, not options.
 
-Run a directory listing (`ls -A` or equivalent) and decide:
+Run a directory listing (`ls -A` or equivalent) and classify:
 
-| CWD shape | How to tell | Default behavior |
+| CWD shape | How to tell | What to do |
 |---|---|---|
-| **Project root** | CWD itself contains `package.json`, `astro.config.*`, `next.config.*`, `svelte.config.*`, `src/`, `app/`, `pages/`, etc. | Assume **existing site** in CWD. Skip the "new vs existing" question — go straight to confirming "Add workflow files to this existing site at `<cwd>`?" |
-| **Workspace / parent dir** | CWD contains multiple subdirectories that themselves look like projects (each with their own `package.json`, framework configs, or `.git`), AND CWD has no framework config of its own. Examples: `~/Developer/projects/`, `~/Developer/_starters/`, anything that looks like a folder full of unrelated projects. | Assume **new site, scaffold here as a subdir**. Ask only for the new project's folder name — **plain prose prompt, free-text input, NO picker, NO canned defaults** like "marketing-site / site / www". The user invents the name. Example prompt: *"What's the folder name for the new site? (will be created under `<cwd>`)"* DO NOT list the sibling project dirs as options to bootstrap into. |
-| **Empty or sparse dir** | CWD is empty, or contains only dotfiles / a single placeholder. | Assume **new site, scaffold in place** (no subdir). |
+| **Project root** | CWD itself contains `package.json`, `astro.config.*`, `next.config.*`, `svelte.config.*`, `src/`, `app/`, `pages/`, etc. | **Existing site in CWD.** Announce the decision in one line and proceed to Stage 3. Stage 6 (inventory pages) becomes the high-value step. |
+| **Workspace / parent dir** | CWD contains multiple subdirectories that themselves look like projects (each with their own `package.json`, framework configs, or `.git`), AND CWD has no framework config of its own. Examples: `~/Developer/projects/`, `~/Developer/_starters/`. | **New site, scaffold as a subdir of CWD.** Announce the decision, then ask ONE question — the folder name — as a free-text prose prompt. Then proceed to Stage 1.2. |
+| **Empty or sparse dir** | CWD is empty, or contains only dotfiles / a single placeholder. | **New site, scaffold in place** (no subdir). Announce the decision and proceed to Stage 1.2. |
 | **User passed a target arg** | `$ARGUMENTS` is non-empty | Resolve the arg as the parent dir. Apply the same classification to it. |
 
-> **Critical:** never present sibling project directories (`splashdev/`, `local-content-clipper/`, etc.) as install candidates. They are not related to this site. The only valid options are "this dir," "a new subdir of this dir," or "a path the user types in."
+> **Critical rules:**
+> - Never present sibling project directories (`splashdev/`, `local-content-clipper/`, etc.) as install candidates. They are not related to this site.
+> - **Do NOT ask the user to confirm the detection.** Announce the decision and move on, the same way `/workflow-init` does. Confirmation prompts after the agent has already decided are redundant noise. If the user disagrees, they will redirect — that's their job, not yours to ask.
+> - The ONLY question allowed in Stage 1.0 is the folder name (workspace case only), as free-text prose. Skip even that for the project-root and empty-dir cases.
 
-### 1.1 New site or existing? *(skip if 1.0 was decisive)*
+**Announcement format** — keep it to one or two lines, no question mark:
 
-Only ask this if the CWD classification in 1.0 was ambiguous. Otherwise apply the default and surface it once for confirmation:
+> "Detected `<cwd>` as a workspace (parent dir with sibling project folders). Scaffolding a new site as a subdir here."
 
-> "Detected `<cwd>` as a [project root / workspace / empty dir]. Defaulting to [add to existing / scaffold new subdir / scaffold in place]. Continue? *(Y/n, or type a different target path)*"
+Then immediately follow with the single folder-name prose prompt (workspace case) or skip straight to the next stage.
 
-If the user pushes back, give them two options:
+### 1.1 New site or existing? *(only if Stage 1.0 was truly ambiguous)*
 
-- **Scaffold a new site** — agent runs a `create-*` command in Stage 2 (you'll be asked for a project name)
+Skip this in the common case — Stage 1.0 has already decided. Only ask if the CWD classification was genuinely ambiguous (e.g. a half-scaffolded dir with `package.json` but no source files, or the user pushed back on the announced default).
+
+If you do need to ask, the options are:
+
+- **Scaffold a new site** — agent runs a `create-*` command in Stage 2 (then asks for a folder name)
 - **Add workflow to existing site** — skip scaffolding (e.g. WoD, an existing agency site)
 
 If "existing," skip Stages 1.2 and 1.3 and jump to Stage 3. Stage 6 (inventory pages) becomes the high-value step for existing sites.
