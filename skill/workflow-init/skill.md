@@ -178,7 +178,19 @@ Surface the output as each command runs. Wait for completion.
 
 If the user wants different framework defaults (eslint, pnpm, alternative template, etc.), ask once and adjust. Don't paste a long config interview at them — keep defaults sensible, only ask if they push back.
 
-### 3. Set the target
+### 3. Clear scaffolder-generated agent files (AGENTS.md / CLAUDE.md / GEMINI.md)
+
+Some scaffolders (notably `create-next-app` ≥ v15) now generate their own `AGENTS.md` as part of the recommended defaults. **We always want our version** — that's the whole point of the workflow starter, and the scaffolder's version doesn't reference the `docs/context/*` structure.
+
+Before Stage 2b, scrub any agent files the scaffolder may have dropped:
+
+```bash
+cd "$PARENT/<name>" && rm -f AGENTS.md CLAUDE.md GEMINI.md
+```
+
+Don't ask the user about this — it's a structural fix, not a preference. The workflow-init CLI then installs the canonical versions in Stage 2b.
+
+### 4. Set the target
 
 The workflow target is now `$PARENT/<name>`. Set `$TARGET` to that absolute path for Stage 2b.
 
@@ -239,13 +251,27 @@ For each: ask → get the first answer → invoke the elaboration loop. The one-
 
 ### Round 2 — Tech stack (AskUserQuestion)
 
-If Stage 2a scaffolded a project, **skip the framework question** — you already know it's Next.js or Astro. Just ask Database + Auth.
+If Stage 2a scaffolded a project, **skip the framework question** — you already know it's Next.js, Astro, SvelteKit, or TanStack Start. Just ask the rest.
 
-Otherwise ask all three multi-choice questions in a single AskUserQuestion call:
+Otherwise ask via AskUserQuestion (one question per layer, so the user can adjust). Group them as 4 separate questions in a single AskUserQuestion call. Each question maxes out at 4 options (the AskUserQuestion limit); anything else surfaces via the auto-added "Other" choice:
 
-1. **Framework** — Next.js 16 (default) / Astro / SvelteKit / Other
-2. **Database** — Postgres via Neon (default) / Postgres self-hosted / SQLite / None / Other
-3. **Auth** — Better Auth (default) / Clerk / Auth0 / NextAuth / None yet / Other
+1. **Framework** — Next.js 16 *(default)* / Astro / SvelteKit / TanStack Start
+2. **Database** — Postgres via Neon *(default)* / SQLite / I'll add it later / None
+3. **ORM** — Drizzle *(default for Postgres)* / Prisma / I'll add it later / None
+4. **Auth** — Better Auth *(default)* / Clerk / I'll add it later / None
+
+The semantic distinction for the last two questions:
+- **"I'll add it later"** = "I want one, just haven't decided / not setting it up right now." The starter docs stay generic; the user picks specifics later.
+- **"None"** = "I don't need this layer at all." E.g., a static content site doesn't need a DB → also doesn't need an ORM → likely doesn't need auth either.
+
+**Skip the ORM question entirely** if the user picked "None" for Database — there's nothing to ORM against. In that case, ask just Framework + Database + Auth (3 questions).
+
+**ORM/Database pairings worth noting** (in case the user wants Claude to comment):
+- Postgres + Drizzle — what `coding-standards.md` documents; lightweight, edge-friendly
+- Postgres + Prisma — more opinionated, larger client, popular for teams
+- SQLite + Drizzle — works great for local-first / edge apps
+- SQLite + Prisma — fine but heavier than Drizzle here
+- None — covered for static sites / pure frontends / Astro content sites
 
 Mark the defaults that match what the starter's `coding-standards.md` already documents — if they pick those, you skip the standards rewrite. (No elaboration loop needed here — these are discrete picks. If the user wants to talk through tradeoffs, they will, and you respond in prose.)
 
@@ -303,9 +329,14 @@ Files to update, in priority order:
 - Leave the diagrams as-is; they'll be edited as the project takes shape.
 
 ### `docs/context/coding-standards.md`
-- If the user picked Next.js + TS + Tailwind v4 (defaults), leave it untouched.
-- If they picked something different, replace the relevant sections (TypeScript stays; React → adapt; Next.js → adapt to chosen framework; Tailwind v4 → adapt; Database → adapt).
-- Update the opening starter-note to reflect the actual chosen stack.
+- If the user picked the defaults the file documents (Next.js + TS + Tailwind v4 + Drizzle), leave it untouched.
+- If they picked something different, replace the relevant sections:
+  - **TypeScript** — stays (universal)
+  - **React** — adapt to Svelte / Astro components if not React-based
+  - **Next.js** — adapt to chosen framework (Astro / SvelteKit / TanStack Start)
+  - **Tailwind v4** — stays (it's in every scaffold path)
+  - **Database** — replace Drizzle paragraph with the chosen ORM's conventions (Prisma migrations vs Drizzle `drizzle-kit`, etc.)
+- Update the opening starter-note to reflect the actual chosen stack (`Framework + DB + ORM + Auth`).
 
 ### `docs/specs/project-spec.md`
 - Replace `{{Project Name}}` references.
