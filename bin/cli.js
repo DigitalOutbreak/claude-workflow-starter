@@ -21,6 +21,7 @@ const PKG_ROOT = path.resolve(__dirname, "..");
 const FILES = [
   "CLAUDE.md",
   "AGENTS.md",
+  "GEMINI.md",
   "docs/context/thesis.md",
   "docs/context/project-overview.md",
   "docs/context/coding-standards.md",

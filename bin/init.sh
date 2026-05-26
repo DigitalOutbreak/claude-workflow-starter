@@ -27,6 +27,7 @@ echo ""
 FILES=(
   "CLAUDE.md"
   "AGENTS.md"
+  "GEMINI.md"
   "docs/context/thesis.md"
   "docs/context/project-overview.md"
   "docs/context/coding-standards.md"

@@ -123,6 +123,11 @@ Files to update, in priority order:
 - Replace the one-line description.
 - Everything else stays.
 
+### `GEMINI.md`
+- Replace `{{Project Name}}` with the real name.
+- Replace the one-line description.
+- Everything else stays. (Same content as AGENTS.md, addressed to Gemini-based agents.)
+
 ## Stage 4 — Recommend a first feature
 
 Now propose what to ship first. Pick the smallest thing that proves the product's core promise — the "Daily Brief" pattern from the source thesis is the right shape:

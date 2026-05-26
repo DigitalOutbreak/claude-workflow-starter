@@ -47,6 +47,7 @@ The slash command is a thin wrapper that calls the same `npx … init` command. 
 ```
 CLAUDE.md                            ← root brief, with @-imports (Claude Code)
 AGENTS.md                            ← universal pointer for any AI agent
+GEMINI.md                            ← Gemini Code Assist brief
 docs/
 ├── context/                         ← auto-imported every session
 │   ├── thesis.md                    [TEMPLATE — fill in]
@@ -101,11 +102,17 @@ Features ship through a fixed 7-step loop:
 
 Each command has its own action file in `.claude/skills/feature/actions/`. Read [`docs/context/ai-interaction.md`](./docs/context/ai-interaction.md) (after install) for the full workflow rules.
 
-## AGENTS.md — for non-Claude-Code agents
+## Per-agent root files
 
-`AGENTS.md` is a sibling to `CLAUDE.md` that points any AI agent (Cursor, Cline, Aider, Continue, etc.) at the same five context docs. It explicitly notes which parts of the workflow are Claude Code-specific (the `@`-imports, slash commands, agents) and which are tool-agnostic (the docs themselves, the workflow philosophy).
+Three root-level briefs ship together — pick whichever your agent reads:
 
-The starter installs both — collaborators can use whatever tool they prefer.
+| File | For | Notes |
+|---|---|---|
+| `CLAUDE.md` | Claude Code | Uses `@`-import syntax to auto-load the five context docs every session. References the `/feature` and `/cleanup` slash commands and the `code-scanner` agent. |
+| `AGENTS.md` | Cursor, Cline, Aider, Continue, etc. | Universal pointer — no tool-specific syntax. Tells the agent to read the five context docs manually. |
+| `GEMINI.md` | Gemini Code Assist and other Gemini-based agents | Same content as AGENTS.md, addressed to Gemini specifically. |
+
+The starter installs all three so collaborators can use whatever tool they prefer. All three point at the same five context docs in `docs/context/`.
 
 ## CLI reference
 
