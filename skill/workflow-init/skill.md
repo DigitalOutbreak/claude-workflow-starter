@@ -8,8 +8,8 @@ argument-hint: [target-dir]
 
 End-to-end project bootstrap. In one flow:
 
-1. **Pre-flight** — ask whether to scaffold the framework (Next.js + shadcn) or work in an existing project.
-2. **Scaffold** (optional) — run `create-next-app` + `shadcn init` if requested. Otherwise skip.
+1. **Pre-flight** — ask which scaffolder (Next.js + shadcn / Next.js only / Astro / none).
+2. **Scaffold** (optional) — run the chosen `create-*` command, then `shadcn init` if applicable. Otherwise skip.
 3. **Install** the starter files via `npx @digitaloutbreak/workflow-init` (CLAUDE.md, AGENTS.md, GEMINI.md, the five context docs, the spec, skills, agents).
 4. **Interview + fill** — ask the user a handful of targeted questions with elaboration loops, then write the answers into the template files so the project starts with real context, not placeholders.
 5. **Recommend a first feature** and optionally `/feature spec` it.
@@ -23,21 +23,59 @@ Decide the working location:
 1. If `$ARGUMENTS` is provided → it's the **parent** directory (where the new project lives or will live).
 2. If `$ARGUMENTS` is empty → use the current working directory as the parent.
 
-Ask the user (use AskUserQuestion):
+Ask in three small steps — keeps each question under AskUserQuestion's 4-option limit and reaches every framework × shadcn combo.
 
-> "How do you want to start?"
->
-> 1. **Scaffold a new Next.js + shadcn project** (recommended for a clean React UI). I'll run `create-next-app` + `shadcn init` in a new subdirectory, then drop the workflow files into it.
-> 2. **Use an existing project** — install the workflow files into the current directory. (Skip scaffolding.)
-> 3. **I'll handle the framework myself** — just install the workflow files here. Same as option 2.
+### Step 1a — New project or existing? (AskUserQuestion, 2 options)
 
-Branch based on the answer:
-- **Option 1** → Stage 2a (scaffold) → then Stage 2b (install workflow) into the new subdir.
-- **Option 2 / 3** → Stage 2b (install workflow) directly into the current/target dir.
+| Option | What runs |
+|---|---|
+| **Scaffold a new project** | Continue to Step 1b → 1c → Stage 2a |
+| **Use existing project** | Skip scaffolding; install workflow files in the current dir (jump to Stage 2b) |
 
-## Stage 2a — Scaffold (Next.js + shadcn)
+Frame: "How do you want to start?"
 
-Only run this if the user picked Option 1.
+### Step 1b — Framework (AskUserQuestion, 4 options)
+
+Only ask if Step 1a was "Scaffold a new project."
+
+| Option | What runs (high-level) |
+|---|---|
+| **Next.js** *(recommended)* | `create-next-app` — TS + Tailwind + App Router + Turbopack |
+| **Astro** | `npm create astro` (minimal, strictest TS) + `astro add tailwind` |
+| **SvelteKit** | `npx sv create` (minimal, TS) + `sv add tailwindcss` |
+| **TanStack Start** | `npx create-tsrouter-app` with Start + Tailwind add-ons |
+
+Frame: "Which framework?" — recommend Next.js as the default for new React UI projects.
+
+### Step 1c — Add shadcn? (AskUserQuestion, 2 options)
+
+Only ask after a framework is chosen.
+
+| Option | What runs |
+|---|---|
+| **Yes** | After the framework scaffolds, run `shadcn init` (or `shadcn-svelte init` for SvelteKit). For Astro, also add `react` integration first. |
+| **No** | Skip shadcn — bring your own UI lib |
+
+Frame contextually based on the chosen framework:
+- **Next.js / TanStack Start**: "Add shadcn for UI components? (Recommended — most React + Tailwind projects use it.)"
+- **Astro**: "Add shadcn for React UI islands? (Optional — useful for interactive components on a content site.)"
+- **SvelteKit**: "Add shadcn-svelte for UI components? (Community port of shadcn for Svelte.)"
+
+### Branch summary
+
+After all three steps, the combinations are:
+
+| Choice | Path |
+|---|---|
+| Existing project | → Stage 2b directly |
+| Next.js (± shadcn) | → Stage 2a (Next.js scaffold ± shadcn) → Stage 2b |
+| Astro (± shadcn) | → Stage 2a (Astro scaffold + tailwind ± react + shadcn) → Stage 2b |
+| SvelteKit (± shadcn-svelte) | → Stage 2a (SvelteKit scaffold + tailwind ± shadcn-svelte) → Stage 2b |
+| TanStack Start (± shadcn) | → Stage 2a (TanStack Start scaffold ± shadcn) → Stage 2b |
+
+## Stage 2a — Scaffold
+
+Only run this if the user picked a scaffolding option (not "existing project").
 
 ### 1. Project name
 
@@ -45,7 +83,11 @@ Ask in prose: "What should we name the project? (lowercase, hyphens — this bec
 
 Invoke the elaboration loop if the user wants to brainstorm names. Once settled, paraphrase: "So the project name is `<name>` — directory will be `<parent>/<name>`. Sound good?"
 
-### 2. Run create-next-app
+### 2. Run the scaffolder
+
+Pick the command set based on the user's Stage 1 choice.
+
+**For Next.js (with or without shadcn):**
 
 ```bash
 cd "$PARENT" && npx create-next-app@latest <name> \
@@ -59,28 +101,89 @@ cd "$PARENT" && npx create-next-app@latest <name> \
   --no-eslint
 ```
 
-Surface the output as it runs. Wait for it to complete.
-
-If the user wants different defaults (`eslint`, `pnpm`, etc.) ask before running and adjust the flags. Don't paste a long config interview at them — keep defaults sensible, only ask if they push back.
-
-### 3. Run shadcn init
+If they picked **Next.js + shadcn**, follow up with:
 
 ```bash
 cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
 ```
 
-Zinc is a neutral default. If the user has a strong opinion (slate / stone / gray / neutral / red / etc.), ask which they prefer.
+Zinc is a neutral default. If the user has a strong preference (slate / stone / gray / neutral / red / etc.), ask which they prefer before running shadcn.
 
-### 4. Set the target
+**For Astro:**
+
+```bash
+cd "$PARENT" && npm create astro@latest <name> -- \
+  --template minimal \
+  --typescript strictest \
+  --install \
+  --no-git \
+  --yes
+
+cd "$PARENT/<name>" && npx astro add tailwind --yes
+```
+
+If they picked **Astro + shadcn**, follow up with the React integration *first* (shadcn requires React in Astro):
+
+```bash
+cd "$PARENT/<name>" && npx astro add react --yes
+cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+```
+
+**For SvelteKit:**
+
+```bash
+cd "$PARENT" && npx sv create <name> \
+  --template minimal \
+  --types ts \
+  --no-add-ons \
+  --install npm \
+  --no-git
+
+cd "$PARENT/<name>" && npx sv add --tailwindcss
+```
+
+If they picked **SvelteKit + shadcn-svelte**, follow up:
+
+```bash
+cd "$PARENT/<name>" && npx shadcn-svelte@latest init --base-color zinc
+```
+
+(Note: `shadcn-svelte` is the community Svelte port of shadcn, not the official `shadcn` CLI — different package.)
+
+**For TanStack Start:**
+
+```bash
+cd "$PARENT" && npx create-tsrouter-app@latest <name> \
+  --add-ons start,tailwind \
+  --package-manager npm
+```
+
+If they picked **TanStack Start + shadcn**:
+
+```bash
+cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+```
+
+(TanStack Start is React under the hood, so the official shadcn CLI works directly.)
+
+CLI flag names occasionally shift between versions across all four scaffolders. If a flag is rejected, drop the offending flag and re-run rather than tweaking endlessly — the defaults are reasonable.
+
+Surface the output as each command runs. Wait for completion.
+
+If the user wants different framework defaults (eslint, pnpm, alternative template, etc.), ask once and adjust. Don't paste a long config interview at them — keep defaults sensible, only ask if they push back.
+
+### 3. Set the target
 
 The workflow target is now `$PARENT/<name>`. Set `$TARGET` to that absolute path for Stage 2b.
 
 ### What if scaffolding fails?
 
-If `create-next-app` or `shadcn init` errors, stop the flow. Report the error verbatim, offer to:
-- Retry (often a network blip)
-- Skip scaffolding and continue with workflow install only
-- Abort entirely
+If any command errors (network blip, flag mismatch in a newer version of the scaffolder, etc.), stop the flow. Report the error verbatim. Offer:
+
+- **Retry** (most failures are transient)
+- **Drop the failing step** (e.g., scaffold succeeded but shadcn init failed → continue with workflow install in the partly-scaffolded project)
+- **Skip scaffolding entirely** and continue with workflow install only in the parent dir
+- **Abort**
 
 Don't silently continue past a failed scaffold.
 
@@ -130,11 +233,11 @@ For each: ask → get the first answer → invoke the elaboration loop. The one-
 
 ### Round 2 — Tech stack (AskUserQuestion)
 
-If Stage 2a scaffolded a Next.js + shadcn project, **skip the framework question** — you already know. Just ask Database + Auth.
+If Stage 2a scaffolded a project, **skip the framework question** — you already know it's Next.js or Astro. Just ask Database + Auth.
 
 Otherwise ask all three multi-choice questions in a single AskUserQuestion call:
 
-1. **Framework** — Next.js 16 (default) / SvelteKit / Astro / Other
+1. **Framework** — Next.js 16 (default) / Astro / SvelteKit / Other
 2. **Database** — Postgres via Neon (default) / Postgres self-hosted / SQLite / None / Other
 3. **Auth** — Better Auth (default) / Clerk / Auth0 / NextAuth / None yet / Other
 
