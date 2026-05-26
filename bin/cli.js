@@ -150,6 +150,51 @@ function cmdInit(targetArg) {
 
 // ────────────────────────────────────────────────────────────────────── install-skill
 
+// Parse the YAML frontmatter from a markdown file with `--- ... ---` at the top.
+// Returns { frontmatter: { ...fields }, body: string }. Permissive — only handles
+// the fields we use (name, description, argument-hint), single-line string values.
+function parseFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (!match) return { frontmatter: {}, body: content };
+
+  const frontmatter = {};
+  for (const line of match[1].split("\n")) {
+    const kv = line.match(/^(\w[\w-]*):\s*(.+)$/);
+    if (kv) {
+      const [, key, value] = kv;
+      // Strip surrounding quotes if any
+      frontmatter[key] = value.replace(/^["']|["']$/g, "");
+    }
+  }
+  return { frontmatter, body: match[2] };
+}
+
+// Generate a Gemini CLI TOML command file from a parsed skill.
+// TOML format: https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/custom-commands.md
+// Uses literal multi-line strings (''') so backslashes in bash commands stay literal.
+function buildGeminiTOML(skillMd) {
+  const { frontmatter, body } = parseFrontmatter(skillMd);
+  const description = frontmatter.description || "Workflow init";
+
+  // Description goes in a basic string — escape " and \.
+  const descEscaped = description.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+  // Body goes in a multi-line literal string ('''). The skill content
+  // shouldn't contain ''' — verify just in case.
+  if (body.includes("'''")) {
+    throw new Error(
+      "skill body contains ''' — cannot safely emit as TOML literal string"
+    );
+  }
+
+  return `description = "${descEscaped}"
+
+prompt = '''
+${body.trim()}
+'''
+`;
+}
+
 function cmdInstallSkill() {
   const skillSrc = path.join(PKG_ROOT, "skill", "workflow-init", "skill.md");
   if (!exists(skillSrc)) {
@@ -157,18 +202,42 @@ function cmdInstallSkill() {
     process.exit(1);
   }
 
-  // Each tool reads from a different global location and expects a different filename casing.
-  // The skill content itself is identical — only the install path + filename change.
+  const skillContent = fs.readFileSync(skillSrc, "utf8");
+
+  // Each tool has a different global location, filename, and format.
+  // Same source content; we transform for Gemini and copy verbatim for Claude/Codex.
   const targets = [
     {
       tool: "Claude Code",
-      dir: path.join(os.homedir(), ".claude", "skills", "workflow-init"),
-      file: "skill.md",
+      dest: path.join(
+        os.homedir(),
+        ".claude",
+        "skills",
+        "workflow-init",
+        "skill.md"
+      ),
+      content: skillContent,
     },
     {
       tool: "Codex (CLI / IDE / app)",
-      dir: path.join(os.homedir(), ".agents", "skills", "workflow-init"),
-      file: "SKILL.md",
+      dest: path.join(
+        os.homedir(),
+        ".agents",
+        "skills",
+        "workflow-init",
+        "SKILL.md"
+      ),
+      content: skillContent,
+    },
+    {
+      tool: "Gemini CLI",
+      dest: path.join(
+        os.homedir(),
+        ".gemini",
+        "commands",
+        "workflow-init.toml"
+      ),
+      content: buildGeminiTOML(skillContent),
     },
   ];
 
@@ -176,11 +245,10 @@ function cmdInstallSkill() {
   console.log("");
 
   for (const target of targets) {
-    const dest = path.join(target.dir, target.file);
-    fs.mkdirSync(target.dir, { recursive: true });
-    fs.copyFileSync(skillSrc, dest);
+    fs.mkdirSync(path.dirname(target.dest), { recursive: true });
+    fs.writeFileSync(target.dest, target.content);
     console.log(`  ${green("+")} ${target.tool}`);
-    console.log(`    ${dim(dest)}`);
+    console.log(`    ${dim(target.dest)}`);
   }
 
   console.log("");
@@ -189,11 +257,10 @@ function cmdInstallSkill() {
   console.log("Try it from any supported agent:");
   console.log("  Claude Code:  /workflow-init");
   console.log("  Codex:        $workflow-init  (or via /skills picker)");
+  console.log("  Gemini CLI:   /workflow-init");
   console.log("");
   console.log(
-    dim(
-      "The skill delegates to `npx @digitaloutbreak/workflow-init` —"
-    )
+    dim("The skill delegates to `npx @digitaloutbreak/workflow-init` —")
   );
   console.log(
     dim(

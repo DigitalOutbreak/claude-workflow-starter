@@ -12,16 +12,20 @@ One-time per machine, install the global slash command:
 npx @digitaloutbreak/workflow-init --install-skill
 ```
 
-This drops the skill into both supported global locations at once:
-- `~/.claude/skills/workflow-init/skill.md` — Claude Code
-- `~/.agents/skills/workflow-init/SKILL.md` — Codex (CLI / IDE / app)
+This drops the skill into all supported global locations at once:
+- `~/.claude/skills/workflow-init/skill.md` — Claude Code (markdown + YAML frontmatter)
+- `~/.agents/skills/workflow-init/SKILL.md` — Codex CLI / IDE / app (markdown + YAML frontmatter)
+- `~/.gemini/commands/workflow-init.toml` — Gemini CLI (TOML)
 
-Then from any session in either tool:
+The CLI generates each tool's expected format from the same source skill (markdown for Claude/Codex, TOML for Gemini), so the content stays in sync.
+
+Then from any session in any of these:
 
 | Tool | Invoke with |
 |---|---|
 | **Claude Code** | `/workflow-init` |
 | **Codex** | `$workflow-init` (or pick from the `/skills` picker) |
+| **Gemini CLI** | `/workflow-init` |
 
 The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh framework (Next.js / Astro / SvelteKit / TanStack Start, with or without shadcn), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
 

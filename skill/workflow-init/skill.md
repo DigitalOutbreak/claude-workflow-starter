@@ -22,8 +22,8 @@ Don't just dump templates and walk away. Most of the template files (thesis, ove
 
 Decide the working location:
 
-1. If `$ARGUMENTS` is provided → it's the **parent** directory (where the new project lives or will live).
-2. If `$ARGUMENTS` is empty → use the current working directory as the parent.
+1. If the user provided a target directory after the command name → that's the **parent** directory (where the new project lives or will live). Resolve relative paths against the user's current working directory.
+2. If no target was provided → use the current working directory as the parent.
 
 Ask in three small steps — keeps each question under structured-question prompt's 4-option limit and reaches every framework × shadcn combo.
 
