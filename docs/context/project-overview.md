@@ -106,6 +106,25 @@ flowchart LR
 
 ---
 
+## 🤖 Agent capabilities
+
+MCPs installed in this project so AI agents can do meaningful work without copy-paste:
+
+| MCP | Purpose | Install |
+|---|---|---|
+| `<mcp-name>` | <what it unlocks for the agent> | `<install command from MCP docs>` |
+
+> Populated by `/workflow-init` based on stack picks. Common picks:
+> - `neon` or `postgres` MCP for DB introspection
+> - `context7` for up-to-date library docs
+> - `playwright` for browser-driven testing
+> - `vercel` / `cloudflare` MCPs for deploy ops
+> - `stripe` MCP for payment testing
+>
+> Each user installs locally on their machine — these aren't auto-installed by cloning the repo.
+
+---
+
 ## 🌐 [Routing / multi-tenancy model]
 
 > Delete this section if your project is single-tenant. Otherwise: how do hosts / subdomains / paths map to data scopes? Who logs in where? What's locked vs. switchable?

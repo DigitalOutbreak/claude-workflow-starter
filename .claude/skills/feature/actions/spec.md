@@ -4,6 +4,11 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
 
 ## Steps
 
+0. **Read roadmap and backlog silently** (no output to user yet).
+   - Read `docs/context/roadmap.md` if it exists. Note the milestones in `Now` / `Next` / `Later`.
+   - Read `docs/context/backlog.md` if it exists. Note categories + items.
+   - These are reference material for step 4 below. Don't mention them yet.
+
 1. **Parse $ARGUMENTS** (text after `spec`):
    - If it looks like a short slug or topic phrase (`dashboard-phase-4`, `inbox mutations`, `webhook hmac`), use it to seed the topic for the interview.
    - If it starts with `fix:` or `feature:`, take that as the kind and the rest as the topic.
@@ -22,6 +27,16 @@ Authors a new feature or fix spec at `docs/context/features/<slug>-spec.md` (or 
    5. **Notes / gotchas.** "Anything else: constraints, performance targets, footguns to avoid, patterns to preserve, env or migration considerations?" → merged into `## Notes`
 
    If the user's first reply already hands you most of this (e.g. they pasted a long description), skip the questions they've already answered — only ask for what's actually missing.
+
+   **After Q1 (overview), match against roadmap + backlog from step 0:**
+
+   - **Roadmap match** — if the feature description aligns with a milestone in `roadmap.md` (any phase), surface it: "This looks like part of *<milestone name>* from your roadmap. Link it as `Part of: <milestone>` in the spec?" → user picks yes/no.
+   - **Backlog match** — if the feature description aligns with a specific deferred item in `backlog.md`, surface it: "This looks like the *<item name>* backlog item. Promote it to a spec? (I'll remove it from backlog.md when this feature completes.)" → user picks yes/no.
+   - **No match** — don't pester. Just continue.
+   - **Confidence threshold** — only suggest a link if you're reasonably sure it matches. If multiple roadmap items partially match, ask which one (or "neither").
+   - **No roadmap match for new feature** — if the user describes work that's NOT on the roadmap and `Now` has space, gently ask: "This isn't on the current roadmap. Should it be? Which phase fits — Now, Next, or Later?" The agent doesn't auto-add to roadmap; the user decides.
+
+   If a roadmap/backlog link was confirmed, include it in the spec's References section under a `### Roadmap` or `### Backlog` heading.
 
 4. **Pick the title and slug.**
    - Title: short, title-case, no trailing "Spec" (e.g. `Inbox: Real Data`, `Workspace Switcher Wiring`, `Fix Duplicate Contact Race`).

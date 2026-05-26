@@ -29,6 +29,7 @@ const FILES = [
   "docs/context/ai-interaction.md",
   "docs/context/current-feature.md",
   "docs/context/backlog.md",
+  "docs/context/roadmap.md",
   "docs/specs/project-spec.md",
   ".claude/agents/code-scanner.md",
 ];
@@ -37,7 +38,7 @@ const FILES = [
 const DIRS = [".claude/skills/feature", ".claude/skills/cleanup"];
 
 // Empty placeholder dirs to create.
-const EMPTY_DIRS = ["docs/context/features"];
+const EMPTY_DIRS = ["docs/context/features", "docs/context/screenshots"];
 
 // ────────────────────────────────────────────────────────────────────── helpers
 

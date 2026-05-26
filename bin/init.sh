@@ -34,6 +34,7 @@ FILES=(
   "docs/context/ai-interaction.md"
   "docs/context/current-feature.md"
   "docs/context/backlog.md"
+  "docs/context/roadmap.md"
   "docs/specs/project-spec.md"
   ".claude/agents/code-scanner.md"
 )
@@ -77,6 +78,8 @@ done
 # Empty placeholder dirs
 mkdir -p "$TARGET/docs/context/features"
 echo "  + docs/context/features/ (empty — per-feature specs land here)"
+mkdir -p "$TARGET/docs/context/screenshots"
+echo "  + docs/context/screenshots/ (empty — visual references for features)"
 
 echo ""
 echo "Done. Next:"

@@ -27,7 +27,13 @@ Do NOT commit without permission and until the build passes. If build fails, fix
 
 ## Branching
 
-We will create a new branch for every feature/fix. Name branch **feature/[feature]** or **fix[fix]**, etc. Ask to delete the branch once merged.
+We will create a new branch for every feature/fix.
+
+- **Features** → `feature/<slug>` branches. Tracked in `docs/context/features/<slug>-spec.md`. Spec → load → start → complete. Land in `current-feature.md` history.
+- **Bug fixes** → `fix/<slug>` branches. **Do NOT** add bug fixes to the roadmap. Do NOT add them to `current-feature.md` history unless they're substantial (>1 day of work). They're reactive, not planned. Cut a branch, fix, merge, delete branch. Done.
+- **Refactors / chores** → `chore/<slug>` branches when they're standalone (not part of a feature). Same lightweight treatment as bug fixes.
+
+Ask to delete the branch once merged.
 
 ## Commits
 
