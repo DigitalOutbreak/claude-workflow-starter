@@ -1,10 +1,12 @@
 ---
 name: workflow-init
-description: Bootstrap a new Claude Code project with a guided discovery interview — installs the starter, fills in the strategy/overview/spec templates from the user's answers, then recommends a first feature to ship. Optional argument is the target directory; defaults to the current working directory.
+description: Bootstrap a new project with a guided discovery interview — installs the starter, fills in the strategy/overview/spec templates from the user's answers, then recommends a first feature to ship. Optional argument is the target directory; defaults to the current working directory. Supports Claude Code, Codex, and any AI agent that loads agent skills.
 argument-hint: [target-dir]
 ---
 
 # Workflow Init
+
+> **Cross-agent note**: where this skill says "use a structured-question prompt," use whatever mechanism your agent offers. In Claude Code that's `AskUserQuestion`. In Codex / other agents, it's natural-language prose with clear option lists. Same end behavior — the agent presents 2-4 choices, the user picks one.
 
 End-to-end project bootstrap. In one flow:
 
@@ -23,9 +25,9 @@ Decide the working location:
 1. If `$ARGUMENTS` is provided → it's the **parent** directory (where the new project lives or will live).
 2. If `$ARGUMENTS` is empty → use the current working directory as the parent.
 
-Ask in three small steps — keeps each question under AskUserQuestion's 4-option limit and reaches every framework × shadcn combo.
+Ask in three small steps — keeps each question under structured-question prompt's 4-option limit and reaches every framework × shadcn combo.
 
-### Step 1a — New project or existing? (AskUserQuestion, 2 options)
+### Step 1a — New project or existing? (structured-question prompt, 2 options)
 
 | Option | What runs |
 |---|---|
@@ -34,7 +36,7 @@ Ask in three small steps — keeps each question under AskUserQuestion's 4-optio
 
 Frame: "How do you want to start?"
 
-### Step 1b — Framework (AskUserQuestion, 4 options)
+### Step 1b — Framework (structured-question prompt, 4 options)
 
 Only ask if Step 1a was "Scaffold a new project."
 
@@ -47,7 +49,7 @@ Only ask if Step 1a was "Scaffold a new project."
 
 Frame: "Which framework?" — recommend Next.js as the default for new React UI projects.
 
-### Step 1c — Add shadcn? (AskUserQuestion, 2 options)
+### Step 1c — Add shadcn? (structured-question prompt, 2 options)
 
 Only ask after a framework is chosen.
 
@@ -222,7 +224,7 @@ Quote the CLI's file list and next-steps output back to the user. Then tell them
 
 ## Stage 3 — Discovery interview
 
-Use `AskUserQuestion` for structured choices, plain prose for open-ended ones. Run in rounds so the user isn't overwhelmed by a 10-question form. **One AskUserQuestion call per round** so the user can adjust mid-stream.
+Use `structured-question prompt` for structured choices, plain prose for open-ended ones. Run in rounds so the user isn't overwhelmed by a 10-question form. **One structured-question prompt call per round** so the user can adjust mid-stream.
 
 ### Elaboration loops — the universal rule for prose rounds
 
@@ -238,7 +240,7 @@ Then **listen**. The user has three modes here:
 
 When you finally capture the answer, **paraphrase back in one sentence** and confirm before recording it. "So you'd say: <X>. Sound right?" If they tweak, accept the tweak and move on.
 
-Don't gate the elaboration loop behind AskUserQuestion — it's natural prose. AskUserQuestion is for clearly bounded choices (stack, surfaces). Strategy/identity/recommendations are conversation, not multiple choice.
+Don't gate the elaboration loop behind structured-question prompt — it's natural prose. structured-question prompt is for clearly bounded choices (stack, surfaces). Strategy/identity/recommendations are conversation, not multiple choice.
 
 ### Round 1 — Identity (required, may iterate)
 
@@ -249,11 +251,11 @@ Ask in prose, one question at a time (not all at once):
 
 For each: ask → get the first answer → invoke the elaboration loop. The one-sentence description is the most worth iterating on — if they give you a paragraph, work with them to compress it. Tight description compounds across every doc the starter writes.
 
-### Round 2 — Tech stack (AskUserQuestion)
+### Round 2 — Tech stack (structured-question prompt)
 
 If Stage 2a scaffolded a project, **skip the framework question** — you already know it's Next.js, Astro, SvelteKit, or TanStack Start. Just ask the rest.
 
-Otherwise ask via AskUserQuestion (one question per layer, so the user can adjust). Group them as 4 separate questions in a single AskUserQuestion call. Each question maxes out at 4 options (the AskUserQuestion limit); anything else surfaces via the auto-added "Other" choice.
+Otherwise ask via structured-question prompt (one question per layer, so the user can adjust). Group them as 4 separate questions in a single structured-question prompt call. Each question maxes out at 4 options (the structured-question prompt limit); anything else surfaces via the auto-added "Other" choice.
 
 **For Framework, the default is real — `create-next-app` runs in Stage 2a.** For the other three, default to "I'll add it later" since the skill records the choice but doesn't actually install the DB/ORM/Auth. Users who want the starter's recommended stack (Drizzle + Better Auth + Postgres Neon) can pick it explicitly in one click; the "recommended" hint is visible on each.
 
@@ -292,7 +294,7 @@ This round will be the longest. Strategy is where the product gets sharpened, an
 
 A thin thesis is still OK — you've offered the iteration; if they don't want it, move on. The point is to *make the depth available*, not to force it.
 
-### Round 4 — Surfaces (AskUserQuestion + elaboration if needed)
+### Round 4 — Surfaces (structured-question prompt + elaboration if needed)
 
 Based on the description, suggest 2-4 plausible v1 surfaces and ask the user to confirm/edit. Examples:
 - For an inbox/triage product: Inbox · Contacts · Settings · Ask

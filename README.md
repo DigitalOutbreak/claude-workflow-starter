@@ -6,27 +6,28 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ## Install
 
-Two paths depending on which AI agent you use.
-
-### If you use Claude Code (the full experience)
-
-One-time per machine, install the slash command:
+One-time per machine, install the global slash command:
 
 ```sh
 npx @digitaloutbreak/workflow-init --install-skill
 ```
 
-Then from any Claude Code session:
+This drops the skill into both supported global locations at once:
+- `~/.claude/skills/workflow-init/skill.md` — Claude Code
+- `~/.agents/skills/workflow-init/SKILL.md` — Codex (CLI / IDE / app)
 
-```
-/workflow-init
-```
+Then from any session in either tool:
+
+| Tool | Invoke with |
+|---|---|
+| **Claude Code** | `/workflow-init` |
+| **Codex** | `$workflow-init` (or pick from the `/skills` picker) |
 
 The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh framework (Next.js / Astro / SvelteKit / TanStack Start, with or without shadcn), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
 
-### If you use Gemini / Cursor / Cline / Aider / any other agent
+### Other agents (Cursor, Cline, Aider, Gemini, etc.)
 
-Skills (slash commands) are a Claude Code-specific feature — they won't surface in other agents. But the raw CLI works anywhere:
+Each agent's slash-command mechanism uses a different folder/format. Confirmed support so far is Claude Code + Codex (above). For other tools, the raw CLI works in any terminal:
 
 ```sh
 npx @digitaloutbreak/workflow-init
@@ -34,7 +35,9 @@ npx @digitaloutbreak/workflow-init
 
 That drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + the five context docs + `.claude/` into the target directory. Your agent then reads its respective root file (`AGENTS.md` for Cursor/Cline/Aider, `GEMINI.md` for Gemini Code Assist, `CLAUDE.md` for Claude Code) and follows it to `docs/context/`.
 
-You won't get the auto-interview / template-fill / first-feature pitch in other agents — that's driven by the Claude Code skill. You'll edit the templates manually (or ask your agent to walk you through them).
+You won't get the auto-interview / template-fill / first-feature pitch in those tools — that's driven by the slash-command skill. You'll edit the templates manually (or ask your agent to walk you through them).
+
+*More tool integrations are planned* — Cursor (`~/.cursor/commands/`), GitHub Copilot (`.github/prompts/`), and Gemini CLI as their formats are verified.
 
 ### Target a specific path
 

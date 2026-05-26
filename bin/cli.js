@@ -157,24 +157,42 @@ function cmdInstallSkill() {
     process.exit(1);
   }
 
-  const skillDestDir = path.join(os.homedir(), ".claude", "skills", "workflow-init");
-  const skillDest = path.join(skillDestDir, "skill.md");
-
-  fs.mkdirSync(skillDestDir, { recursive: true });
-  fs.copyFileSync(skillSrc, skillDest);
+  // Each tool reads from a different global location and expects a different filename casing.
+  // The skill content itself is identical — only the install path + filename change.
+  const targets = [
+    {
+      tool: "Claude Code",
+      dir: path.join(os.homedir(), ".claude", "skills", "workflow-init"),
+      file: "skill.md",
+    },
+    {
+      tool: "Codex (CLI / IDE / app)",
+      dir: path.join(os.homedir(), ".agents", "skills", "workflow-init"),
+      file: "SKILL.md",
+    },
+  ];
 
   console.log(`${dim("source:")} ${skillSrc}`);
-  console.log(`${dim("dest:  ")} ${skillDest}`);
+  console.log("");
+
+  for (const target of targets) {
+    const dest = path.join(target.dir, target.file);
+    fs.mkdirSync(target.dir, { recursive: true });
+    fs.copyFileSync(skillSrc, dest);
+    console.log(`  ${green("+")} ${target.tool}`);
+    console.log(`    ${dim(dest)}`);
+  }
+
   console.log("");
   console.log(green("Installed /workflow-init global skill."));
   console.log("");
-  console.log("Try it from any Claude Code session:");
-  console.log("  /workflow-init           # install starter into current dir");
-  console.log("  /workflow-init ./my-app  # install starter into ./my-app");
+  console.log("Try it from any supported agent:");
+  console.log("  Claude Code:  /workflow-init");
+  console.log("  Codex:        $workflow-init  (or via /skills picker)");
   console.log("");
   console.log(
     dim(
-      "The skill just delegates to `npx @digitaloutbreak/workflow-init` —"
+      "The skill delegates to `npx @digitaloutbreak/workflow-init` —"
     )
   );
   console.log(
