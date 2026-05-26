@@ -10,7 +10,7 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ```sh
 # 1. Install GLOBALLY — adds /workflow-init to every agent on your machine
-npx skills add DigitalOutbreak/claude-workflow-starter -g -y
+npx skills add DigitalOutbreak/workflow-init -g -y
 
 # 2. From any project dir, in your agent:
 /workflow-init
@@ -23,7 +23,7 @@ The first command uses the open [agent skills](https://www.skills.sh) ecosystem 
 The repo ships three skills total: `workflow-init` (the bootstrap command), `feature` (lifecycle workflow), and `cleanup` (housekeeping). By default `-g -y` installs all three. If you only want `/workflow-init`:
 
 ```sh
-npx skills add DigitalOutbreak/claude-workflow-starter -g -y -s workflow-init
+npx skills add DigitalOutbreak/workflow-init -g -y -s workflow-init
 ```
 
 ### Install project-local instead of global
@@ -31,7 +31,7 @@ npx skills add DigitalOutbreak/claude-workflow-starter -g -y -s workflow-init
 Omit `-g` to install into the current project's `.agents/skills/` (so the skills are checked into version control with the project):
 
 ```sh
-npx skills add DigitalOutbreak/claude-workflow-starter -y
+npx skills add DigitalOutbreak/workflow-init -y
 ```
 
 > Prefer our own CLI? Backwards-compat fallback:
@@ -96,7 +96,7 @@ npx @digitaloutbreak/workflow-init ./my-new-app
 
 > Until the package was published, you could run it straight from GitHub. That still works as a fallback:
 > ```sh
-> npx github:DigitalOutbreak/claude-workflow-starter
+> npx github:DigitalOutbreak/workflow-init
 > ```
 
 ## Use the slash command (optional)
@@ -207,7 +207,7 @@ Two fallback paths:
 
 1. **Clone the repo and run the bash scripts directly:**
    ```sh
-   git clone https://github.com/DigitalOutbreak/claude-workflow-starter.git ~/Developer/_starters/claude-workflow
+   git clone https://github.com/DigitalOutbreak/workflow-init.git ~/Developer/_starters/claude-workflow
    bash ~/Developer/_starters/claude-workflow/bin/init.sh ./my-app
    ```
 2. **Install Node.js first** (https://nodejs.org/) — `npx` is bundled with every Node install ≥ 5.2.
@@ -218,10 +218,10 @@ If you improve the workflow in a real project, copy the change back:
 
 ```sh
 # Example: improved /feature complete
-gh repo clone DigitalOutbreak/claude-workflow-starter
+gh repo clone DigitalOutbreak/workflow-init
 cp ~/projects/my-app/.claude/skills/feature/actions/complete.md \
-   claude-workflow-starter/.claude/skills/feature/actions/complete.md
-cd claude-workflow-starter && git commit -am "improve /feature complete" && git push
+   workflow-init/.claude/skills/feature/actions/complete.md
+cd workflow-init && git commit -am "improve /feature complete" && git push
 ```
 
 Bump the version in `package.json` and `npm publish` to roll out to everyone.

@@ -460,7 +460,7 @@ ${bold("Direct file install — no agent involvement:")}
   ${dim("This is what the slash command calls internally. Useful if your terminal")}
   ${dim("doesn't have one of the supported agents and you want the docs anyway.")}
 
-${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
+${bold("Repo:")} https://github.com/DigitalOutbreak/workflow-init
 `;
   console.log(help);
 }

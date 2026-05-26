@@ -1,6 +1,6 @@
 {
   "name": "@digitaloutbreak/workflow-init",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Drop-in workflow scaffold for AI-assisted coding — works with Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, and any agent loading the open agent skills standard. Includes /workflow-init slash command, /feature lifecycle, /cleanup, code-scanner agent, and tool-specific root files (CLAUDE.md / AGENTS.md / GEMINI.md).",
   "bin": {
     "workflow-init": "bin/cli.js"
@@ -35,12 +35,12 @@
   "author": "Joey Alvarado <joeynalvarado@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DigitalOutbreak/claude-workflow-starter.git"
+    "url": "git+https://github.com/DigitalOutbreak/workflow-init.git"
   },
   "bugs": {
-    "url": "https://github.com/DigitalOutbreak/claude-workflow-starter/issues"
+    "url": "https://github.com/DigitalOutbreak/workflow-init/issues"
   },
-  "homepage": "https://github.com/DigitalOutbreak/claude-workflow-starter#readme",
+  "homepage": "https://github.com/DigitalOutbreak/workflow-init#readme",
   "publishConfig": {
     "access": "public"
   }

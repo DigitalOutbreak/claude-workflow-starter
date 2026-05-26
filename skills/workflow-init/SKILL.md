@@ -422,4 +422,4 @@ If the user explicitly says "skip the interview" or "just install the files," do
 
 ## If `npx` isn't available
 
-Fall back to `npx github:DigitalOutbreak/claude-workflow-starter` (works via the GitHub form even on machines that haven't been logged into npm). If neither npx form works, suggest they install Node.js (https://nodejs.org/).
+Fall back to `npx github:DigitalOutbreak/workflow-init` (works via the GitHub form even on machines that haven't been logged into npm). If neither npx form works, suggest they install Node.js (https://nodejs.org/).
