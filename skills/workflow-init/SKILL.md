@@ -135,10 +135,26 @@ Pick the command set based on the user's Stage 1 choices.
 **For Next.js + shadcn (use shadcn's unified scaffolder — one command):**
 
 ```bash
-cd "$PARENT" && npx -y shadcn@latest init --template next --name <name> --yes
+cd "$PARENT" && npx -y shadcn@latest init \
+  --template next \
+  --name <name> \
+  --base radix \
+  --preset b0 \
+  --no-monorepo \
+  --yes
 ```
 
 This is the modern path. shadcn scaffolds Next.js + installs shadcn in one step. Different (and slightly better) result than `create-next-app` followed by `shadcn init` — fewer post-hoc config tweaks, shadcn's preferred defaults baked in.
+
+> **Why every flag matters (DO NOT drop any):**
+> - `--template next` — picks the Next.js template
+> - `--name <name>` — sets project + directory name (skips "what's your project name?" prompt)
+> - `--base radix` — picks Radix component primitives (skips the "Select a component library" arrow-key prompt that the agent cannot answer via piped input)
+> - `--preset b0` — uses the v0.dev / Vercel preset (skips the "Which preset would you like to use?" arrow-key prompt)
+> - `--no-monorepo` — declines the monorepo setup (skips "Would you like to set up a monorepo? (y/N)")
+> - `--yes` — accepts remaining defaults (separate from the `-y` after `npx`)
+>
+> Without these flags, shadcn's init hangs on interactive prompts that an agent session can't auto-respond to. The agent ends up burning minutes piping `N\n` and newlines, then falling back to a two-step path. Just pre-answer everything.
 
 **For Next.js without shadcn (Tailwind only, no UI lib):**
 
@@ -159,10 +175,16 @@ cd "$PARENT" && npx -y create-next-app@latest <name> \
 **For Astro + shadcn (use shadcn's unified scaffolder — one command):**
 
 ```bash
-cd "$PARENT" && npx -y shadcn@latest init --template astro --name <name> --yes
+cd "$PARENT" && npx -y shadcn@latest init \
+  --template astro \
+  --name <name> \
+  --base radix \
+  --preset b0 \
+  --no-monorepo \
+  --yes
 ```
 
-shadcn scaffolds Astro + adds React + Tailwind + initializes shadcn in one step.
+shadcn scaffolds Astro + adds React + Tailwind + initializes shadcn in one step. Same flag-set reason as Next.js — pre-answer every prompt so the agent never hits an arrow-key picker it can't drive.
 
 **For Astro without shadcn (content site, no React UI needed):**
 
@@ -203,10 +225,16 @@ cd "$PARENT/<name>" && npx -y shadcn-svelte@latest init --base-color zinc
 **For TanStack Start + shadcn (use shadcn's unified scaffolder — one command):**
 
 ```bash
-cd "$PARENT" && npx -y shadcn@latest init --template start --name <name> --yes
+cd "$PARENT" && npx -y shadcn@latest init \
+  --template start \
+  --name <name> \
+  --base radix \
+  --preset b0 \
+  --no-monorepo \
+  --yes
 ```
 
-shadcn scaffolds TanStack Start + initializes shadcn in one step.
+shadcn scaffolds TanStack Start + initializes shadcn in one step. Same flag-set reason as Next.js.
 
 **For TanStack Start without shadcn:**
 
@@ -219,6 +247,15 @@ cd "$PARENT" && npx -y create-tsrouter-app@latest <name> \
 (Includes TanStack's recommended add-ons: Start SSR + Tailwind + ESLint + Prettier.)
 
 CLI flag names occasionally shift between versions across all four scaffolders. If a flag is rejected, drop the offending flag and re-run rather than tweaking endlessly — the defaults are reasonable.
+
+**Known shadcn CLI shifts to watch for:**
+- `--base-color zinc` (old) → `--base radix` + `--preset b0` (current). The old flag picked the neutral color; the new CLI splits that into base library + preset.
+- If `--base radix` is rejected, run `npx shadcn@latest init --help` once, read what `Arguments:` and `Options:` it lists, then rebuild the command from those names. Don't guess.
+
+**If the scaffolder hangs on an interactive prompt anyway** (rare, but possible if shadcn adds a new question we don't have a flag for): do NOT pipe `printf 'N\n\n\n'` to dodge arrow-key prompts — it sometimes works for y/N but never works for arrow-key list pickers, and the agent will waste minutes retrying. Instead:
+1. Cancel the hung command.
+2. Fall back to the two-step path: run `create-next-app` (or framework-specific creator) without shadcn, THEN run `cd <name> && npx -y shadcn@latest init --base radix --preset b0 --no-monorepo --yes` inside the freshly-created project.
+3. Move on.
 
 ### 2.3 Clear scaffolder-generated agent files
 
