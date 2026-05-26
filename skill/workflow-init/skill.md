@@ -6,24 +6,90 @@ argument-hint: [target-dir]
 
 # Workflow Init
 
-Two-stage initialization:
+End-to-end project bootstrap. In one flow:
 
-1. **Install** the starter files via `npx @digitaloutbreak/workflow-init` (templates, skills, agents).
-2. **Interview + fill** — ask the user a handful of targeted questions, then write the answers into the template files so the project starts with real context, not placeholders.
+1. **Pre-flight** — ask whether to scaffold the framework (Next.js + shadcn) or work in an existing project.
+2. **Scaffold** (optional) — run `create-next-app` + `shadcn init` if requested. Otherwise skip.
+3. **Install** the starter files via `npx @digitaloutbreak/workflow-init` (CLAUDE.md, AGENTS.md, GEMINI.md, the five context docs, the spec, skills, agents).
+4. **Interview + fill** — ask the user a handful of targeted questions with elaboration loops, then write the answers into the template files so the project starts with real context, not placeholders.
+5. **Recommend a first feature** and optionally `/feature spec` it.
 
 Don't just dump templates and walk away. Most of the template files (thesis, overview, spec, CLAUDE.md) have `{{Placeholders}}` and `[Replace with...]` prompts — those need real content to be useful, and the user has the answers in their head right now. The interview surfaces them.
 
-## Stage 1 — Install the files
+## Stage 1 — Pre-flight
 
-Decide the target directory:
+Decide the working location:
 
-1. If `$ARGUMENTS` is provided → use it as the target path (relative paths resolved against the user's current working directory).
-2. If `$ARGUMENTS` is empty → use the current working directory (`.`).
+1. If `$ARGUMENTS` is provided → it's the **parent** directory (where the new project lives or will live).
+2. If `$ARGUMENTS` is empty → use the current working directory as the parent.
 
-Sanity checks (same as before):
+Ask the user (use AskUserQuestion):
+
+> "How do you want to start?"
+>
+> 1. **Scaffold a new Next.js + shadcn project** (recommended for a clean React UI). I'll run `create-next-app` + `shadcn init` in a new subdirectory, then drop the workflow files into it.
+> 2. **Use an existing project** — install the workflow files into the current directory. (Skip scaffolding.)
+> 3. **I'll handle the framework myself** — just install the workflow files here. Same as option 2.
+
+Branch based on the answer:
+- **Option 1** → Stage 2a (scaffold) → then Stage 2b (install workflow) into the new subdir.
+- **Option 2 / 3** → Stage 2b (install workflow) directly into the current/target dir.
+
+## Stage 2a — Scaffold (Next.js + shadcn)
+
+Only run this if the user picked Option 1.
+
+### 1. Project name
+
+Ask in prose: "What should we name the project? (lowercase, hyphens — this becomes the directory name and the `name` field in `package.json`)."
+
+Invoke the elaboration loop if the user wants to brainstorm names. Once settled, paraphrase: "So the project name is `<name>` — directory will be `<parent>/<name>`. Sound good?"
+
+### 2. Run create-next-app
+
+```bash
+cd "$PARENT" && npx create-next-app@latest <name> \
+  --typescript \
+  --tailwind \
+  --app \
+  --turbopack \
+  --import-alias '@/*' \
+  --use-npm \
+  --yes \
+  --no-eslint
+```
+
+Surface the output as it runs. Wait for it to complete.
+
+If the user wants different defaults (`eslint`, `pnpm`, etc.) ask before running and adjust the flags. Don't paste a long config interview at them — keep defaults sensible, only ask if they push back.
+
+### 3. Run shadcn init
+
+```bash
+cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+```
+
+Zinc is a neutral default. If the user has a strong opinion (slate / stone / gray / neutral / red / etc.), ask which they prefer.
+
+### 4. Set the target
+
+The workflow target is now `$PARENT/<name>`. Set `$TARGET` to that absolute path for Stage 2b.
+
+### What if scaffolding fails?
+
+If `create-next-app` or `shadcn init` errors, stop the flow. Report the error verbatim, offer to:
+- Retry (often a network blip)
+- Skip scaffolding and continue with workflow install only
+- Abort entirely
+
+Don't silently continue past a failed scaffold.
+
+## Stage 2b — Install the workflow files
+
+Sanity checks:
 - If target doesn't exist, ask the user before creating it.
-- If target is empty, the CLI installs cleanly — proceed.
-- If target has files, the CLI will detect conflicts and abort — surface that, don't bypass.
+- If target is empty (or just scaffolded), the CLI installs cleanly — proceed.
+- If target has files unrelated to scaffolding, the CLI will detect conflicts and abort — surface that, don't bypass.
 
 Run the install:
 
@@ -33,7 +99,7 @@ npx @digitaloutbreak/workflow-init "$TARGET"
 
 Quote the CLI's file list and next-steps output back to the user. Then tell them: **"Files are in. Let me ask you a few questions so we can fill them with real content instead of placeholders."**
 
-## Stage 2 — Discovery interview
+## Stage 3 — Discovery interview
 
 Use `AskUserQuestion` for structured choices, plain prose for open-ended ones. Run in rounds so the user isn't overwhelmed by a 10-question form. **One AskUserQuestion call per round** so the user can adjust mid-stream.
 
@@ -56,7 +122,7 @@ Don't gate the elaboration loop behind AskUserQuestion — it's natural prose. A
 ### Round 1 — Identity (required, may iterate)
 
 Ask in prose, one question at a time (not all at once):
-- "What's the project's name?"
+- "What's the project's name?" *(skip if already captured in Stage 2a)*
 - "One sentence — what does it do?"
 - "Who's the primary user? (you / a team / a customer / the public)"
 
@@ -64,7 +130,9 @@ For each: ask → get the first answer → invoke the elaboration loop. The one-
 
 ### Round 2 — Tech stack (AskUserQuestion)
 
-Ask three multi-choice questions in a single AskUserQuestion call:
+If Stage 2a scaffolded a Next.js + shadcn project, **skip the framework question** — you already know. Just ask Database + Auth.
+
+Otherwise ask all three multi-choice questions in a single AskUserQuestion call:
 
 1. **Framework** — Next.js 16 (default) / SvelteKit / Astro / Other
 2. **Database** — Postgres via Neon (default) / Postgres self-hosted / SQLite / None / Other
@@ -97,7 +165,7 @@ Based on the description, suggest 2-4 plausible v1 surfaces and ask the user to 
 
 Phrase as: "I'd suggest these surfaces for v1 — adjust as needed." Use multiSelect with proposed surfaces + "let me describe them in my own words" fallback. If they pick the fallback or push back on the proposed set, drop into the elaboration loop and work out the right list together.
 
-## Stage 3 — Fill the templates
+## Stage 4 — Fill the templates
 
 Now edit the freshly-installed files with the user's answers. **Edit in place — don't ask permission for each edit.** The user already opted into this by running the skill.
 
@@ -150,7 +218,7 @@ Files to update, in priority order:
 - Replace the one-line description.
 - Everything else stays. (Same content as AGENTS.md, addressed to Gemini-based agents.)
 
-## Stage 4 — Recommend a first feature
+## Stage 5 — Recommend a first feature
 
 Now propose what to ship first. Pick the smallest thing that proves the product's core promise — the "Daily Brief" pattern from the source thesis is the right shape:
 
@@ -182,7 +250,7 @@ When the first feature is settled, paraphrase it back ("So feature #1 is: <X>. T
 
 If they say yes, invoke `/feature spec` with a concise brief built from the recommendation. If they say no, just leave the recommendation as part of the history entry in `current-feature.md` and stop.
 
-## Stage 5 — Hand off
+## Stage 6 — Hand off
 
 End with a clear next-steps message:
 

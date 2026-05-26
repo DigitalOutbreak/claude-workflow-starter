@@ -6,6 +6,23 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ## Install (one command)
 
+### As a slash command (recommended — runs the guided bootstrap)
+
+```sh
+# One-time, per machine:
+npx @digitaloutbreak/workflow-init --install-skill
+```
+
+Then from any Claude Code session:
+
+```
+/workflow-init
+```
+
+The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh Next.js + shadcn project (via `create-next-app` + `shadcn init`), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
+
+### As a raw CLI (skips the guided interview)
+
 From inside any new project directory:
 
 ```sh
@@ -18,7 +35,7 @@ Or target an explicit path:
 npx @digitaloutbreak/workflow-init ./my-new-app
 ```
 
-That's it. No clone, no PATH setup, no folder structure assumptions. `npx` handles caching; the installer refuses to overwrite if any target files already exist.
+This just lays down the workflow files. No scaffolding, no interview — useful if you're adding the workflow to an existing project and don't want the slash-command experience.
 
 > Until the package is published to npm, you can still run it straight from GitHub:
 > ```sh
