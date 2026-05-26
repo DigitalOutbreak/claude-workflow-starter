@@ -4,12 +4,15 @@ A drop-in workflow scaffold for Claude Code projects. Includes the `CLAUDE.md` a
 
 Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
 
-## Install (one command)
+## Install
 
-### As a slash command (recommended — runs the guided bootstrap)
+Two paths depending on which AI agent you use.
+
+### If you use Claude Code (the full experience)
+
+One-time per machine, install the slash command:
 
 ```sh
-# One-time, per machine:
 npx @digitaloutbreak/workflow-init --install-skill
 ```
 
@@ -19,25 +22,27 @@ Then from any Claude Code session:
 /workflow-init
 ```
 
-The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh Next.js + shadcn project (via `create-next-app` + `shadcn init`), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
+The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh framework (Next.js / Astro / SvelteKit / TanStack Start, with or without shadcn), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
 
-### As a raw CLI (skips the guided interview)
+### If you use Gemini / Cursor / Cline / Aider / any other agent
 
-From inside any new project directory:
+Skills (slash commands) are a Claude Code-specific feature — they won't surface in other agents. But the raw CLI works anywhere:
 
 ```sh
 npx @digitaloutbreak/workflow-init
 ```
 
-Or target an explicit path:
+That drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + the five context docs + `.claude/` into the target directory. Your agent then reads its respective root file (`AGENTS.md` for Cursor/Cline/Aider, `GEMINI.md` for Gemini Code Assist, `CLAUDE.md` for Claude Code) and follows it to `docs/context/`.
+
+You won't get the auto-interview / template-fill / first-feature pitch in other agents — that's driven by the Claude Code skill. You'll edit the templates manually (or ask your agent to walk you through them).
+
+### Target a specific path
 
 ```sh
 npx @digitaloutbreak/workflow-init ./my-new-app
 ```
 
-This just lays down the workflow files. No scaffolding, no interview — useful if you're adding the workflow to an existing project and don't want the slash-command experience.
-
-> Until the package is published to npm, you can still run it straight from GitHub:
+> Until the package was published, you could run it straight from GitHub. That still works as a fallback:
 > ```sh
 > npx github:DigitalOutbreak/claude-workflow-starter
 > ```

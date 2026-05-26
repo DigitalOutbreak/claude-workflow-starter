@@ -1,6 +1,6 @@
 # Coding Standards
 
-> **Starter note:** these defaults assume Next.js 16 App Router + TypeScript + Tailwind v4 + Drizzle ORM. If your stack differs, edit the relevant sections. Sections most likely to need changes: Tailwind, Next.js, Database. The "no `any` types", "functional components only", "naming", and "code quality" sections are stack-agnostic.
+> **Starter note:** the conventions below describe the stack the OS project ships on — Next.js 16 App Router + TypeScript + Tailwind v4 — with sections for Drizzle ORM if you've picked it. The `/workflow-init` flow will rewrite these sections based on your actual stack picks; if you ran the CLI bare (no interview), edit the sections that don't match. The "no `any` types", "functional components only", "naming", and "code quality" sections are stack-agnostic and stay regardless.
 
 ## TypeScript
 

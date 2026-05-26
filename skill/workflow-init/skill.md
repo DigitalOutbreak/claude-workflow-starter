@@ -259,7 +259,7 @@ Otherwise ask via AskUserQuestion (one question per layer, so the user can adjus
 
 1. **Framework** — Next.js 16 *(default — scaffolded)* / Astro / SvelteKit / TanStack Start
 2. **Database** — I'll add it later *(default)* / Postgres via Neon *(recommended)* / SQLite / None
-3. **ORM** — I'll add it later *(default)* / Drizzle *(recommended for Postgres)* / Prisma / None
+3. **ORM** — I'll add it later *(default)* / Drizzle *(recommended)* / Prisma / None
 4. **Auth** — I'll add it later *(default)* / Better Auth *(recommended)* / Clerk / None
 
 The semantic distinction for the last three questions:

@@ -1,6 +1,6 @@
 {
   "name": "@digitaloutbreak/workflow-init",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Drop-in workflow scaffold for Claude Code projects — CLAUDE.md, AGENTS.md, /feature lifecycle, /cleanup, code-scanner agent.",
   "bin": {
     "workflow-init": "bin/cli.js"
@@ -10,6 +10,7 @@
     "skill/",
     "CLAUDE.md",
     "AGENTS.md",
+    "GEMINI.md",
     "LICENSE",
     "docs/",
     ".claude/"
