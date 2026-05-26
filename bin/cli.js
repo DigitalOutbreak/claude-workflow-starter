@@ -290,7 +290,7 @@ function describeState(target) {
 }
 
 async function cmdInstallSkill(args) {
-  const skillSrc = path.join(PKG_ROOT, "skill", "workflow-init", "skill.md");
+  const skillSrc = path.join(PKG_ROOT, "skills", "workflow-init", "SKILL.md");
   if (!exists(skillSrc)) {
     console.error(red(`error: skill source not found at ${skillSrc}`));
     process.exit(1);
@@ -421,7 +421,7 @@ async function cmdInstallSkill(args) {
 
 function cmdHelp() {
   const help = `
-${bold("@digitaloutbreak/workflow-init")} — drop-in workflow scaffold for Claude Code / Codex / Gemini
+${bold("@digitaloutbreak/workflow-init")} — drop-in workflow scaffold for AI-assisted coding
 
 ${bold("Two-step setup, one for life:")}
 

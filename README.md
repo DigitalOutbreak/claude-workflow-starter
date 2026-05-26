@@ -1,6 +1,8 @@
-# Claude Workflow Starter
+# workflow-init
 
-A drop-in workflow scaffold for Claude Code projects. Includes the `CLAUDE.md` anchor, five auto-imported context docs, the `/feature` lifecycle skill (spec → load → start → complete), the `/cleanup` housekeeping skill, the `code-scanner` agent, and an `AGENTS.md` for non-Claude-Code agents (Cursor, Cline, Aider, Continue, etc.).
+A drop-in workflow scaffold for AI-assisted coding. Works with any agent that loads the [open agent skills](https://www.skills.sh) standard — Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, and ~12 more.
+
+Ships with a `/workflow-init` slash command, plus the root-level `AGENTS.md` (and tool-specific `CLAUDE.md` / `GEMINI.md`) pointing every agent at five context docs, a `/feature` lifecycle skill (spec → load → start → complete), a `/cleanup` housekeeping skill, and a `code-scanner` agent.
 
 Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
 
@@ -8,13 +10,20 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ```sh
 # 1. Run ONCE per machine — teaches your agent the /workflow-init slash command
-npx @digitaloutbreak/workflow-init
+npx skills add DigitalOutbreak/claude-workflow-starter
 
 # 2. From any project dir, in your agent:
 /workflow-init
 ```
 
-The first command is interactive — asks which agents you want the slash command installed for. The second is what you'll actually use every time you start a project.
+The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI — it auto-detects which agents you have installed (Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, etc.) and installs the slash command at the right path for each. The second is what you'll actually use every time you start a project.
+
+> Prefer not to use `npx skills add`? We also ship our own CLI as a fallback:
+> ```sh
+> npx @digitaloutbreak/workflow-init        # interactive: pick which of Claude/Codex/Gemini to install
+> npx @digitaloutbreak/workflow-init --all  # install for all three, no prompts
+> ```
+> Same end result. The `npx skills add` path is preferred because it supports more agents and uses a shared, well-known install convention.
 
 ### What `/workflow-init` does
 
