@@ -18,27 +18,49 @@ const readline = require("readline");
 
 const PKG_ROOT = path.resolve(__dirname, "..");
 
-// Files we copy verbatim into the target project.
-const FILES = [
-  "CLAUDE.md",
-  "AGENTS.md",
-  "GEMINI.md",
-  "docs/context/thesis.md",
-  "docs/context/project-overview.md",
-  "docs/context/coding-standards.md",
-  "docs/context/ai-interaction.md",
-  "docs/context/current-feature.md",
-  "docs/context/backlog.md",
-  "docs/context/roadmap.md",
-  "docs/specs/project-spec.md",
-  ".claude/agents/code-scanner.md",
-];
-
-// Directories we copy recursively.
-const DIRS = [".claude/skills/feature", ".claude/skills/cleanup"];
-
-// Empty placeholder dirs to create.
-const EMPTY_DIRS = ["docs/context/features", "docs/context/designs"];
+// Install presets — each describes what gets dropped into a target project.
+// "product" is the original /workflow-init payload (full feature lifecycle).
+// "site"    is the slimmer /site-init payload for marketing sites.
+//
+// Source paths are resolved relative to `srcRoot`. Destination paths are the
+// same string (minus the srcRoot prefix) inside the user's target directory.
+const PRESETS = {
+  product: {
+    srcRoot: PKG_ROOT,
+    files: [
+      "CLAUDE.md",
+      "AGENTS.md",
+      "GEMINI.md",
+      "docs/context/thesis.md",
+      "docs/context/project-overview.md",
+      "docs/context/coding-standards.md",
+      "docs/context/ai-interaction.md",
+      "docs/context/current-feature.md",
+      "docs/context/backlog.md",
+      "docs/context/roadmap.md",
+      "docs/specs/project-spec.md",
+      ".claude/agents/code-scanner.md",
+    ],
+    dirs: [".claude/skills/feature", ".claude/skills/cleanup"],
+    emptyDirs: ["docs/context/features", "docs/context/designs"],
+  },
+  site: {
+    srcRoot: path.join(PKG_ROOT, "templates", "site"),
+    files: [
+      "CLAUDE.md",
+      "AGENTS.md",
+      "GEMINI.md",
+      "docs/context/site-brief.md",
+      "docs/context/brand.md",
+      "docs/context/pages.md",
+      "docs/context/content-backlog.md",
+      "docs/context/coding-standards.md",
+      "docs/context/ai-interaction.md",
+    ],
+    dirs: [".claude/skills/cleanup"],
+    emptyDirs: [],
+  },
+};
 
 // ────────────────────────────────────────────────────────────────────── helpers
 
@@ -80,7 +102,13 @@ const bold = (t) => color("1", t);
 
 // ────────────────────────────────────────────────────────────────────── init
 
-function cmdInit(targetArg) {
+function cmdInit(targetArg, presetName = "product") {
+  const preset = PRESETS[presetName];
+  if (!preset) {
+    console.error(red(`error: unknown preset '${presetName}'`));
+    process.exit(1);
+  }
+
   const target = path.resolve(process.cwd(), targetArg || ".");
 
   if (!exists(target)) {
@@ -94,16 +122,17 @@ function cmdInit(targetArg) {
     process.exit(1);
   }
 
-  console.log(`${dim("starter:")} ${PKG_ROOT}`);
+  console.log(`${dim("preset: ")} ${presetName}`);
+  console.log(`${dim("source: ")} ${preset.srcRoot}`);
   console.log(`${dim("target: ")} ${target}`);
   console.log("");
 
   // Conflict check.
   const conflicts = [];
-  for (const f of FILES) {
+  for (const f of preset.files) {
     if (exists(path.join(target, f))) conflicts.push(f);
   }
-  for (const d of DIRS) {
+  for (const d of preset.dirs) {
     if (exists(path.join(target, d))) conflicts.push(d + "/");
   }
   if (conflicts.length > 0) {
@@ -119,8 +148,8 @@ function cmdInit(targetArg) {
   }
 
   // Copy files.
-  for (const f of FILES) {
-    const src = path.join(PKG_ROOT, f);
+  for (const f of preset.files) {
+    const src = path.join(preset.srcRoot, f);
     const dest = path.join(target, f);
     if (!exists(src)) {
       console.error(red(`error: missing source ${f} in package`));
@@ -129,25 +158,34 @@ function cmdInit(targetArg) {
     copyFile(src, dest);
     console.log(`  ${green("+")} ${f}`);
   }
-  for (const d of DIRS) {
-    const src = path.join(PKG_ROOT, d);
+  for (const d of preset.dirs) {
+    const src = path.join(preset.srcRoot, d);
     const dest = path.join(target, d);
     copyDir(src, dest);
     console.log(`  ${green("+")} ${d}/`);
   }
-  for (const d of EMPTY_DIRS) {
+  for (const d of preset.emptyDirs) {
     fs.mkdirSync(path.join(target, d), { recursive: true });
     console.log(`  ${green("+")} ${d}/ ${dim("(empty)")}`);
   }
 
   console.log("");
   console.log(bold("Done. Next:"));
-  console.log("  Recommended — open your agent in this directory and run /workflow-init.");
-  console.log("  It runs a guided interview and fills the templates with your real context.");
-  console.log("");
-  console.log(`  ${dim("Or, to fill templates by hand:")}`);
-  console.log(`  ${dim("  • Edit CLAUDE.md / docs/context/thesis.md / docs/context/project-overview.md / etc.")}`);
-  console.log(`  ${dim("  • Replace {{Project Name}} and the placeholder content with yours.")}`);
+  if (presetName === "site") {
+    console.log("  Recommended — open your agent in this directory and run /site-init.");
+    console.log("  It runs a short interview (~5 min) and fills the templates with your real context.");
+    console.log("");
+    console.log(`  ${dim("Or, to fill templates by hand:")}`);
+    console.log(`  ${dim("  • Edit CLAUDE.md / docs/context/site-brief.md / docs/context/brand.md / etc.")}`);
+    console.log(`  ${dim("  • Replace {{Site Name}} and the placeholder content with yours.")}`);
+  } else {
+    console.log("  Recommended — open your agent in this directory and run /workflow-init.");
+    console.log("  It runs a guided interview and fills the templates with your real context.");
+    console.log("");
+    console.log(`  ${dim("Or, to fill templates by hand:")}`);
+    console.log(`  ${dim("  • Edit CLAUDE.md / docs/context/thesis.md / docs/context/project-overview.md / etc.")}`);
+    console.log(`  ${dim("  • Replace {{Project Name}} and the placeholder content with yours.")}`);
+  }
 }
 
 // ────────────────────────────────────────────────────────────────────── install-skill
@@ -228,8 +266,17 @@ async function askMany(prompts) {
   return answers;
 }
 
-// All known agent install targets. Order is the prompt order in interactive mode.
-function getTargets(skillContent) {
+// Skills the CLI knows how to install. Each is a slash command users invoke
+// in their agent. We install BOTH skills for every selected agent — they're
+// siblings, not alternatives.
+const SKILLS = [
+  { name: "workflow-init", srcPath: ["skills", "workflow-init", "SKILL.md"] },
+  { name: "site-init", srcPath: ["skills", "site-init", "SKILL.md"] },
+];
+
+// Build the per-agent install targets for a single skill. Returned in the
+// order used by the interactive picker (Claude, Codex, Gemini).
+function getTargetsForSkill(skillName, skillContent) {
   return [
     {
       key: "claude",
@@ -239,7 +286,7 @@ function getTargets(skillContent) {
         os.homedir(),
         ".claude",
         "skills",
-        "workflow-init",
+        skillName,
         "skill.md"
       ),
       content: skillContent,
@@ -252,7 +299,7 @@ function getTargets(skillContent) {
         os.homedir(),
         ".agents",
         "skills",
-        "workflow-init",
+        skillName,
         "SKILL.md"
       ),
       content: skillContent,
@@ -265,7 +312,7 @@ function getTargets(skillContent) {
         os.homedir(),
         ".gemini",
         "commands",
-        "workflow-init.toml"
+        `${skillName}.toml`
       ),
       content: buildGeminiTOML(skillContent),
     },
@@ -291,28 +338,41 @@ function describeState(target) {
 }
 
 async function cmdInstallSkill(args) {
-  const skillSrc = path.join(PKG_ROOT, "skills", "workflow-init", "SKILL.md");
-  if (!exists(skillSrc)) {
-    console.error(red(`error: skill source not found at ${skillSrc}`));
-    process.exit(1);
+  // Load all known skills' source content up front.
+  const loadedSkills = [];
+  for (const skill of SKILLS) {
+    const skillSrc = path.join(PKG_ROOT, ...skill.srcPath);
+    if (!exists(skillSrc)) {
+      console.error(red(`error: skill source not found at ${skillSrc}`));
+      process.exit(1);
+    }
+    loadedSkills.push({
+      name: skill.name,
+      src: skillSrc,
+      content: fs.readFileSync(skillSrc, "utf8"),
+    });
   }
 
-  const skillContent = fs.readFileSync(skillSrc, "utf8");
-  const allTargets = getTargets(skillContent);
+  // The per-agent flag list — same across all skills (since destinations only
+  // differ by skill name, not agent set).
+  const AGENTS = [
+    { key: "claude", tool: "Claude Code", flag: "--claude" },
+    { key: "codex", tool: "Codex (CLI / IDE / app)", flag: "--codex" },
+    { key: "gemini", tool: "Gemini CLI", flag: "--gemini" },
+  ];
 
   const flags = new Set(args);
   const hasAll = flags.has("--all");
-  const explicitKeys = allTargets.filter((t) => flags.has(t.flag)).map((t) => t.key);
+  const explicitKeys = AGENTS.filter((a) => flags.has(a.flag)).map((a) => a.key);
 
-  // Decide which targets to install.
+  // Decide which agents to install for. Both skills install per selected agent.
   let selectedKeys;
   if (hasAll) {
-    selectedKeys = allTargets.map((t) => t.key);
+    selectedKeys = AGENTS.map((a) => a.key);
   } else if (explicitKeys.length > 0) {
     selectedKeys = explicitKeys;
   } else {
-    // Interactive mode — needs a TTY. If stdin isn't a TTY (piped input, CI, etc.),
-    // bail with a clear message rather than hanging on readline.
+    // Interactive mode — needs a TTY.
     if (!process.stdin.isTTY) {
       console.error(red("error: interactive mode requires a TTY."));
       console.error("");
@@ -326,27 +386,40 @@ async function cmdInstallSkill(args) {
       process.exit(1);
     }
 
-    // Ask Y/n per agent using a single shared readline.
-    // Show current status (not installed / up-to-date / will update) per target,
-    // and default the prompt accordingly — "already up-to-date" defaults to No.
-    console.log("Pick which agents to install the /workflow-init skill for.");
+    // Show status per agent — aggregate across skills. If either skill is
+    // missing or outdated for an agent, default to Yes; otherwise default No.
+    console.log(
+      `Pick which agents to install the workflow skills for ${dim(
+        `(${SKILLS.map((s) => "/" + s.name).join(", ")})`
+      )}.`
+    );
     console.log(dim("(Press Enter to accept the default, type 'n' to skip.)"));
     console.log("");
 
-    const prompts = allTargets.map((t) => {
-      const status = describeState(t);
-      // Default Yes for "not installed" or "will update". Default No for "up-to-date".
-      const defaultYes = status.action !== "unchanged";
+    const prompts = AGENTS.map((agent) => {
+      // Compute combined status across skills for this agent.
+      const states = loadedSkills.map((skill) => {
+        const target = getTargetsForSkill(skill.name, skill.content).find(
+          (t) => t.key === agent.key
+        );
+        return describeState(target);
+      });
+      const anyMissingOrOutdated = states.some(
+        (s) => s.action !== "unchanged"
+      );
+      const label = anyMissingOrOutdated
+        ? states
+            .map((s, i) => `${loadedSkills[i].name}: ${s.label}`)
+            .join(" · ")
+        : "all up-to-date";
       return {
-        text: `  Install for ${t.tool}? ${dim(`(${status.label})`)}`,
-        defaultYes,
+        text: `  Install for ${agent.tool}? ${dim(`(${label})`)}`,
+        defaultYes: anyMissingOrOutdated,
       };
     });
 
     const answers = await askMany(prompts);
-    selectedKeys = allTargets
-      .filter((_, i) => answers[i])
-      .map((t) => t.key);
+    selectedKeys = AGENTS.filter((_, i) => answers[i]).map((a) => a.key);
     console.log("");
     if (selectedKeys.length === 0) {
       console.log(dim("No agents selected. Nothing to install."));
@@ -354,60 +427,74 @@ async function cmdInstallSkill(args) {
     }
   }
 
-  const selected = allTargets.filter((t) => selectedKeys.includes(t.key));
-
-  console.log(`${dim("source:")} ${skillSrc}`);
   console.log("");
 
-  // Count per outcome so the summary line is honest about what actually happened.
-  let counts = { new: 0, updated: 0, unchanged: 0 };
+  // Per-skill counts so the summary tells the truth.
+  const perSkillCounts = {};
 
-  for (const target of selected) {
-    const state = describeState(target);
-    counts[state.action]++;
+  for (const skill of loadedSkills) {
+    perSkillCounts[skill.name] = { new: 0, updated: 0, unchanged: 0 };
 
-    if (state.action === "unchanged") {
-      // Don't touch the file — it's identical. Skip the write to avoid
-      // bumping mtime unnecessarily.
-      console.log(`  ${dim("·")} ${target.tool} ${dim("(already up-to-date)")}`);
-    } else {
-      fs.mkdirSync(path.dirname(target.dest), { recursive: true });
-      fs.writeFileSync(target.dest, target.content);
-      const marker = state.action === "new" ? green("+") : green("↻");
-      const note = state.action === "new" ? "" : dim(" (updated)");
-      console.log(`  ${marker} ${target.tool}${note}`);
+    console.log(bold(`/${skill.name}`));
+    console.log(`  ${dim("source:")} ${skill.src}`);
+
+    const targets = getTargetsForSkill(skill.name, skill.content).filter((t) =>
+      selectedKeys.includes(t.key)
+    );
+
+    for (const target of targets) {
+      const state = describeState(target);
+      perSkillCounts[skill.name][state.action]++;
+
+      if (state.action === "unchanged") {
+        console.log(
+          `  ${dim("·")} ${target.tool} ${dim("(already up-to-date)")}`
+        );
+      } else {
+        fs.mkdirSync(path.dirname(target.dest), { recursive: true });
+        fs.writeFileSync(target.dest, target.content);
+        const marker = state.action === "new" ? green("+") : green("↻");
+        const note = state.action === "new" ? "" : dim(" (updated)");
+        console.log(`  ${marker} ${target.tool}${note}`);
+      }
+      console.log(`    ${dim(target.dest)}`);
     }
-    console.log(`    ${dim(target.dest)}`);
+    console.log("");
   }
 
-  console.log("");
-  // Summary line reflects what actually happened.
-  const parts = [];
-  if (counts.new > 0) parts.push(`${counts.new} installed`);
-  if (counts.updated > 0) parts.push(`${counts.updated} updated`);
-  if (counts.unchanged > 0) parts.push(`${counts.unchanged} already up-to-date`);
-  console.log(green(`/workflow-init skill: ${parts.join(", ")}.`));
+  // Summary line per skill.
+  for (const skill of loadedSkills) {
+    const counts = perSkillCounts[skill.name];
+    const parts = [];
+    if (counts.new > 0) parts.push(`${counts.new} installed`);
+    if (counts.updated > 0) parts.push(`${counts.updated} updated`);
+    if (counts.unchanged > 0)
+      parts.push(`${counts.unchanged} already up-to-date`);
+    console.log(green(`/${skill.name} skill: ${parts.join(", ")}.`));
+  }
   console.log("");
 
-  // Print the invocations only for what was actually installed.
+  // Per-agent invocations — show both skills.
   const invocations = {
-    claude: "Claude Code:  /workflow-init",
-    codex: "Codex:        $workflow-init  (or via /skills picker)",
-    gemini: "Gemini CLI:   /workflow-init",
+    claude: (s) => `Claude Code:  /${s}`,
+    codex: (s) => `Codex:        $${s}  (or via /skills picker)`,
+    gemini: (s) => `Gemini CLI:   /${s}`,
   };
-  console.log("Try it from your agent:");
+  console.log("Try them from your agent:");
   for (const key of selectedKeys) {
-    console.log(`  ${invocations[key]}`);
+    for (const skill of loadedSkills) {
+      console.log(`  ${invocations[key](skill.name)}`);
+    }
   }
   console.log("");
   console.log(
     dim(
-      "The slash command itself calls `npx @digitaloutbreak/workflow init <target>`"
+      "Each slash command calls `npx @digitaloutbreak/workflow init <target>`"
     )
   );
   console.log(
     dim(
-      "under the hood — no absolute paths to maintain, no re-install needed if you move things."
+      "(or `init-site <target>`) under the hood — no absolute paths to maintain."
     )
   );
   console.log("");
@@ -424,11 +511,15 @@ function cmdHelp() {
   const help = `
 ${bold("@digitaloutbreak/workflow")} — drop-in workflow scaffold for AI-assisted coding
 
-${bold("Two ways to install the /workflow-init slash command:")}
+${bold("Two slash commands ship together:")}
+  ${green("/workflow-init")}  — full product/app bootstrap (thesis, spec, feature lifecycle)
+  ${green("/site-init")}      — slim marketing-site bootstrap (brand, pages, content backlog)
+
+${bold("Two ways to install:")}
 
   ${green("Recommended")} — via the open-skills ecosystem CLI:
     ${green("npx skills add DigitalOutbreak/workflow -g")}
-    ${dim("Installs into Claude / Codex / Gemini in one shot.")}
+    ${dim("Installs both skills into Claude / Codex / Gemini in one shot.")}
     ${dim("Re-run anytime to refresh against the latest release.")}
 
   ${dim("Or via this CLI directly (legacy / fallback):")}
@@ -436,34 +527,38 @@ ${bold("Two ways to install the /workflow-init slash command:")}
     ${dim("npx @digitaloutbreak/workflow --all       # install for all 3 agents")}
 
 ${bold("Then from any project dir, in your agent:")}
-  ${green("/workflow-init")}
-  ${dim("Runs the full bootstrap — project type, scaffold (web only), install,")}
-  ${dim("discovery interview, MCPs, roadmap, fill templates, first feature.")}
+  ${green("/workflow-init")}  for product apps with a database, auth, feature lifecycle
+  ${green("/site-init")}      for marketing/agency/brand/landing sites
 
-${bold("Project types supported:")}
+${bold("/workflow-init project types:")}
   • Web app or site — Next.js / Astro / SvelteKit / TanStack Start scaffolders
   • Backend / API / service — docs install only, you bring the scaffolder
   • Mobile / desktop — docs install only, you bring the scaffolder
   • Other (CLI, library, ML/data) — docs install only
 
+${bold("/site-init project types:")}
+  • New marketing site — Astro / Next.js / SvelteKit scaffold + slim docs
+  • Existing marketing site (WoD, agency sites, etc.) — drop docs, auto-inventory pages
+
 ${bold("Usage:")}
-  npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
+  npx @digitaloutbreak/workflow                       Interactive — install slash commands for chosen agents
   npx @digitaloutbreak/workflow ${green("--all")}                 Install for all three agents, no prompts
   npx @digitaloutbreak/workflow ${green("--claude")} ${green("--gemini")}      Install for specific agents
-  npx @digitaloutbreak/workflow ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop workflow files directly into target
+  npx @digitaloutbreak/workflow ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop product-workflow files into target
+  npx @digitaloutbreak/workflow ${green("init-site")} ${dim("[target]")}     ${dim("(advanced)")} Drop marketing-site files into target
   npx @digitaloutbreak/workflow ${green("--help")}                Show this message
 
 ${bold("Agent flags:")}
-  ${green("--claude")}     →  ~/.claude/skills/workflow-init/skill.md
-  ${green("--codex")}      →  ~/.agents/skills/workflow-init/SKILL.md
-  ${green("--gemini")}     →  ~/.gemini/commands/workflow-init.toml
+  ${green("--claude")}     →  ~/.claude/skills/{workflow-init,site-init}/skill.md
+  ${green("--codex")}      →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md
+  ${green("--gemini")}     →  ~/.gemini/commands/{workflow-init,site-init}.toml
   ${green("--all")}        →  all three
 
 ${bold("Direct file install — no agent involvement:")}
-  npx @digitaloutbreak/workflow init ./my-app
+  npx @digitaloutbreak/workflow init ./my-app        ${dim("# product workflow")}
+  npx @digitaloutbreak/workflow init-site ./my-site  ${dim("# marketing site workflow")}
 
-  ${dim("This is what /workflow-init calls internally. Useful if your terminal")}
-  ${dim("doesn't have one of the supported agents and you want the docs anyway.")}
+  ${dim("These are what the slash commands call internally.")}
 
 ${bold("Repo:")} https://github.com/DigitalOutbreak/workflow
 `;
@@ -492,10 +587,14 @@ async function main() {
     return;
   }
 
-  // Explicit init subcommand: install files into a target project.
-  // This is the path the slash command itself calls under the hood.
+  // Explicit init subcommands: install files into a target project.
+  // These are the paths the slash commands themselves call under the hood.
   if (first === "init") {
-    cmdInit(args[1]);
+    cmdInit(args[1], "product");
+    return;
+  }
+  if (first === "init-site") {
+    cmdInit(args[1], "site");
     return;
   }
 
@@ -503,7 +602,9 @@ async function main() {
   // OR if no args at all (new default UX).
   const isSkillFlag = (a) => SKILL_FLAGS.has(a);
   const skillFlags = args.filter(isSkillFlag);
-  const nonFlagArgs = args.filter((a) => !a.startsWith("-") && a !== "init");
+  const nonFlagArgs = args.filter(
+    (a) => !a.startsWith("-") && a !== "init" && a !== "init-site"
+  );
 
   if (args.length === 0 || skillFlags.length > 0) {
     // Pure skill-install mode. Strip the legacy --install-skill prefix

@@ -2,9 +2,16 @@
 
 A drop-in workflow scaffold for AI-assisted coding. Works with any agent that loads the [open agent skills](https://www.skills.sh) standard — Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, and ~12 more.
 
-Ships with a `/workflow-init` slash command, plus the root-level `AGENTS.md` (and tool-specific `CLAUDE.md` / `GEMINI.md`) pointing every agent at five context docs, a `/feature` lifecycle skill (spec → load → start → complete), a `/cleanup` housekeeping skill, and a `code-scanner` agent.
+Ships with **two slash commands** and the surrounding scaffold:
 
-Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
+| Command | For | What you get |
+|---|---|---|
+| `/workflow-init` | **Product apps** — anything with a database, auth, or a feature lifecycle | `thesis.md` + `project-overview.md` + `current-feature.md` + `roadmap.md` + `project-spec.md` + a `/feature` lifecycle skill |
+| `/site-init` | **Marketing sites** — agency sites, brand sites, landing pages, content sites | `site-brief.md` + `brand.md` + `pages.md` + `content-backlog.md` — and for existing sites, auto-inventory of every route in the repo |
+
+Both ship with `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` root briefs and a `/cleanup` housekeeping skill. `/workflow-init` additionally includes a `code-scanner` agent.
+
+Snapshot of the product workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
 
 ## Two-step setup, one for life
 
@@ -13,7 +20,8 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 npx skills add DigitalOutbreak/workflow -g
 
 # 2. From any project dir, in your agent:
-/workflow-init
+/workflow-init    # for product apps
+/site-init        # for marketing sites
 ```
 
 The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI:
@@ -46,6 +54,29 @@ npx skills add DigitalOutbreak/workflow
 > ```
 > Same end result but smaller agent set — only Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`). `npx skills add` is preferred.
 
+### Which one should I use?
+
+| You're building... | Use |
+|---|---|
+| A product, dashboard, internal tool, SaaS, e-commerce backend, anything with a database or auth | `/workflow-init` |
+| An agency site, brand site, landing page, content site, or any mostly-static marketing surface | `/site-init` |
+| Not sure? | Ask yourself: *does this need a feature-spec lifecycle?* If yes, `/workflow-init`. If "I'll just edit pages and ship," `/site-init`. |
+
+Existing sites work too — `/site-init` skips the framework scaffold for "Add workflow to existing site" and reads the repo to pre-fill `pages.md` from real route files.
+
+### What `/site-init` does
+
+Eight-stage bootstrap (~5 min). Slim by design:
+
+1. **Idempotency check** — same Resume / Refresh / Re-inventory / Start fresh menu as `/workflow-init`
+2. **Pre-flight** — new vs existing site, framework pick (Astro recommended), CMS pick (MDX vs headless)
+3. **Scaffold** — only for new sites: `npm create astro@latest` / `create-next-app` / `sv create`
+4. **Install template files** — drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + `docs/context/{site-brief,brand,pages,content-backlog,coding-standards,ai-interaction}.md` + `.claude/skills/cleanup/`
+5. **Interview** — ~5 min: brand voice, audience, offer, conversion goal, 3 adjectives + 3 banned words, visual refs
+6. **MCP decision** — SEO-focused (firecrawl, dataforseo, CMS MCPs if applicable). Install commands stashed in `site-brief.md`
+7. **Inventory pages** (existing sites only) — reads `src/pages/`, `app/`, `src/routes/`, `src/content/` and pre-fills `pages.md` so you don't type out every URL
+8. **Hand off** — MCP install commands + next-steps (open `brand.md`, fill primary CTAs in `pages.md`, run `/seo-audit` once deployed)
+
 ### What `/workflow-init` does
 
 Ten-stage guided bootstrap (~5-15 min depending on how much you elaborate):
@@ -60,21 +91,21 @@ Ten-stage guided bootstrap (~5-15 min depending on how much you elaborate):
 8. **Recommend first feature** — picks the smallest thing from the roadmap's `Now` phase and offers to `/feature spec` it immediately
 9. **Hand off** — MCP install commands appear here (safe to restart now; the interview is all on disk). Plus next-steps for `/feature` lifecycle
 
-### Where the slash command lives, per agent
+### Where the slash commands live, per agent
 
-- `~/.claude/skills/workflow-init/skill.md` — Claude Code (markdown + YAML frontmatter)
-- `~/.agents/skills/workflow-init/SKILL.md` — Codex CLI / IDE / app (markdown + YAML frontmatter)
-- `~/.gemini/commands/workflow-init.toml` — Gemini CLI (TOML)
+Both `/workflow-init` and `/site-init` install side-by-side:
 
-The CLI generates each tool's expected format from the same source skill (markdown for Claude/Codex, TOML for Gemini), so the content stays in sync.
+- `~/.claude/skills/{workflow-init,site-init}/skill.md` — Claude Code (markdown + YAML frontmatter)
+- `~/.agents/skills/{workflow-init,site-init}/SKILL.md` — Codex CLI / IDE / app (markdown + YAML frontmatter)
+- `~/.gemini/commands/{workflow-init,site-init}.toml` — Gemini CLI (TOML)
+
+The CLI generates each tool's expected format from the same source skills (markdown for Claude/Codex, TOML for Gemini), so the content stays in sync.
 
 | Tool | Invoke with |
 |---|---|
-| **Claude Code** | `/workflow-init` |
-| **Codex** | `$workflow-init` (or pick from the `/skills` picker) |
-| **Gemini CLI** | `/workflow-init` |
-
-The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh framework (Next.js / Astro / SvelteKit / TanStack Start, with or without shadcn), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
+| **Claude Code** | `/workflow-init` · `/site-init` |
+| **Codex** | `$workflow-init` · `$site-init` (or pick from the `/skills` picker) |
+| **Gemini CLI** | `/workflow-init` · `/site-init` |
 
 ### Other agents (Cursor, Cline, Aider, Continue, etc.)
 
@@ -96,6 +127,8 @@ npx skills add DigitalOutbreak/workflow
 > The legacy CLI (below) accepts a path argument directly: `npx @digitaloutbreak/workflow ./my-new-app`.
 
 ## What gets installed
+
+### `/workflow-init` (product apps)
 
 ```
 CLAUDE.md                            ← root brief, with @-imports (Claude Code)
@@ -120,9 +153,30 @@ docs/
     └── cleanup/                     ← /cleanup  housekeeping scan
 ```
 
-The starter's own `README.md`, `README.html`, `LICENSE`, `bin/`, `skill/`, and `package.json` are NOT installed — they describe the starter, not whatever project you're starting.
+### `/site-init` (marketing sites)
+
+```
+CLAUDE.md                            ← root brief, with @-imports (Claude Code)
+AGENTS.md                            ← universal pointer for any AI agent
+GEMINI.md                            ← Gemini Code Assist brief
+docs/
+└── context/                         ← auto-imported every session
+    ├── site-brief.md                [TEMPLATE — what the site is, who it's for, what it sells]
+    ├── brand.md                     [TEMPLATE — voice, tone, words used/avoided, visual direction]
+    ├── pages.md                     [TEMPLATE — page inventory; auto-filled for existing sites]
+    ├── content-backlog.md           [TEMPLATE — planned pages, posts, case studies]
+    ├── coding-standards.md          [STARTER — Astro/Next/SvelteKit + Tailwind defaults]
+    └── ai-interaction.md            [LITERAL — copy as-is, no feature-spec lifecycle]
+.claude/
+└── skills/
+    └── cleanup/                     ← /cleanup  housekeeping scan
+```
+
+The starter's own `README.md`, `README.html`, `LICENSE`, `bin/`, `skill/`, `templates/`, and `package.json` are NOT installed — they describe the starter, not whatever project you're starting.
 
 ## What to fill in after install
+
+### Product (`/workflow-init`)
 
 Three files determine whether the AI context is useful or generic. Spend an hour on these and the rest compounds:
 
@@ -132,6 +186,16 @@ Three files determine whether the AI context is useful or generic. Spend an hour
 | `docs/context/thesis.md` | Your strategic memo — why you're building this, the bet, the moat, the failure modes. |
 | `docs/context/project-overview.md` | The polished summary auto-loaded every session — scope, stack, surfaces, decisions log. |
 | `docs/specs/project-spec.md` | Deeper authoritative spec — schema, contracts, env keys. Read on demand only. |
+
+### Site (`/site-init`)
+
+Three files set the agent up to write good copy and edit pages without drifting:
+
+| File | What to write |
+|---|---|
+| `docs/context/site-brief.md` | What the site is, who it's for, what it sells, the single primary conversion event, the stack and key links. |
+| `docs/context/brand.md` | Voice (3 adjectives + a paragraph in-voice), per-surface tone, words to use and avoid, palette and type tokens. |
+| `docs/context/pages.md` | One row per URL. For existing sites, `/site-init` pre-fills URL / type / status from your repo — you add primary CTA and target keyword. |
 
 The template files have `{{Placeholders}}` and bracketed `[Replace with...]` prompts plus scaffolding for the sections we've found load-bearing.
 
@@ -172,13 +236,13 @@ The starter installs all three root files (CLAUDE.md / AGENTS.md / GEMINI.md) so
 The preferred install path is `npx skills add DigitalOutbreak/workflow -g` (see [Two-step setup](#two-step-setup-one-for-life) above). The legacy CLI below predates that ecosystem and is kept for backwards compatibility — it only supports Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`).
 
 ```
-npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
+npx @digitaloutbreak/workflow                       Interactive — install both slash commands for chosen agents
 npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini, no prompts
-npx @digitaloutbreak/workflow --claude              Just Claude Code
+npx @digitaloutbreak/workflow --claude              Just Claude Code (installs both /workflow-init and /site-init)
 npx @digitaloutbreak/workflow --claude --gemini     Install for specific agents
 npx @digitaloutbreak/workflow --codex               Add Codex later, leave others
-npx @digitaloutbreak/workflow ./my-new-app          Target a specific path
-npx @digitaloutbreak/workflow init [target]         (advanced) Drop workflow files directly into target
+npx @digitaloutbreak/workflow init [target]         (advanced) Drop product-workflow files directly into target
+npx @digitaloutbreak/workflow init-site [target]    (advanced) Drop marketing-site files directly into target
 npx @digitaloutbreak/workflow --help                Show usage
 
 # Pre-publish fallback (still works)
