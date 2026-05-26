@@ -96,10 +96,11 @@ Ten-stage guided bootstrap (~5-15 min depending on how much you elaborate):
 Both `/workflow-init` and `/site-init` install side-by-side:
 
 - `~/.claude/skills/{workflow-init,site-init}/skill.md` — Claude Code (markdown + YAML frontmatter)
-- `~/.agents/skills/{workflow-init,site-init}/SKILL.md` — Codex CLI / IDE / app (markdown + YAML frontmatter)
-- `~/.gemini/commands/{workflow-init,site-init}.toml` — Gemini CLI (TOML)
+- `~/.agents/skills/{workflow-init,site-init}/SKILL.md` — **Codex AND Gemini CLI v0.43+** (the open agent-skills standard)
 
-The CLI generates each tool's expected format from the same source skills (markdown for Claude/Codex, TOML for Gemini), so the content stays in sync.
+Codex and Gemini CLI both read from the same path — the open agent-skills standard at `~/.agents/skills/`. `--codex` and `--gemini` in the CLI both resolve to that path; the install is deduped so the same file isn't written twice.
+
+> Note: earlier versions of this CLI wrote a Gemini-specific TOML file at `~/.gemini/commands/<name>.toml`. That format predates the agent-skills standard and isn't used by modern Gemini CLI. If you have stale TOML files there from a prior install, you can delete them — they're harmless but inert.
 
 | Tool | Invoke with |
 |---|---|

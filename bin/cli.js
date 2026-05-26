@@ -209,31 +209,13 @@ function parseFrontmatter(content) {
   return { frontmatter, body: match[2] };
 }
 
-// Generate a Gemini CLI TOML command file from a parsed skill.
-// TOML format: https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/custom-commands.md
-// Uses literal multi-line strings (''') so backslashes in bash commands stay literal.
-function buildGeminiTOML(skillMd) {
-  const { frontmatter, body } = parseFrontmatter(skillMd);
-  const description = frontmatter.description || "Workflow init";
-
-  // Description goes in a basic string — escape " and \.
-  const descEscaped = description.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-
-  // Body goes in a multi-line literal string ('''). The skill content
-  // shouldn't contain ''' — verify just in case.
-  if (body.includes("'''")) {
-    throw new Error(
-      "skill body contains ''' — cannot safely emit as TOML literal string"
-    );
-  }
-
-  return `description = "${descEscaped}"
-
-prompt = '''
-${body.trim()}
-'''
-`;
-}
+// Note: previous versions of this CLI also generated a Gemini-specific TOML
+// file at ~/.gemini/commands/<name>.toml. Modern Gemini CLI (v0.43+) reads
+// the open agent-skills standard at ~/.agents/skills/<name>/SKILL.md instead,
+// so we emit the same markdown format for both Codex and Gemini and let the
+// agent-skills standard handle discovery. The TOML path is no longer written.
+//
+// `parseFrontmatter` is kept available for any future per-agent transforms.
 
 // Ask a series of Y/n questions on stdin. Returns an array of booleans matching
 // the input order. Uses one readline interface across all questions — separate
@@ -308,13 +290,18 @@ function getTargetsForSkill(skillName, skillContent) {
       key: "gemini",
       tool: "Gemini CLI",
       flag: "--gemini",
+      // Gemini CLI v0.43+ reads from the open agent-skills standard, the same
+      // path Codex uses. Both flags now resolve to the same destination — the
+      // dual-write is deduped at install time so the same file isn't touched
+      // twice in one run.
       dest: path.join(
         os.homedir(),
-        ".gemini",
-        "commands",
-        `${skillName}.toml`
+        ".agents",
+        "skills",
+        skillName,
+        "SKILL.md"
       ),
-      content: buildGeminiTOML(skillContent),
+      content: skillContent,
     },
   ];
 }
@@ -442,7 +429,22 @@ async function cmdInstallSkill(args) {
       selectedKeys.includes(t.key)
     );
 
-    for (const target of targets) {
+    // Dedupe by destination path — Codex and Gemini both write to
+    // ~/.agents/skills/, so if the user picked both, the second write would
+    // be a no-op AND would print a misleading "already up-to-date" line.
+    // Merge the tool labels instead.
+    const byDest = new Map();
+    for (const t of targets) {
+      const existing = byDest.get(t.dest);
+      if (existing) {
+        existing.tool = `${existing.tool} / ${t.tool}`;
+      } else {
+        byDest.set(t.dest, { ...t });
+      }
+    }
+    const dedupedTargets = Array.from(byDest.values());
+
+    for (const target of dedupedTargets) {
       const state = describeState(target);
       perSkillCounts[skill.name][state.action]++;
 
@@ -551,7 +553,7 @@ ${bold("Usage:")}
 ${bold("Agent flags:")}
   ${green("--claude")}     →  ~/.claude/skills/{workflow-init,site-init}/skill.md
   ${green("--codex")}      →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md
-  ${green("--gemini")}     →  ~/.gemini/commands/{workflow-init,site-init}.toml
+  ${green("--gemini")}     →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md  ${dim("(same path as --codex — Gemini CLI v0.43+ reads the open agent-skills standard)")}
   ${green("--all")}        →  all three
 
 ${bold("Direct file install — no agent involvement:")}
