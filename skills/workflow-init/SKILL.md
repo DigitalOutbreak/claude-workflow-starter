@@ -44,7 +44,7 @@ Only ask if Step 1a was "Scaffold a new project."
 |---|---|
 | **Next.js** *(recommended)* | `create-next-app` — TS + Tailwind + App Router + Turbopack |
 | **Astro** | `npm create astro` (minimal, strictest TS) + `astro add tailwind` |
-| **SvelteKit** | `npx sv create` (minimal, TS) + `sv add tailwindcss` |
+| **SvelteKit** | `npx -y sv create` (minimal, TS) + `sv add tailwindcss` |
 | **TanStack Start** | `npx create-tsrouter-app` with Start + Tailwind add-ons |
 
 Frame: "Which framework?" — recommend Next.js as the default for new React UI projects.
@@ -79,6 +79,8 @@ After all three steps, the combinations are:
 
 Only run this if the user picked a scaffolding option (not "existing project").
 
+> **Critical: keep `-y` in every `npx -y <command>`.** Without it, npx asks "Ok to proceed? (y)" before downloading the package the first time, and an agent session **cannot auto-respond** to that prompt — the user would have to manually type `y` in the shell. Each command below has `-y` in the right position; do not drop it. The `--yes` later in the command (for `create-next-app`, `shadcn`, etc.) is a different flag — that one accepts the framework's defaults. Both are needed.
+
 ### 1. Project name
 
 Ask in prose: "What should we name the project? (lowercase, hyphens — this becomes the directory name and the `name` field in `package.json`)."
@@ -92,7 +94,7 @@ Pick the command set based on the user's Stage 1 choice.
 **For Next.js (with or without shadcn):**
 
 ```bash
-cd "$PARENT" && npx create-next-app@latest <name> \
+cd "$PARENT" && npx -y create-next-app@latest <name> \
   --typescript \
   --tailwind \
   --eslint \
@@ -108,7 +110,7 @@ cd "$PARENT" && npx create-next-app@latest <name> \
 If they picked **Next.js + shadcn**, follow up with:
 
 ```bash
-cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
 ```
 
 Zinc is a neutral default. If the user has a strong preference (slate / stone / gray / neutral / red / etc.), ask which they prefer before running shadcn.
@@ -123,7 +125,7 @@ cd "$PARENT" && npm create astro@latest <name> -- \
   --no-git \
   --yes
 
-cd "$PARENT/<name>" && npx astro add tailwind --yes
+cd "$PARENT/<name>" && npx -y astro add tailwind --yes
 ```
 
 (Astro doesn't ship ESLint as a default convention — `astro check` is the type checker and Prettier handles formatting. If the user wants ESLint, they can `npm i -D eslint` later. Tailwind is added explicitly because no Astro template includes it by default.)
@@ -131,14 +133,14 @@ cd "$PARENT/<name>" && npx astro add tailwind --yes
 If they picked **Astro + shadcn**, follow up with the React integration *first* (shadcn requires React in Astro):
 
 ```bash
-cd "$PARENT/<name>" && npx astro add react --yes
-cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+cd "$PARENT/<name>" && npx -y astro add react --yes
+cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
 ```
 
 **For SvelteKit:**
 
 ```bash
-cd "$PARENT" && npx sv create <name> \
+cd "$PARENT" && npx -y sv create <name> \
   --template minimal \
   --types ts \
   --add-ons eslint,prettier,tailwindcss \
@@ -151,7 +153,7 @@ cd "$PARENT" && npx sv create <name> \
 If they picked **SvelteKit + shadcn-svelte**, follow up:
 
 ```bash
-cd "$PARENT/<name>" && npx shadcn-svelte@latest init --base-color zinc
+cd "$PARENT/<name>" && npx -y shadcn-svelte@latest init --base-color zinc
 ```
 
 (Note: `shadcn-svelte` is the community Svelte port of shadcn, not the official `shadcn` CLI — different package.)
@@ -159,7 +161,7 @@ cd "$PARENT/<name>" && npx shadcn-svelte@latest init --base-color zinc
 **For TanStack Start:**
 
 ```bash
-cd "$PARENT" && npx create-tsrouter-app@latest <name> \
+cd "$PARENT" && npx -y create-tsrouter-app@latest <name> \
   --add-ons start,tailwind,eslint,prettier \
   --package-manager npm
 ```
@@ -169,7 +171,7 @@ cd "$PARENT" && npx create-tsrouter-app@latest <name> \
 If they picked **TanStack Start + shadcn**:
 
 ```bash
-cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
+cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
 ```
 
 (TanStack Start is React under the hood, so the official shadcn CLI works directly.)
@@ -217,7 +219,7 @@ Sanity checks:
 Run the install:
 
 ```bash
-npx @digitaloutbreak/workflow init "$TARGET"
+npx -y @digitaloutbreak/workflow init "$TARGET"
 ```
 
 Quote the CLI's file list and next-steps output back to the user. Then tell them: **"Files are in. Let me ask you a few questions so we can fill them with real content instead of placeholders."**
