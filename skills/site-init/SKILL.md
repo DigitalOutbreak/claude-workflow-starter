@@ -50,17 +50,30 @@ If no prior install detected, proceed.
 
 ## Stage 1 — Pre-flight
 
-Decide working location:
+### 1.0 Detect CWD shape — DO NOT skip this
 
-1. If the user provided a target directory, resolve it. Otherwise use the current working directory.
+Before asking the user anything, inspect the current working directory and classify it. **Do not enumerate sibling project directories as bootstrap candidates** — those are unrelated projects, not options.
 
-Ask three sub-questions in sequence.
+Run a directory listing (`ls -A` or equivalent) and decide:
 
-### 1.1 New site or existing?
+| CWD shape | How to tell | Default behavior |
+|---|---|---|
+| **Project root** | CWD itself contains `package.json`, `astro.config.*`, `next.config.*`, `svelte.config.*`, `src/`, `app/`, `pages/`, etc. | Assume **existing site** in CWD. Skip the "new vs existing" question — go straight to confirming "Add workflow files to this existing site at `<cwd>`?" |
+| **Workspace / parent dir** | CWD contains multiple subdirectories that themselves look like projects (each with their own `package.json`, framework configs, or `.git`), AND CWD has no framework config of its own. Examples: `~/Developer/projects/`, `~/Developer/_starters/`, anything that looks like a folder full of unrelated projects. | Assume **new site, scaffold here as a subdir**. Ask only for the new project's name; DO NOT list the sibling project dirs as options to bootstrap into. |
+| **Empty or sparse dir** | CWD is empty, or contains only dotfiles / a single placeholder. | Assume **new site, scaffold in place** (no subdir). |
+| **User passed a target arg** | `$ARGUMENTS` is non-empty | Resolve the arg as the parent dir. Apply the same classification to it. |
 
-Two options:
+> **Critical:** never present sibling project directories (`splashdev/`, `local-content-clipper/`, etc.) as install candidates. They are not related to this site. The only valid options are "this dir," "a new subdir of this dir," or "a path the user types in."
 
-- **Scaffold a new site** — agent runs a `create-*` command in Stage 2
+### 1.1 New site or existing? *(skip if 1.0 was decisive)*
+
+Only ask this if the CWD classification in 1.0 was ambiguous. Otherwise apply the default and surface it once for confirmation:
+
+> "Detected `<cwd>` as a [project root / workspace / empty dir]. Defaulting to [add to existing / scaffold new subdir / scaffold in place]. Continue? *(Y/n, or type a different target path)*"
+
+If the user pushes back, give them two options:
+
+- **Scaffold a new site** — agent runs a `create-*` command in Stage 2 (you'll be asked for a project name)
 - **Add workflow to existing site** — skip scaffolding (e.g. WoD, an existing agency site)
 
 If "existing," skip Stages 1.2 and 1.3 and jump to Stage 3. Stage 6 (inventory pages) becomes the high-value step for existing sites.
