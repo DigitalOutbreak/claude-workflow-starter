@@ -16,12 +16,14 @@ End-to-end project bootstrap. Ten stages, executed sequentially:
 2  Scaffold                (only for new Web projects — run create-* commands)
 3  Install workflow files  (drop CLAUDE.md / AGENTS.md / GEMINI.md / docs/ / .claude/)
 4  Discovery interview     (identity → stack → strategy → surfaces, with elaboration)
-5  MCP suggestion          (recommend MCPs based on stack — skipped for simple projects)
+5  MCP decision            (pick MCPs — do NOT install yet; restart would lose context)
 6  Roadmap proposal        (draft + iterate + save — skipped for existing projects)
-7  Fill templates          (edit all template files with user's answers)
+7  Fill templates          (edit all template files; MCP commands written to project-overview.md)
 8  Recommend first feature (pick from roadmap's "Now" milestone)
-9  Hand off                (next-steps message)
+9  Hand off                (MCP install commands + next-steps — safe to restart here)
 ```
+
+**🚨 Critical ordering rule:** MCP installs require an agent restart, which wipes conversation context. Stage 5 picks MCPs but never installs them. The actual install commands surface at Stage 9 — *after* Stages 6-7 have written every interview answer, roadmap entry, and template to disk. By then a restart is harmless.
 
 > **The workflow is project-agnostic.** Web app, backend service, mobile, CLI tool, library — the docs (thesis, overview, roadmap, feature specs) work for any codebase. Only **Stage 2 (scaffold)** is web-specific because that's the only category with reliable, tested scaffolders. Non-web projects skip Stage 2 and get the docs installed in their existing/empty directory; the user runs whatever init their stack needs (e.g. `cargo init`, `python -m venv`, `flutter create`) themselves.
 
@@ -63,7 +65,7 @@ Four options:
 |---|---|
 | **Web app or site** *(recommended for most)* | Dashboard, marketing site, docs site, web app, e-commerce |
 | **Backend / API / service** | REST API, GraphQL service, worker, daemon, microservice |
-| **Mobile or desktop app** | iOS / Android / React Native / Expo / Flutter / Tauri / Electron |
+| **Mobile or desktop app** | iOS / Android / Expo / Flutter / Tauri / Electron / egui / gpui / SwiftUI / WPF / Qt — anything not running in a browser tab |
 | **Other** | CLI tool, library/package, data/ML project, custom stack |
 
 This decides whether Stage 2 (scaffold) runs:
@@ -313,11 +315,43 @@ Ask 4 sub-questions in one prompt:
 
 #### If project type = Mobile or desktop
 
-Ask 3 sub-questions in one prompt:
+The Mobile/Desktop space is too varied for a fixed dropdown — Tauri+React, egui, gpui, SwiftUI, Flutter, Electron, native iOS, native Android, Qt, slint, and a dozen others are all valid. Ask freeform questions with rich examples instead of a closed option list.
 
-1. **Platform** — Expo / React Native CLI / Flutter / Tauri / Electron / Native (iOS/Android) / Other
-2. **Local storage** — I'll add it later *(default)* / SQLite / Realm / AsyncStorage/Hive / None
-3. **Auth** — I'll add it later *(default)* / Better Auth / Clerk / Firebase Auth / Native sign-in only / None
+Ask 3 sub-questions in plain prose, one at a time:
+
+1. **Stack** — "Describe your stack in one line. A few examples to anchor the answer:
+   - `Tauri + React + TypeScript` (Rust shell with web UI inside)
+   - `Electron + Svelte` (Node shell with web UI inside)
+   - `egui` (pure Rust, immediate-mode GUI — like dear ImGui)
+   - `gpui` (pure Rust, GPU-accelerated retained-mode — like Zed editor)
+   - `iced` (pure Rust, Elm-style)
+   - `SwiftUI` for macOS / iOS / both
+   - `Flutter` for mobile / desktop / both (cross-platform Dart)
+   - `React Native via Expo` (cross-platform JS)
+   - `WinUI + C#` (Windows native)
+   - `Qt + C++` (cross-platform native)
+   - `Undecided — I'll pick during the project`
+
+   Plain language is fine — I just need enough to know how to frame the rest."
+
+2. **Local data** — "How will you store local data? Examples: SQLite, Core Data, Realm, Tauri SQL plugin, plain files, none, undecided."
+
+3. **Auth** — "Auth, if any? Examples: Sign in with Apple, Better Auth, Clerk, Firebase Auth, custom, none."
+
+### Adapt subsequent stages to the Mobile/Desktop stack answer
+
+The agent uses the freeform Stack answer (Q1) to adapt downstream stages. Don't apply blindly — read what the user wrote and judge:
+
+| Stack signal in Q1 | Agent adapts by |
+|---|---|
+| Mentions web-tech shell (Tauri, Electron, Neutralino, Wails) + a JS framework (React/Vue/Svelte/Solid) | Asks shadcn opt-in late ("Most React/Vue desktop GUIs use shadcn for the inner UI — want me to add a roadmap entry for installing it?"). Round 4 framing = "screens." MCPs: context7 + playwright (the inner UI is web). |
+| Mentions pure Rust GUI (egui, gpui, iced, slint, druid) | NO shadcn. NO web-related MCPs. Round 4 framing = "panels" or "windows." MCPs: context7 only. Suggest `cargo` workflows in the roadmap. |
+| Mentions Apple-native (SwiftUI, AppKit, UIKit) | NO shadcn. NO JS tooling. Round 4 framing = "screens" or "views." MCPs: context7 only. Suggest XCTest + Apple HIG in the roadmap. |
+| Mentions Microsoft-native (WPF, WinUI, MAUI) | NO shadcn. NO JS tooling. MCPs: context7 only. Suggest XAML + .NET conventions. |
+| Mentions cross-platform native (Flutter, Qt, KMP) | NO shadcn. MCPs: context7 only. Roadmap follows the framework's conventions (Flutter widgets, Qt slots/signals). |
+| User said "Undecided" | Add a roadmap entry to the "Now" phase: "Decide UI framework — evaluate <2-3 candidates relevant to the project>." Defer all framework-specific advice until that decision lands. |
+
+This isn't an exhaustive table — it's a sanity check. Use judgment. The point: **don't pretend egui or SwiftUI are web projects; don't pretend Tauri+React isn't.**
 
 #### If project type = Other (CLI, library, ML/data, custom)
 
@@ -348,7 +382,8 @@ Longest round. Ask in prose, one at a time, elaboration loop after each:
 
 The framing depends on project type from Stage 1.1:
 
-- **Web or Mobile/Desktop** — ask about *surfaces* (screens, pages, views). Based on the description, suggest 2-4 plausible v1 surfaces. Multi-select with "let me describe in my own words" fallback.
+- **Web or Mobile/Desktop with screens** (web app, Tauri+React, SwiftUI, Flutter, etc.) — ask about *surfaces* (screens, pages, views). Suggest 2-4 plausible v1 surfaces. Multi-select with "let me describe in my own words" fallback.
+- **Mobile/Desktop without traditional screens** (egui/gpui/iced — panel/window-based) — ask about *panels or windows*. "What are the 2-4 main panels/windows for v1?"
 - **Backend / API / service** — ask about *endpoints or capabilities* instead. "What are the 2-4 most important endpoints or capabilities for v1? (e.g. `POST /users`, webhook receiver, background job, etc.)"
 - **CLI tool** — ask about *commands*. "What are the 2-4 most important commands for v1?"
 - **Library / SDK** — ask about *public API surface*. "What are the 2-4 most important functions/classes the library will expose in v1?"
@@ -356,7 +391,11 @@ The framing depends on project type from Stage 1.1:
 
 If pushed back, drop into elaboration. Whichever framing you use, capture 2-4 items — those drive the roadmap proposal and the first-feature recommendation.
 
-## Stage 5 — MCP suggestion
+## Stage 5 — MCP decision (do NOT install yet)
+
+> **🚨 Critical workflow rule — DO NOT install MCPs at this stage.**
+>
+> MCP installs require an agent restart. A restart at Stage 5 destroys the conversation context, so everything captured in the discovery interview (Rounds 1-4) and the roadmap (Stage 6, not yet run) is **permanently lost** before Stage 7 writes it to disk. Stage 5 is a DECISION step only — pick which MCPs to recommend, then move on to Stages 6-7 so the docs are filled. Install commands surface in Stage 9 (hand-off), after every interview answer is safely persisted to the filesystem.
 
 > **Skip this stage entirely if the project is "simple"** — defined as ALL of:
 > - Database = None
@@ -377,26 +416,48 @@ Then suggest based on stack:
 | Postgres self-hosted | `postgres` MCP | Generic Postgres queries + inspection |
 | Supabase | `supabase` MCP | DB + auth + storage |
 | Any project with library docs needs | `context7` MCP | Up-to-date docs for any library |
-| Web project with UI surfaces (1.1 = Web AND Round 4 ≠ empty) | `playwright` MCP | Drive browser, screenshots, E2E |
+| Project with web-tech UI (1.1 = Web, OR Mobile/Desktop stack contains Tauri/Electron/Neutralino/Wails) AND Round 4 ≠ empty | `playwright` MCP | Drive browser, screenshots, E2E |
 | User mentions Figma | Figma MCP | Pull design files, Code Connect |
 | Vercel deployments | `vercel` MCP | Deploys, logs, env vars |
 | Stripe billing | `stripe` MCP | Subscriptions, test webhooks |
 
 Limit to 2-3 most relevant MCPs. Don't dump a 10-item list — that's noise.
 
-For each suggested MCP, provide the install command for the user's specific agent:
+### Ask the user which to recommend — do NOT show install commands
+
+Structured-question prompt: which of the suggested MCPs do you want to recommend? Multi-select with an "all of them" default.
+
+Frame the choice this way (paraphrase as needed):
+
+> "I'll record the ones you pick in `docs/context/project-overview.md` with install commands. **You'll run the installs at the very end of this flow, after we've filled all the docs** — that way an agent restart for MCP loading doesn't wipe this conversation. Until then, we keep moving."
+
+Capture the chosen MCP list (with names + install commands per agent) — it's needed in Stage 7 (template fill) and Stage 9 (hand-off). Do NOT run `claude mcp add`, do NOT tell the user to restart, do NOT promise "I'll record them later" in a way that requires future agent action.
+
+### Install command reference (write into project-overview.md at Stage 7)
+
+For each chosen MCP, the install command the user will run at the end of Stage 9:
 
 ```bash
 # Claude Code
-claude mcp add neon --scope user -- npx -y mcp-remote@latest https://mcp.neon.tech/sse
+claude mcp add <name> --scope user -- npx -y <package or remote URL>
 
-# Codex (and others) — different install conventions
-# Agent figures out the right install command for the current tool
+# Codex / Gemini / other agents — use their respective install commands
+# Agent picks the right form based on which tool the user is running
 ```
 
-The user runs the commands themselves (agents can't install MCPs autonomously — install requires agent restart in most cases). After install, ask: "Did the install succeed? Want me to verify by trying to use the MCP?"
+Common Claude Code commands:
 
-Record which MCPs were installed in `docs/context/project-overview.md` under a new § Agent capabilities section (added during Stage 7 template fill).
+```bash
+claude mcp add context7   --scope user -- npx -y @upstash/context7-mcp
+claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest
+claude mcp add neon       --scope user -- npx -y mcp-remote@latest https://mcp.neon.tech/sse
+claude mcp add postgres   --scope user -- npx -y @modelcontextprotocol/server-postgres <DB_URL>
+claude mcp add supabase   --scope user -- npx -y @supabase/mcp-server-supabase
+claude mcp add vercel     --scope user -- npx -y mcp-remote@latest https://mcp.vercel.com/sse
+claude mcp add stripe     --scope user -- npx -y @stripe/mcp
+```
+
+(If an exact package name has shifted, the agent should look it up rather than guess — `context7` MCP itself can help here once installed.)
 
 ## Stage 6 — Roadmap proposal
 
@@ -492,18 +553,23 @@ Files to update, in priority order:
 ### `docs/context/project-overview.md`
 - Top — product description, "Built for", v1 scope from user's answers.
 - Tech stack table — update Framework, Database, ORM, Auth from Round 2.
-- **§ Agent capabilities** (NEW SECTION) — add a subsection listing the MCPs installed from Stage 5. Format:
+- **§ Agent capabilities** (NEW SECTION) — list the MCPs chosen in Stage 5 with their install commands. **MCPs are NOT yet installed** — the user runs the commands at the end of Stage 9 to keep the install + restart out of this conversation. Write the section with status "Recommended — install at end of `/workflow-init`":
   ```markdown
   ## 🤖 Agent capabilities
 
-  MCPs installed to enable agent-driven workflows:
+  MCPs recommended for this stack. Install commands run at the end of `/workflow-init`
+  (Stage 9 hand-off) — keeping installs out of the discovery flow means an agent
+  restart never wipes the interview context.
 
-  | MCP | Purpose |
-  |---|---|
-  | `neon` | DB introspection + query running |
-  | `context7` | Up-to-date library docs |
-  | `playwright` | Browser-driven testing |
+  | MCP | Purpose | Install command (Claude Code) |
+  |---|---|---|
+  | `context7` | Up-to-date library docs | `claude mcp add context7 --scope user -- npx -y @upstash/context7-mcp` |
+  | `playwright` | Browser-driven testing | `claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest` |
+  | `neon` | DB introspection + queries | `claude mcp add neon --scope user -- npx -y mcp-remote@latest https://mcp.neon.tech/sse` |
+
+  After install: restart your agent. Verify with `claude mcp list`.
   ```
+  Use the actual MCP set captured in Stage 5. If running on Codex/Gemini, swap the install command syntax to that agent's equivalent.
 - "What we're building → v1 surfaces" — populate from Round 4.
 - "Definition of done for v1" — derive 3-5 concrete behaviors.
 
@@ -523,7 +589,7 @@ Files to update, in priority order:
 
 ### `docs/context/current-feature.md`
 - Leave Status/Goals/Notes empty (placeholder comments stay).
-- Append a **History** entry: "**[today's date] — Project bootstrap.** Initialized via `/workflow-init`. Stack: {framework} + {database} + {orm} + {auth}. v1 surfaces: {list}. First feature target: {feature name} (see Stage 8). MCPs installed: {list}."
+- Append a **History** entry: "**[today's date] — Project bootstrap.** Initialized via `/workflow-init`. Stack: {framework} + {database} + {orm} + {auth}. v1 surfaces: {list}. First feature target: {feature name} (see Stage 8). MCPs recommended (install pending — see `project-overview.md` § Agent capabilities): {list}."
 
 ### `AGENTS.md` and `GEMINI.md`
 - Replace `{{Project Name}}` with the real name.
@@ -547,12 +613,34 @@ If yes, invoke `/feature spec`. If no, leave the recommendation as part of the h
 
 ## Stage 9 — Hand off
 
-End with a clear next-steps message:
+Two parts: MCP install commands (if any were chosen in Stage 5), then the standard next-steps.
+
+### Part A — MCP install (if any chosen)
+
+Surface the install commands captured in Stage 5 verbatim, and explain that restarting now is safe because every interview answer is already persisted to disk:
+
+```
+Before you start the first feature, install your recommended MCPs:
+
+  <install command 1>
+  <install command 2>
+  ...
+
+Then restart your agent so they load.
+
+  Safe to restart now — the interview, roadmap, and feature recommendation
+  are all written to docs/context/. The next agent session reads them as
+  context automatically, so you lose nothing.
+```
+
+Skip Part A entirely if Stage 5 was skipped or the user chose no MCPs.
+
+### Part B — Next steps (always)
 
 ```
 You're set up.
 
-• docs/context/ has 5 docs filled with your real context. Edit as you learn more.
+• docs/context/ has the docs filled with your real context. Edit as you learn more.
 • docs/context/roadmap.md has the proposed roadmap. Re-order, add, or remove as priorities shift.
 • docs/context/screenshots/ is empty — drop visual references for features in subfolders matching the feature slug.
 • Run `/feature spec` when you're ready to start the first feature.
