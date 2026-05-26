@@ -253,18 +253,20 @@ For each: ask → get the first answer → invoke the elaboration loop. The one-
 
 If Stage 2a scaffolded a project, **skip the framework question** — you already know it's Next.js, Astro, SvelteKit, or TanStack Start. Just ask the rest.
 
-Otherwise ask via AskUserQuestion (one question per layer, so the user can adjust). Group them as 4 separate questions in a single AskUserQuestion call. Each question maxes out at 4 options (the AskUserQuestion limit); anything else surfaces via the auto-added "Other" choice:
+Otherwise ask via AskUserQuestion (one question per layer, so the user can adjust). Group them as 4 separate questions in a single AskUserQuestion call. Each question maxes out at 4 options (the AskUserQuestion limit); anything else surfaces via the auto-added "Other" choice.
 
-1. **Framework** — Next.js 16 *(default)* / Astro / SvelteKit / TanStack Start
-2. **Database** — Postgres via Neon *(default)* / SQLite / I'll add it later / None
-3. **ORM** — Drizzle *(default for Postgres)* / Prisma / I'll add it later / None
-4. **Auth** — Better Auth *(default)* / Clerk / I'll add it later / None
+**For Framework, the default is real — `create-next-app` runs in Stage 2a.** For the other three, default to "I'll add it later" since the skill records the choice but doesn't actually install the DB/ORM/Auth. Users who want the starter's recommended stack (Drizzle + Better Auth + Postgres Neon) can pick it explicitly in one click; the "recommended" hint is visible on each.
 
-The semantic distinction for the last two questions:
-- **"I'll add it later"** = "I want one, just haven't decided / not setting it up right now." The starter docs stay generic; the user picks specifics later.
+1. **Framework** — Next.js 16 *(default — scaffolded)* / Astro / SvelteKit / TanStack Start
+2. **Database** — I'll add it later *(default)* / Postgres via Neon *(recommended)* / SQLite / None
+3. **ORM** — I'll add it later *(default)* / Drizzle *(recommended for Postgres)* / Prisma / None
+4. **Auth** — I'll add it later *(default)* / Better Auth *(recommended)* / Clerk / None
+
+The semantic distinction for the last three questions:
+- **"I'll add it later"** = "I want one, just haven't decided / not setting it up right now." The starter docs stay generic; the user picks specifics in a future feature spec.
 - **"None"** = "I don't need this layer at all." E.g., a static content site doesn't need a DB → also doesn't need an ORM → likely doesn't need auth either.
 
-**Skip the ORM question entirely** if the user picked "None" for Database — there's nothing to ORM against. In that case, ask just Framework + Database + Auth (3 questions).
+**Skip the ORM question entirely** if the user picked "None" for Database — there's nothing to ORM against. In that case, ask just Framework + Database + Auth (3 questions). If they picked "I'll add it later" for Database, still ask the ORM question — they might know which ORM they want even before the DB is picked.
 
 **ORM/Database pairings worth noting** (in case the user wants Claude to comment):
 - Postgres + Drizzle — what `coding-standards.md` documents; lightweight, edge-friendly
@@ -330,13 +332,14 @@ Files to update, in priority order:
 
 ### `docs/context/coding-standards.md`
 - If the user picked the defaults the file documents (Next.js + TS + Tailwind v4 + Drizzle), leave it untouched.
-- If they picked something different, replace the relevant sections:
+- If they picked **"I'll add it later"** for any of Database / ORM / Auth — strip the specifics from those sections and replace with a TBD note: "Database: TBD — pick when ready, then update this section." Same shape for ORM, Auth. This keeps the file honest about what's actually decided.
+- If they picked a different specific choice, replace the relevant sections:
   - **TypeScript** — stays (universal)
   - **React** — adapt to Svelte / Astro components if not React-based
   - **Next.js** — adapt to chosen framework (Astro / SvelteKit / TanStack Start)
   - **Tailwind v4** — stays (it's in every scaffold path)
-  - **Database** — replace Drizzle paragraph with the chosen ORM's conventions (Prisma migrations vs Drizzle `drizzle-kit`, etc.)
-- Update the opening starter-note to reflect the actual chosen stack (`Framework + DB + ORM + Auth`).
+  - **Database/ORM** — replace Drizzle paragraph with the chosen ORM's conventions (Prisma migrations vs Drizzle `drizzle-kit`, etc.)
+- Update the opening starter-note to reflect the actual chosen stack (e.g., `Next.js + TS + Tailwind v4 + TBD database`).
 
 ### `docs/specs/project-spec.md`
 - Replace `{{Project Name}}` references.
