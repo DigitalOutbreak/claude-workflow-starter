@@ -2,6 +2,8 @@
 name: feature
 description: Manage current feature workflow - spec, load, start, review, explain or complete
 argument-hint: spec|load|start|review|explain|complete
+metadata:
+  internal: true
 ---
 
 # Feature Workflow

@@ -1,6 +1,6 @@
 {
   "name": "@digitaloutbreak/workflow",
-  "version": "0.13.1",
+  "version": "0.14.0",
   "description": "Drop-in workflow scaffold for AI-assisted coding — works with Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, and any agent loading the open agent skills standard. Includes /workflow-init slash command, /feature lifecycle, /cleanup, code-scanner agent, and tool-specific root files (CLAUDE.md / AGENTS.md / GEMINI.md).",
   "bin": {
     "workflow": "bin/cli.js"
