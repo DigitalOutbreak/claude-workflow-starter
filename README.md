@@ -9,18 +9,24 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 ## Two-step setup, one for life
 
 ```sh
-# 1. Install GLOBALLY — adds /workflow-init to every agent on your machine
-npx skills add DigitalOutbreak/workflow -g -y
+# 1. Install GLOBALLY — shows you a picker of every agent you have installed
+npx skills add DigitalOutbreak/workflow -g -s workflow-init
 
 # 2. From any project dir, in your agent:
 /workflow-init
 ```
 
-The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI. With `-g` (global) it installs at the user level for every supported agent — Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, OpenCode, and ~12 others. With `-y` it skips confirmation prompts. The second is what you'll actually use every time you start a project.
+The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI:
 
-### Install only `/workflow-init`, not the bundled skills
+- `-g` forces a **global** install. Without it the CLI auto-detects scope — if you happen to be standing in a git repo, it'd install project-local, which isn't what you want for a slash command you use everywhere.
+- `-s workflow-init` says **just install the bootstrap skill**. The repo ships three skills total — `workflow-init` (the bootstrap entry point), `feature` (lifecycle workflow), and `cleanup` (housekeeping). The last two are **project-local** by design — they get copied into each new project by `/workflow-init` itself. You don't want them as global slash commands.
+- **No `-y`** — the CLI will show you a picker of every detected agent on your machine (Claude Code, Codex, Cursor, Gemini, Copilot, Windsurf, OpenCode, and ~10 more) so you can tick the ones you actually want. Press the spacebar to toggle, Enter to confirm.
 
-The repo ships three skills total: `workflow-init` (the bootstrap command), `feature` (lifecycle workflow), and `cleanup` (housekeeping). By default `-g -y` installs all three. If you only want `/workflow-init`:
+The second is what you'll actually use every time you start a project.
+
+### Skip the picker (install for all detected agents at once)
+
+Add `-y` if you want one-shot install without picking:
 
 ```sh
 npx skills add DigitalOutbreak/workflow -g -y -s workflow-init
@@ -28,10 +34,10 @@ npx skills add DigitalOutbreak/workflow -g -y -s workflow-init
 
 ### Install project-local instead of global
 
-Omit `-g` to install into the current project's `.agents/skills/` (so the skills are checked into version control with the project):
+Omit `-g` to install into the current project's `.agents/skills/` (skills are then checked into version control with the project):
 
 ```sh
-npx skills add DigitalOutbreak/workflow -y
+npx skills add DigitalOutbreak/workflow -s workflow-init
 ```
 
 > Prefer our own CLI? Backwards-compat fallback:
