@@ -9,21 +9,37 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 ## Two-step setup, one for life
 
 ```sh
-# 1. Run ONCE per machine — teaches your agent the /workflow-init slash command
-npx skills add DigitalOutbreak/claude-workflow-starter
+# 1. Install GLOBALLY — adds /workflow-init to every agent on your machine
+npx skills add DigitalOutbreak/claude-workflow-starter -g -y
 
 # 2. From any project dir, in your agent:
 /workflow-init
 ```
 
-The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI — it auto-detects which agents you have installed (Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, etc.) and installs the slash command at the right path for each. The second is what you'll actually use every time you start a project.
+The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI. With `-g` (global) it installs at the user level for every supported agent — Claude Code, Codex, Cursor, Gemini, Copilot, Cline, Windsurf, OpenCode, and ~12 others. With `-y` it skips confirmation prompts. The second is what you'll actually use every time you start a project.
 
-> Prefer not to use `npx skills add`? We also ship our own CLI as a fallback:
+### Install only `/workflow-init`, not the bundled skills
+
+The repo ships three skills total: `workflow-init` (the bootstrap command), `feature` (lifecycle workflow), and `cleanup` (housekeeping). By default `-g -y` installs all three. If you only want `/workflow-init`:
+
+```sh
+npx skills add DigitalOutbreak/claude-workflow-starter -g -y -s workflow-init
+```
+
+### Install project-local instead of global
+
+Omit `-g` to install into the current project's `.agents/skills/` (so the skills are checked into version control with the project):
+
+```sh
+npx skills add DigitalOutbreak/claude-workflow-starter -y
+```
+
+> Prefer our own CLI? Backwards-compat fallback:
 > ```sh
-> npx @digitaloutbreak/workflow-init        # interactive: pick which of Claude/Codex/Gemini to install
-> npx @digitaloutbreak/workflow-init --all  # install for all three, no prompts
+> npx @digitaloutbreak/workflow-init        # interactive: pick from Claude/Codex/Gemini
+> npx @digitaloutbreak/workflow-init --all  # all three, no prompts
 > ```
-> Same end result. The `npx skills add` path is preferred because it supports more agents and uses a shared, well-known install convention.
+> Same end result but smaller agent set (3 vs ~15+). `npx skills add` is preferred.
 
 ### What `/workflow-init` does
 
