@@ -37,14 +37,30 @@ Quote the CLI's file list and next-steps output back to the user. Then tell them
 
 Use `AskUserQuestion` for structured choices, plain prose for open-ended ones. Run in rounds so the user isn't overwhelmed by a 10-question form. **One AskUserQuestion call per round** so the user can adjust mid-stream.
 
-### Round 1 — Identity (required)
+### Elaboration loops — the universal rule for prose rounds
 
-Before any AskUserQuestion, ask in prose:
+Planning even a simple product is a back-and-forth. After the user's first answer to ANY prose question (Round 1, Round 3, or any future prose round), do not race to the next question. Ask:
+
+> "Want to dig into that more, refine it, or are you good to move on?"
+
+Then **listen**. The user has three modes here:
+
+1. **"Move on"** (explicit or implicit "yes/next/that's it") → record their answer verbatim, move to the next question.
+2. **"Let me think out loud"** → engage. Ask follow-ups, mirror back what you heard, propose tighter phrasings if they're circling, point out tensions ("you said X but also Y — which one's load-bearing?"). Stay in this mode until they say move on.
+3. **"Help me figure it out"** → make a recommendation. Pull from what they've already told you about the product, the primary user, the unfair advantage. Offer 2-3 framings and ask which lands. If they reject all, ask what's wrong with each — that reveals what they actually want.
+
+When you finally capture the answer, **paraphrase back in one sentence** and confirm before recording it. "So you'd say: <X>. Sound right?" If they tweak, accept the tweak and move on.
+
+Don't gate the elaboration loop behind AskUserQuestion — it's natural prose. AskUserQuestion is for clearly bounded choices (stack, surfaces). Strategy/identity/recommendations are conversation, not multiple choice.
+
+### Round 1 — Identity (required, may iterate)
+
+Ask in prose, one question at a time (not all at once):
 - "What's the project's name?"
 - "One sentence — what does it do?"
 - "Who's the primary user? (you / a team / a customer / the public)"
 
-Capture the answers verbatim. The one-sentence description is load-bearing — push back gently if they give you a paragraph and ask for the tightest version.
+For each: ask → get the first answer → invoke the elaboration loop. The one-sentence description is the most worth iterating on — if they give you a paragraph, work with them to compress it. Tight description compounds across every doc the starter writes.
 
 ### Round 2 — Tech stack (AskUserQuestion)
 
@@ -54,18 +70,24 @@ Ask three multi-choice questions in a single AskUserQuestion call:
 2. **Database** — Postgres via Neon (default) / Postgres self-hosted / SQLite / None / Other
 3. **Auth** — Better Auth (default) / Clerk / Auth0 / NextAuth / None yet / Other
 
-Mark the defaults that match what the starter's `coding-standards.md` already documents — if they pick those, you skip the standards rewrite.
+Mark the defaults that match what the starter's `coding-standards.md` already documents — if they pick those, you skip the standards rewrite. (No elaboration loop needed here — these are discrete picks. If the user wants to talk through tradeoffs, they will, and you respond in prose.)
 
-### Round 3 — Strategy (open-ended)
+### Round 3 — Strategy (open-ended, expect iteration)
 
-Ask in prose, briefly:
-- "Why does this need to exist? In one or two sentences — the bet you're making."
-- "What's your unfair advantage here? A first customer, deep expertise, access to data nobody else has, something you'll learn by doing it?"
-- "What's the smallest thing that proves the bet? The v1 shippable."
+This round will be the longest. Strategy is where the product gets sharpened, and the elaboration loop is the whole point. Ask in prose, ONE QUESTION AT A TIME, with the elaboration loop after each:
 
-If the user gives short or vague answers, prompt once for a more specific version — but don't grind. A thin thesis is OK; they'll sharpen it later.
+- **"Why does this need to exist? In one or two sentences — the bet you're making."**
+  → Then loop. Push for specificity. "The bet" should be a falsifiable belief, not a vague aspiration. If they say "people need better X," ask "*which* people, and what's the evidence they're underserved?"
 
-### Round 4 — Surfaces (AskUserQuestion)
+- **"What's your unfair advantage here?"**
+  → Then loop. Probe: first customer, deep expertise, access to data, time to experiment, an internal use case you're already living. If they don't have one, that's important to surface — the thesis template's "Laboratory" section will read differently.
+
+- **"What's the smallest thing that proves the bet?"**
+  → Then loop. This is the v1 shippable. If they describe a feature-rich app, narrow them down. "If you could only ship ONE screen / surface / endpoint and it would have to prove the bet, what would it be?" The thesis memo's "Daily Brief" pattern is the model — ugly, useful, shippable in a week.
+
+A thin thesis is still OK — you've offered the iteration; if they don't want it, move on. The point is to *make the depth available*, not to force it.
+
+### Round 4 — Surfaces (AskUserQuestion + elaboration if needed)
 
 Based on the description, suggest 2-4 plausible v1 surfaces and ask the user to confirm/edit. Examples:
 - For an inbox/triage product: Inbox · Contacts · Settings · Ask
@@ -73,7 +95,7 @@ Based on the description, suggest 2-4 plausible v1 surfaces and ask the user to 
 - For a dashboard: Dashboard · Reports · Settings
 - For a developer tool: CLI / Studio · Logs · Settings
 
-Phrase as: "I'd suggest these surfaces for v1 — adjust as needed." Single-select isn't right here; use multiSelect with proposed surfaces + "let me describe them in my own words" fallback.
+Phrase as: "I'd suggest these surfaces for v1 — adjust as needed." Use multiSelect with proposed surfaces + "let me describe them in my own words" fallback. If they pick the fallback or push back on the proposed set, drop into the elaboration loop and work out the right list together.
 
 ## Stage 3 — Fill the templates
 
@@ -146,7 +168,17 @@ Look at the user's answers and synthesize. Examples:
 
 Pitch the recommendation in 2-3 sentences. Say *why* it's the right first slice (proves which assumption, defers which complexity). Then ask:
 
-> "Want me to `/feature spec` this as your first feature now, or hold off?"
+> "Does that feel right, or want to talk through it / try a different cut?"
+
+Invoke the elaboration loop here too — first features are worth refining. The user might:
+- **Accept** → move on to the next prompt below.
+- **Counter-propose** → engage. "You're thinking X instead? Walk me through why — what's the assumption that's worth testing first?" Iterate until you both agree.
+- **Ask for alternatives** → offer 2-3 honest options with the tradeoff for each ("this proves X but punts Y; this proves Y but you need Z first"). Let them pick.
+- **Reject the framing** → that's useful signal. Maybe you misread the product. Go back to Round 3 if needed.
+
+When the first feature is settled, paraphrase it back ("So feature #1 is: <X>. The bet it tests: <Y>. What you're punting: <Z>.") and ask:
+
+> "Want me to `/feature spec` this now, or hold off?"
 
 If they say yes, invoke `/feature spec` with a concise brief built from the recommendation. If they say no, just leave the recommendation as part of the history entry in `current-feature.md` and stop.
 
