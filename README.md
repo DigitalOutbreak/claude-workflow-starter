@@ -41,10 +41,10 @@ npx skills add DigitalOutbreak/workflow
 
 > Prefer our own CLI? Backwards-compat fallback:
 > ```sh
-> npx @digitaloutbreak/workflow        # interactive: pick from Claude/Codex/Gemini
-> npx @digitaloutbreak/workflow --all  # all three, no prompts
+> npx @digitaloutbreak/workflow        # interactive: pick from Claude / Codex / Gemini
+> npx @digitaloutbreak/workflow --all  # install for Claude + Codex + Gemini, no prompts
 > ```
-> Same end result but smaller agent set (3 vs ~15+). `npx skills add` is preferred.
+> Same end result but smaller agent set — only Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`). `npx skills add` is preferred.
 
 ### What `/workflow-init` does
 
@@ -57,7 +57,7 @@ npx skills add DigitalOutbreak/workflow
 ### Non-interactive install
 
 ```sh
-npx @digitaloutbreak/workflow --all                       # all three agents
+npx @digitaloutbreak/workflow --all                       # Claude + Codex + Gemini
 npx @digitaloutbreak/workflow --claude                    # just Claude Code
 npx @digitaloutbreak/workflow --claude --gemini           # specific combo
 npx @digitaloutbreak/workflow --codex                     # add Codex later, leave others
@@ -191,13 +191,13 @@ Three root-level briefs ship together — pick whichever your agent reads:
 | `AGENTS.md` | Cursor, Cline, Aider, Continue, etc. | Universal pointer — no tool-specific syntax. Tells the agent to read the five context docs manually. |
 | `GEMINI.md` | Gemini Code Assist and other Gemini-based agents | Same content as AGENTS.md, addressed to Gemini specifically. |
 
-The starter installs all three so collaborators can use whatever tool they prefer. All three point at the same five context docs in `docs/context/`.
+The starter installs all three root files (CLAUDE.md / AGENTS.md / GEMINI.md) so collaborators on the same project can use whatever agent they prefer. All three point at the same five context docs in `docs/context/`.
 
 ## CLI reference
 
 ```
 npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
-npx @digitaloutbreak/workflow --all                 Install for all three agents, no prompts
+npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini, no prompts
 npx @digitaloutbreak/workflow --claude --gemini     Install for specific agents
 npx @digitaloutbreak/workflow init [target]         (advanced) Drop workflow files directly into target
 npx @digitaloutbreak/workflow --help                Show usage

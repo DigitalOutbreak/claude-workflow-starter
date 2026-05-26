@@ -324,14 +324,15 @@ For each: ask → first answer → elaboration loop. The one-sentence descriptio
 
 #### If project type = Web
 
-If Stage 2 scaffolded a project, **skip the framework question** — you already know. Just ask the rest.
+**Framework is already known by the time Round 2 runs:**
+- New + scaffolded → picked in Stage 1.3 (e.g., Next.js + shadcn)
+- Existing project → detect from `package.json` deps (`next` / `astro` / `svelte` / `@tanstack/start-router`) and confirm with the user
 
-Otherwise ask 4 sub-questions in one prompt:
+So skip the framework question. Ask the remaining 3:
 
-1. **Framework** — Next.js 16 *(default — scaffolded)* / Astro / SvelteKit / TanStack Start
-2. **Database** — I'll add it later *(default)* / Postgres via Neon *(recommended)* / SQLite / None
-3. **ORM** — I'll add it later *(default)* / Drizzle *(recommended)* / Prisma / None
-4. **Auth** — I'll add it later *(default)* / Better Auth *(recommended)* / Clerk / None
+1. **Database** — I'll add it later *(default)* / Postgres via Neon *(recommended)* / SQLite / None
+2. **ORM** — I'll add it later *(default)* / Drizzle *(recommended)* / Prisma / None
+3. **Auth** — I'll add it later *(default)* / Better Auth *(recommended)* / Clerk / None
 
 #### If project type = Backend / API / service
 
@@ -426,10 +427,22 @@ If pushed back, drop into elaboration. Whichever framing you use, capture 2-4 it
 >
 > MCP installs require an agent restart. A restart at Stage 5 destroys the conversation context, so everything captured in the discovery interview (Rounds 1-4) and the roadmap (Stage 6, not yet run) is **permanently lost** before Stage 7 writes it to disk. Stage 5 is a DECISION step only — pick which MCPs to recommend, then move on to Stages 6-7 so the docs are filled. Install commands surface in Stage 9 (hand-off), after every interview answer is safely persisted to the filesystem.
 
+### Stage 5.0 — Ask about external service calls
+
+Before deciding which MCPs to suggest (or whether to skip the stage), ask in plain prose:
+
+> "Quick check before I suggest MCPs: will this project call any external services from code? Examples: Stripe / payment processors, OpenAI / AI providers, Vercel deploys, Figma, lead systems like GHL, transactional email, analytics, etc. Just a yes/no or a quick list of which ones."
+
+This drives two decisions:
+- Whether to skip Stage 5 entirely (skip rule below)
+- Which MCPs to suggest (a "yes, Stripe" answer pulls Stripe MCP into the list)
+
+### Skip rule
+
 > **Skip this stage entirely if the project is "simple"** — defined as ALL of:
 > - Database = None
 > - Auth = None
-> - User answered "no" to: "Will you call any external services from code? (Stripe, OpenAI, GHL, deploys, etc.)"
+> - User answered "no" to the external-services question (Stage 5.0)
 >
 > Examples that skip: portfolio sites, static content pages, pure CLI utilities with no external calls, libraries with no external integrations. MCPs don't help much when there's no data layer or external behavior to talk to.
 
@@ -490,7 +503,7 @@ claude mcp add stripe     --scope user -- npx -y @stripe/mcp
 
 ## Stage 6 — Roadmap proposal
 
-> **Skip this stage if "Use existing project" was picked in Stage 1.1.** For existing projects, the agent doesn't know what's already built — proposing a roadmap that says "Build app shell" when one exists is wrong. Instead, briefly inspect the codebase and either skip the roadmap or propose a roadmap that picks up from current state.
+> **Skip this stage if "Use existing project" was picked in Stage 1.2** (Web flow) OR if the project type from Stage 1.1 is Backend / Mobile / Desktop / Other and the parent directory already contains a codebase. For existing projects, the agent doesn't know what's already built — proposing a roadmap that says "Build app shell" when one exists is wrong. Instead, briefly inspect the codebase and either skip the roadmap or propose a roadmap that picks up from current state.
 
 For new projects, generate a roadmap proposal based on:
 - Product description (Round 1)
@@ -555,8 +568,8 @@ The agent fills this in based on which idioms applied.
 (none yet — pre-launch)
 
 ## Recurring cadence
-- Run audit pass (UI critique + accessibility) every 2 milestones.
-- Run refactor scanner every 3 milestones.
+- Every 2-3 milestones, spawn the bundled `code-scanner` agent (`.claude/agents/code-scanner.md`) on the changed areas — security + quality + dead-code pass in parallel.
+- Every 2-3 milestones, do a manual UI audit pass: walk the user-facing flows, check accessibility (keyboard nav + screen reader + contrast), check responsive breakpoints. Use harness-built-in slash commands if your agent has them (`/audit`, `/critique`, `/polish` in Claude Code).
 - Bugfixes go on `fix/<slug>` branches, NOT in this roadmap.
 ```
 
