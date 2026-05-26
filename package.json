@@ -1,0 +1,46 @@
+{
+  "name": "@digitaloutbreak/claude-workflow",
+  "version": "0.1.0",
+  "description": "Drop-in workflow scaffold for Claude Code projects — CLAUDE.md, AGENTS.md, /feature lifecycle, /cleanup, code-scanner agent.",
+  "bin": {
+    "claude-workflow-starter": "bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "skill/",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "LICENSE",
+    "docs/",
+    ".claude/"
+  ],
+  "scripts": {
+    "test": "node bin/cli.js --help"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "workflow",
+    "starter",
+    "scaffold",
+    "agents",
+    "ai-agents",
+    "anthropic"
+  ],
+  "license": "MIT",
+  "author": "Joey Alvarado <joeynalvarado@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DigitalOutbreak/claude-workflow-starter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DigitalOutbreak/claude-workflow-starter/issues"
+  },
+  "homepage": "https://github.com/DigitalOutbreak/claude-workflow-starter#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

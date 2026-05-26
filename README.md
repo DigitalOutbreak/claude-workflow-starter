@@ -1,34 +1,51 @@
 # Claude Workflow Starter
 
-A drop-in workflow scaffold for Claude Code projects. Includes the CLAUDE.md anchor, five auto-imported context docs, the `/feature` lifecycle skill (spec → load → start → complete), the `/cleanup` housekeeping skill, the `code-scanner` agent, and an `AGENTS.md` for non-Claude-Code agents (Cursor, Cline, Aider, etc.).
+A drop-in workflow scaffold for Claude Code projects. Includes the `CLAUDE.md` anchor, five auto-imported context docs, the `/feature` lifecycle skill (spec → load → start → complete), the `/cleanup` housekeeping skill, the `code-scanner` agent, and an `AGENTS.md` for non-Claude-Code agents (Cursor, Cline, Aider, Continue, etc.).
 
 Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https://github.com/DigitalOutbreak/digitaloutbreak-os).
 
-## Install
+## Install (one command)
+
+From inside any new project directory:
 
 ```sh
-# 1. Clone the starter wherever you keep templates
-git clone https://github.com/DigitalOutbreak/claude-workflow-starter.git ~/Developer/_starters/claude-workflow
-
-# 2. Install the /workflow-init global skill (self-configuring — detects where you cloned)
-bash ~/Developer/_starters/claude-workflow/bin/setup.sh
+npx @digitaloutbreak/claude-workflow init
 ```
 
-That's it. From any Claude Code session anywhere, you can now run:
+Or target an explicit path:
+
+```sh
+npx @digitaloutbreak/claude-workflow init ./my-new-app
+```
+
+That's it. No clone, no PATH setup, no folder structure assumptions. `npx` handles caching; the installer refuses to overwrite if any target files already exist.
+
+> Until the package is published to npm, you can still run it straight from GitHub:
+> ```sh
+> npx github:DigitalOutbreak/claude-workflow-starter init
+> ```
+
+## Use the slash command (optional)
+
+Install once per machine to add `/workflow-init` to every Claude Code session:
+
+```sh
+npx @digitaloutbreak/claude-workflow install
+```
+
+Then from any Claude Code session, in any project directory:
 
 ```
-/workflow-init                  # install starter into current directory
-/workflow-init ./my-new-app     # install into a specific path
+/workflow-init                  # install starter into current dir
+/workflow-init ./my-new-app     # or specify a path
 ```
 
-If you ever move the starter, just re-run `setup.sh` from its new location — the skill re-points itself.
+The slash command is a thin wrapper that calls the same `npx … init` command. Skip the install step if you'd rather always type the full npx command — the functionality is identical.
 
-## What gets installed in a new project
-
-The `/workflow-init` skill (or `bin/init.sh` directly) writes these files into your target project:
+## What gets installed
 
 ```
-CLAUDE.md                            ← root brief, with @-imports
+CLAUDE.md                            ← root brief, with @-imports (Claude Code)
 AGENTS.md                            ← universal pointer for any AI agent
 docs/
 ├── context/                         ← auto-imported every session
@@ -49,7 +66,7 @@ docs/
     └── cleanup/                     ← /cleanup  housekeeping scan
 ```
 
-The starter's own `README.md`, `README.html`, `LICENSE`, `bin/`, and `skill/` are NOT installed — they describe the starter, not whatever project you're starting.
+The starter's own `README.md`, `README.html`, `LICENSE`, `bin/`, `skill/`, and `package.json` are NOT installed — they describe the starter, not whatever project you're starting.
 
 ## What to fill in after install
 
@@ -57,12 +74,12 @@ Three files determine whether the AI context is useful or generic. Spend an hour
 
 | File | What to write |
 |---|---|
-| `CLAUDE.md` | Replace `{{Project Name}}` and the project layout. Keep `@`-imports and commands. |
-| `docs/context/thesis.md` | Your strategic memo — why you're building this, the bet, the moat, failure modes. |
+| `CLAUDE.md` | Replace `{{Project Name}}` and the project layout. Keep the `@`-imports and commands list. |
+| `docs/context/thesis.md` | Your strategic memo — why you're building this, the bet, the moat, the failure modes. |
 | `docs/context/project-overview.md` | The polished summary auto-loaded every session — scope, stack, surfaces, decisions log. |
-| `docs/specs/project-spec.md` | The deeper authoritative spec — schema, contracts, env keys. Read on demand only. |
+| `docs/specs/project-spec.md` | Deeper authoritative spec — schema, contracts, env keys. Read on demand only. |
 
-The starter files have `{{Placeholders}}` and bracketed `[Replace with...]` prompts inside, plus scaffolding for the sections we've found load-bearing.
+The template files have `{{Placeholders}}` and bracketed `[Replace with...]` prompts plus scaffolding for the sections we've found load-bearing.
 
 ## How the workflow works
 
@@ -84,11 +101,30 @@ Features ship through a fixed 7-step loop:
 
 Each command has its own action file in `.claude/skills/feature/actions/`. Read [`docs/context/ai-interaction.md`](./docs/context/ai-interaction.md) (after install) for the full workflow rules.
 
-## AGENTS.md — for non-Claude-Code users
+## AGENTS.md — for non-Claude-Code agents
 
 `AGENTS.md` is a sibling to `CLAUDE.md` that points any AI agent (Cursor, Cline, Aider, Continue, etc.) at the same five context docs. It explicitly notes which parts of the workflow are Claude Code-specific (the `@`-imports, slash commands, agents) and which are tool-agnostic (the docs themselves, the workflow philosophy).
 
-The starter installs both — your collaborators can use whatever tool they prefer.
+The starter installs both — collaborators can use whatever tool they prefer.
+
+## CLI reference
+
+```
+npx @digitaloutbreak/claude-workflow init [target]   Install starter into target (default: cwd)
+npx @digitaloutbreak/claude-workflow install         Install the /workflow-init global skill
+npx @digitaloutbreak/claude-workflow --help          Show usage
+```
+
+## Don't have npx?
+
+Two fallback paths:
+
+1. **Clone the repo and run the bash scripts directly:**
+   ```sh
+   git clone https://github.com/DigitalOutbreak/claude-workflow-starter.git ~/Developer/_starters/claude-workflow
+   bash ~/Developer/_starters/claude-workflow/bin/init.sh ./my-app
+   ```
+2. **Install Node.js first** (https://nodejs.org/) — `npx` is bundled with every Node install ≥ 5.2.
 
 ## Customizing the starter
 
@@ -96,21 +132,19 @@ If you improve the workflow in a real project, copy the change back:
 
 ```sh
 # Example: improved /feature complete
+gh repo clone DigitalOutbreak/claude-workflow-starter
 cp ~/projects/my-app/.claude/skills/feature/actions/complete.md \
-   ~/Developer/_starters/claude-workflow/.claude/skills/feature/actions/complete.md
-
-# Then commit + push to share with everyone using the starter
-cd ~/Developer/_starters/claude-workflow
-git add . && git commit -m "improve /feature complete" && git push
+   claude-workflow-starter/.claude/skills/feature/actions/complete.md
+cd claude-workflow-starter && git commit -am "improve /feature complete" && git push
 ```
 
-The starter is a single-file-tree snapshot — there's no framework or build step. Edit what you need.
+Bump the version in `package.json` and `npm publish` to roll out to everyone.
 
 ## What's NOT in this starter
 
 | Missing | Why |
 |---|---|
-| Framework / `package.json` | Bring your own stack. The starter is workflow scaffold, not a Next.js template. |
+| Framework / `package.json` (for the target project) | Bring your own stack. The starter is workflow scaffold, not a Next.js template. |
 | `.env*` files | Per-project secrets. |
 | Schema / migrations / seed | Domain-specific. |
 | UI components / shadcn primitives | Install per project. |
@@ -118,10 +152,10 @@ The starter is a single-file-tree snapshot — there's no framework or build ste
 
 ## Visual how-to
 
-There's an HTML version of this README with screenshots and a stepper at [`README.html`](./README.html). Open it locally:
+[`README.html`](./README.html) has the visual version of this doc — color-coded file types, a stepper for the feature lifecycle, and the file inventory tree. Open locally after cloning:
 
 ```sh
-open ~/Developer/_starters/claude-workflow/README.html
+open ./README.html
 ```
 
 ## License

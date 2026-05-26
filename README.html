@@ -582,40 +582,51 @@
         <!-- ── Quick start ─────────────────────────────────────── -->
         <h2 id="quickstart" data-marker="03">Quick start</h2>
 
-        <p><strong>One-time setup</strong> (per machine):</p>
+        <p>
+          <strong>One command, from any new project directory:</strong>
+        </p>
 
-        <pre class="cli"><code><span class="comment"># 1. Clone the starter wherever you keep templates</span>
-<span class="prompt">$</span> git clone https://github.com/DigitalOutbreak/claude-workflow-starter.git \
-       ~/Developer/_starters/claude-workflow
-
-<span class="comment"># 2. Install the /workflow-init global skill (self-configuring)</span>
-<span class="prompt">$</span> bash ~/Developer/_starters/claude-workflow/bin/setup.sh</code></pre>
+        <pre class="cli"><code><span class="prompt">$</span> npx @digitaloutbreak/claude-workflow init</code></pre>
 
         <p>
-          <strong>From any Claude Code session</strong>, in any project
-          directory:
+          Or target an explicit path:
         </p>
+
+        <pre class="cli"><code><span class="prompt">$</span> npx @digitaloutbreak/claude-workflow init ./my-new-app</code></pre>
+
+        <p>
+          That's it. No clone, no folder structure assumptions, no PATH
+          setup. <code>npx</code> caches the package; the installer refuses
+          to overwrite if any target files exist.
+        </p>
+
+        <p class="muted">
+          Until the package is published to npm, run it straight from
+          GitHub:
+        </p>
+
+        <pre class="cli"><code><span class="prompt">$</span> npx github:DigitalOutbreak/claude-workflow-starter init</code></pre>
+
+        <h3>Optional: install the slash command</h3>
+
+        <p>
+          One-time per machine — adds <code>/workflow-init</code> to every
+          Claude Code session:
+        </p>
+
+        <pre class="cli"><code><span class="prompt">$</span> npx @digitaloutbreak/claude-workflow install</code></pre>
+
+        <p>Then from any Claude Code session:</p>
 
         <pre class="cli"><code><span class="prompt">/</span>workflow-init                  <span class="comment"># install starter into current dir</span>
 <span class="prompt">/</span>workflow-init ./my-new-app     <span class="comment"># or specify a path</span></code></pre>
 
-        <p>
-          Behind the scenes, the skill calls
-          <code>bin/init.sh</code> with the right target. The script refuses
-          to overwrite if any target files exist, so you can't clobber a
-          project you forgot was there.
+        <p class="muted">
+          The slash command is a thin wrapper that calls the same
+          <code>npx … init</code>. Skip the install if you'd rather always
+          type the full <code>npx</code> command — the functionality is
+          identical.
         </p>
-
-        <p>
-          You can also call the script directly (e.g., from a non-Claude
-          shell):
-        </p>
-
-        <pre class="cli"><code><span class="prompt">$</span> cd ~/projects/my-new-app
-<span class="prompt">$</span> bash ~/Developer/_starters/claude-workflow/bin/init.sh
-
-<span class="comment"># or, target an explicit path:</span>
-<span class="prompt">$</span> bash ~/Developer/_starters/claude-workflow/bin/init.sh ./somewhere-else</code></pre>
 
         <p>The script outputs each file it adds and ends with the four edits you should make next:</p>
 
@@ -832,18 +843,20 @@ Done. Next:
         <!-- ── File inventory ──────────────────────────────────── -->
         <h2 id="files" data-marker="06">File inventory</h2>
         <div class="tree">
-<span class="dir">claude-workflow/</span>
+<span class="dir">claude-workflow-starter/</span>
 ├── <span class="name">README.md</span>            <span class="note-text">— markdown source for this page</span>
 ├── <span class="name">README.html</span>          <span class="note-text">— what you're reading right now</span>
 ├── <span class="name">LICENSE</span>              <span class="note-text">— MIT</span>
+├── <span class="name">package.json</span>         <span class="note-text">— npm package metadata + bin entry</span>
 ├── <span class="name">CLAUDE.md</span>            <span class="note-text">— root brief, @-imports + placeholders</span>
 ├── <span class="name">AGENTS.md</span>            <span class="note-text">— universal pointer for any AI agent</span>
 ├── <span class="dir">bin/</span>
-│   ├── <span class="name">init.sh</span>          <span class="note-text">— copies starter files into a target project</span>
-│   └── <span class="name">setup.sh</span>         <span class="note-text">— installs the /workflow-init global skill</span>
+│   ├── <span class="name">cli.js</span>           <span class="note-text">— Node CLI (the one npx runs)</span>
+│   ├── <span class="name">init.sh</span>          <span class="note-text">— bash fallback for direct invocation</span>
+│   └── <span class="name">setup.sh</span>         <span class="note-text">— bash fallback for installing the global skill</span>
 ├── <span class="dir">skill/</span>
 │   └── <span class="dir">workflow-init/</span>
-│       └── <span class="name">skill.md</span>     <span class="note-text">— skill template (setup.sh patches the path in)</span>
+│       └── <span class="name">skill.md</span>     <span class="note-text">— global skill — delegates to npx</span>
 ├── <span class="dir">docs/</span>
 │   ├── <span class="dir">context/</span>          <span class="note-text">— auto-imported every session</span>
 │   │   ├── <span class="name">thesis.md</span>            <span class="note-text">— TEMPLATE — strategic memo</span>

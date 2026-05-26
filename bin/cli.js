@@ -1,0 +1,247 @@
+#!/usr/bin/env node
+// claude-workflow-starter — Node CLI
+//
+// Usage:
+//   npx @digitaloutbreak/claude-workflow init [target]   # install starter into target (default cwd)
+//   npx @digitaloutbreak/claude-workflow install         # install the /workflow-init global skill
+//   npx @digitaloutbreak/claude-workflow --help
+//
+// No external deps — uses Node's built-in fs/path/os only.
+
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+
+const PKG_ROOT = path.resolve(__dirname, "..");
+
+// Files we copy verbatim into the target project.
+const FILES = [
+  "CLAUDE.md",
+  "AGENTS.md",
+  "docs/context/thesis.md",
+  "docs/context/project-overview.md",
+  "docs/context/coding-standards.md",
+  "docs/context/ai-interaction.md",
+  "docs/context/current-feature.md",
+  "docs/context/backlog.md",
+  "docs/specs/project-spec.md",
+  ".claude/agents/code-scanner.md",
+];
+
+// Directories we copy recursively.
+const DIRS = [".claude/skills/feature", ".claude/skills/cleanup"];
+
+// Empty placeholder dirs to create.
+const EMPTY_DIRS = ["docs/context/features"];
+
+// ────────────────────────────────────────────────────────────────────── helpers
+
+function exists(p) {
+  try {
+    fs.accessSync(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function copyFile(src, dest) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(src, dest);
+}
+
+function copyDir(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const srcChild = path.join(src, entry.name);
+    const destChild = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDir(srcChild, destChild);
+    } else if (entry.isFile()) {
+      fs.copyFileSync(srcChild, destChild);
+    }
+  }
+}
+
+function color(code, text) {
+  if (!process.stdout.isTTY) return text;
+  return `\x1b[${code}m${text}\x1b[0m`;
+}
+const green = (t) => color("32", t);
+const red = (t) => color("31", t);
+const dim = (t) => color("2", t);
+const bold = (t) => color("1", t);
+
+// ────────────────────────────────────────────────────────────────────── init
+
+function cmdInit(args) {
+  const targetArg = args[0] || ".";
+  const target = path.resolve(process.cwd(), targetArg);
+
+  if (!exists(target)) {
+    console.error(red(`error: target '${target}' does not exist.`));
+    console.error("       Create it first, or pass an existing path.");
+    process.exit(1);
+  }
+
+  if (!fs.statSync(target).isDirectory()) {
+    console.error(red(`error: target '${target}' is not a directory.`));
+    process.exit(1);
+  }
+
+  console.log(`${dim("starter:")} ${PKG_ROOT}`);
+  console.log(`${dim("target: ")} ${target}`);
+  console.log("");
+
+  // Conflict check.
+  const conflicts = [];
+  for (const f of FILES) {
+    if (exists(path.join(target, f))) conflicts.push(f);
+  }
+  for (const d of DIRS) {
+    if (exists(path.join(target, d))) conflicts.push(d + "/");
+  }
+  if (conflicts.length > 0) {
+    console.error(
+      red("error: target already has these — refusing to overwrite:")
+    );
+    for (const c of conflicts) console.error(`  - ${c}`);
+    console.error("");
+    console.error(
+      "Remove or rename them first, or pick a fresh target directory."
+    );
+    process.exit(2);
+  }
+
+  // Copy files.
+  for (const f of FILES) {
+    const src = path.join(PKG_ROOT, f);
+    const dest = path.join(target, f);
+    if (!exists(src)) {
+      console.error(red(`error: missing source ${f} in package`));
+      process.exit(3);
+    }
+    copyFile(src, dest);
+    console.log(`  ${green("+")} ${f}`);
+  }
+  for (const d of DIRS) {
+    const src = path.join(PKG_ROOT, d);
+    const dest = path.join(target, d);
+    copyDir(src, dest);
+    console.log(`  ${green("+")} ${d}/`);
+  }
+  for (const d of EMPTY_DIRS) {
+    fs.mkdirSync(path.join(target, d), { recursive: true });
+    console.log(`  ${green("+")} ${d}/ ${dim("(empty)")}`);
+  }
+
+  console.log("");
+  console.log(bold("Done. Next:"));
+  console.log("  1. Edit CLAUDE.md — replace {{Project Name}} and the project layout.");
+  console.log("  2. Fill in docs/context/thesis.md — your strategic memo.");
+  console.log("  3. Fill in docs/context/project-overview.md — what you're building.");
+  console.log("  4. Adjust docs/context/coding-standards.md if your stack differs.");
+  console.log("  5. Sketch docs/specs/project-spec.md when implementation needs deeper detail.");
+  console.log("  6. Start a Claude session — CLAUDE.md and the @-imports load automatically.");
+}
+
+// ────────────────────────────────────────────────────────────────────── install
+
+function cmdInstall() {
+  const skillSrc = path.join(PKG_ROOT, "skill", "workflow-init", "skill.md");
+  if (!exists(skillSrc)) {
+    console.error(red(`error: skill source not found at ${skillSrc}`));
+    process.exit(1);
+  }
+
+  const skillDestDir = path.join(os.homedir(), ".claude", "skills", "workflow-init");
+  const skillDest = path.join(skillDestDir, "skill.md");
+
+  fs.mkdirSync(skillDestDir, { recursive: true });
+  fs.copyFileSync(skillSrc, skillDest);
+
+  console.log(`${dim("source:")} ${skillSrc}`);
+  console.log(`${dim("dest:  ")} ${skillDest}`);
+  console.log("");
+  console.log(green("Installed /workflow-init global skill."));
+  console.log("");
+  console.log("Try it from any Claude Code session:");
+  console.log("  /workflow-init           # install starter into current dir");
+  console.log("  /workflow-init ./my-app  # install starter into ./my-app");
+  console.log("");
+  console.log(
+    dim(
+      "The skill just delegates to `npx @digitaloutbreak/claude-workflow init` —"
+    )
+  );
+  console.log(
+    dim(
+      "no absolute paths to maintain, no need to re-run install when you move things."
+    )
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────── help
+
+function cmdHelp() {
+  const help = `
+${bold("claude-workflow-starter")} — drop-in workflow scaffold for Claude Code projects
+
+${bold("Usage:")}
+  npx @digitaloutbreak/claude-workflow ${green("init")} ${dim("[target]")}     Install starter into target (default: cwd)
+  npx @digitaloutbreak/claude-workflow ${green("install")}              Install the /workflow-init global skill
+  npx @digitaloutbreak/claude-workflow ${green("--help")}               Show this message
+
+${bold("Examples:")}
+  ${dim("# From a fresh project directory")}
+  npx @digitaloutbreak/claude-workflow init
+
+  ${dim("# Targeting a specific path")}
+  npx @digitaloutbreak/claude-workflow init ./my-app
+
+  ${dim("# Install the global slash command")}
+  npx @digitaloutbreak/claude-workflow install
+
+  ${dim("# Then from any Claude Code session:")}
+  /workflow-init
+  /workflow-init ./my-app
+
+${bold("What gets installed:")}
+  CLAUDE.md, AGENTS.md, docs/context/* (5 docs), docs/specs/project-spec.md,
+  .claude/agents/code-scanner.md, .claude/skills/feature/, .claude/skills/cleanup/
+
+The init command refuses to overwrite existing files — safe to run anywhere.
+
+${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
+`;
+  console.log(help);
+}
+
+// ────────────────────────────────────────────────────────────────────── main
+
+function main() {
+  const [cmd, ...args] = process.argv.slice(2);
+
+  if (!cmd || cmd === "--help" || cmd === "-h" || cmd === "help") {
+    cmdHelp();
+    return;
+  }
+
+  switch (cmd) {
+    case "init":
+      cmdInit(args);
+      break;
+    case "install":
+    case "install-skill":
+      cmdInstall();
+      break;
+    default:
+      console.error(red(`unknown command: ${cmd}`));
+      console.error(`Run ${green("npx @digitaloutbreak/claude-workflow --help")} for usage.`);
+      process.exit(1);
+  }
+}
+
+main();
