@@ -1,0 +1,853 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import DocsSidebar from '../components/DocsSidebar.astro';
+---
+
+<Layout
+  title="Docs — workflow"
+  description="Full documentation for @digitaloutbreak/workflow — philosophy, command reference, file conventions, and FAQ."
+>
+  <Nav />
+
+  <div class="container-page py-10 md:py-14">
+    <div class="flex gap-10 lg:gap-14">
+      <DocsSidebar />
+
+      <article class="docs-prose flex-1 min-w-0">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 mono text-xs text-[var(--color-fg-faint)] not-prose">
+          <a href="/" class="hover:text-[var(--color-fg-muted)] transition-colors">workflow</a>
+          <span>/</span>
+          <span class="text-[var(--color-fg-muted)]">docs</span>
+        </div>
+
+        <h1 class="mt-3">Documentation</h1>
+        <p class="lead">
+          A drop-in workflow scaffold for AI-assisted coding. This is the full reference — the
+          philosophy behind the design, every command in detail, every file explained, and the
+          answers to the questions that come up after you've installed it.
+        </p>
+
+        <!-- Versions row -->
+        <div class="not-prose mt-6 flex flex-wrap gap-2 text-xs">
+          <span class="pill !text-[var(--color-fg-muted)]">v0.15.8</span>
+          <span class="pill !text-[var(--color-fg-muted)]">MIT</span>
+          <span class="pill !text-[var(--color-fg-muted)]">15+ agents</span>
+          <span class="pill !text-[var(--color-fg-muted)]">~21 files installed</span>
+        </div>
+
+        <!-- =================== INTRODUCTION =================== -->
+        <h2 id="introduction">Introduction<a href="#introduction" class="anchor">#</a></h2>
+        <p>
+          <strong>@digitaloutbreak/workflow</strong> is an opinionated scaffold for working with AI coding agents.
+          It installs a small set of files into your project that gives any compatible agent —
+          Claude Code, Codex, Cursor, Gemini, Cline, Aider, Continue, Windsurf, OpenCode, and others —
+          a shared understanding of how to work on your codebase.
+        </p>
+        <p>
+          The scaffold ships four things you'll actually use:
+        </p>
+        <ul>
+          <li><strong>A global <code>/workflow-init</code> slash command</strong> that bootstraps any project through a 10-stage discovery flow.</li>
+          <li><strong>A <code>/feature</code> lifecycle skill</strong> that runs the five-command loop for shipping work — <code>spec</code>, <code>load</code>, <code>start</code>, <code>review</code>, <code>complete</code>. You write the code in between.</li>
+          <li><strong>A <code>/cleanup</code> skill</strong> for project housekeeping.</li>
+          <li><strong>A <code>code-scanner</code> agent</strong> for on-demand quality, security, and performance reviews.</li>
+        </ul>
+        <p>
+          And a set of context documents — <code>thesis.md</code>, <code>project-overview.md</code>,
+          <code>coding-standards.md</code>, <code>ai-interaction.md</code>, <code>current-feature.md</code> —
+          that auto-load into every session so the agent stops asking questions you've already answered.
+        </p>
+
+        <div class="callout not-prose mt-6">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <div>
+            <strong>Who this is for.</strong>
+            <p>You work with an AI coding agent every day. You've noticed that you keep re-explaining your project's stack, conventions, and feature workflow each session. You want a repeatable structure that survives across agents, projects, and weeks of accumulated context.</p>
+          </div>
+        </div>
+
+        <!-- =================== INSTALLATION =================== -->
+        <h2 id="installation">Installation<a href="#installation" class="anchor">#</a></h2>
+        <p>
+          One command, run once per machine. It installs <code>/workflow-init</code> globally —
+          you'll never need to install it again.
+        </p>
+
+<pre><code>npx skills add DigitalOutbreak/workflow -g</code></pre>
+
+        <p>
+          The CLI shows you a picker of every AI agent detected on your machine — Claude Code,
+          Codex, Cursor, Gemini, Copilot, Cline, Aider, Continue, Windsurf, OpenCode, and a dozen
+          more. Press <kbd class="mono text-xs px-1.5 py-0.5 rounded border border-hairline">space</kbd> to
+          toggle which agents you want it installed into,
+          <kbd class="mono text-xs px-1.5 py-0.5 rounded border border-hairline">enter</kbd> to confirm.
+        </p>
+
+        <h3>Why <code>-g</code>?</h3>
+        <p>
+          Without <code>-g</code>, the <code>skills</code> CLI auto-detects scope — if you happen
+          to be standing in a git repo, it installs project-local into <code>.agents/skills/</code>.
+          That's the wrong scope for a tool you want everywhere. <code>-g</code> forces a global
+          install into your home directory, where every project will see it.
+        </p>
+
+        <h3>Skip the picker</h3>
+        <p>
+          If you want every detected agent in one shot, add <code>-y</code>:
+        </p>
+<pre><code>npx skills add DigitalOutbreak/workflow -g -y</code></pre>
+
+        <h3>Other paths</h3>
+        <p>
+          <strong>Project-local install</strong> — drops into <code>.agents/skills/</code> in the
+          current project. Useful when you want the skill checked into version control with the
+          project:
+        </p>
+<pre><code>npx skills add DigitalOutbreak/workflow</code></pre>
+
+        <p>
+          <strong>Legacy CLI</strong> — pre-dates the skills ecosystem. Supports Claude Code, Codex,
+          and Gemini only. Kept for backwards compatibility. See the <a href="#legacy-cli">legacy CLI section</a>.
+        </p>
+
+        <!-- =================== FIRST PROJECT =================== -->
+        <h2 id="first-project">Your first project<a href="#first-project" class="anchor">#</a></h2>
+        <p>
+          Open your agent in the directory where you want to start (or where you want to drop the
+          workflow into an existing project), and invoke the slash command:
+        </p>
+
+<pre><code>/workflow-init</code></pre>
+
+        <p>
+          That's it. The flow takes ~5–15 minutes depending on how much you elaborate during the
+          discovery interview. At the end of it you'll have:
+        </p>
+        <ul>
+          <li>The workflow files installed (root briefs, context docs, skills, agents).</li>
+          <li>An optional fresh framework scaffold if you picked a Web project (Next.js, Astro, SvelteKit, or TanStack Start).</li>
+          <li>Templates filled in with your actual answers — no more <code>&#123;&#123;Placeholder&#125;&#125;</code> strings.</li>
+          <li>A <code>Now / Next / Later</code> roadmap drafted from your stack and strategy.</li>
+          <li>A recommended first feature ready to <code>/feature spec</code>.</li>
+        </ul>
+        <p>
+          From there: <code>/feature spec</code> the first thing on your roadmap, and you're shipping.
+        </p>
+
+        <!-- =================== PHILOSOPHY =================== -->
+        <h2 id="philosophy">Philosophy<a href="#philosophy" class="anchor">#</a></h2>
+        <p>
+          The opportunity with AI coding isn't to add another chat box on top of your editor. It's
+          to remove the one task you do over and over: <em>explaining your project to a new
+          session</em>. Every conversation starts the same way — "this is what we're building, this
+          is the stack, this is the convention" — until you've trained the agent into the same shape
+          for the hundredth time.
+        </p>
+        <p>
+          A workflow scaffold solves that by writing the briefing down once, in a place the agent
+          will always read. Then the agent stops being a stranger every morning.
+        </p>
+
+        <h3>What we explicitly reject</h3>
+        <ul>
+          <li><strong>Auto-firing agents.</strong> Slash commands and agents in this scaffold never run on their own. You invoke them. They execute. They stop.</li>
+          <li><strong>Background daemons.</strong> Nothing runs after the install completes. Everything that happens is observable, in your editor, on your terms.</li>
+          <li><strong>Lock-in.</strong> Twenty-one files. MIT licensed. <code>rm -rf .claude docs/context docs/specs</code> and you're back to a vanilla repo.</li>
+          <li><strong>Framework opinions where they don't belong.</strong> The workflow is project-agnostic. Web, backend, mobile, library — the scaffold flow adapts to your project type instead of presuming one.</li>
+        </ul>
+
+        <!-- =================== THREE LAYERS =================== -->
+        <h2 id="three-layers">Three layers of context<a href="#three-layers" class="anchor">#</a></h2>
+        <p>
+          The most expensive thing an AI agent can do is re-derive what it already knew last
+          session. The cheapest thing is to skim a document. So the scaffold structures context
+          into three layers, loaded by need.
+        </p>
+
+        <table>
+          <thead>
+            <tr><th>Layer</th><th>Where</th><th>When loaded</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Auto-imported</strong></td>
+              <td><code>docs/context/*.md</code></td>
+              <td>Every session</td>
+            </tr>
+            <tr>
+              <td><strong>Read on demand</strong></td>
+              <td><code>docs/specs/</code>, <code>docs/context/features/</code>, <code>backlog.md</code></td>
+              <td>When the task makes them relevant</td>
+            </tr>
+            <tr>
+              <td><strong>Executed</strong></td>
+              <td><code>.claude/skills/</code>, <code>.claude/agents/</code></td>
+              <td>When invoked (slash commands, Agent tool)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          The top layer is the briefing — short, stable, always loaded. The middle layer is the
+          deep reference — only pulled when the agent's working on something specifically related to
+          it. The bottom layer is action — slash commands and subagents that <em>do</em> things,
+          invoked explicitly.
+        </p>
+
+        <p>
+          This split is the point. If everything were auto-imported, every session would burn
+          context on docs the agent didn't need. If nothing were auto-imported, every session would
+          start with a cold-start interview. The three-layer split keeps the agent informed without
+          being overwhelmed.
+        </p>
+
+        <!-- =================== PROJECT-AGNOSTIC =================== -->
+        <h2 id="project-agnostic">Project-agnostic design<a href="#project-agnostic" class="anchor">#</a></h2>
+        <p>
+          <code>/workflow-init</code> asks you the project type up front — Web, Backend-API,
+          Mobile-Desktop, or Other. Only the scaffold stage (Stage 2) is Web-specific. Everything
+          else applies to every project type.
+        </p>
+        <ul>
+          <li><strong>Web</strong> — optionally scaffolds Next.js / Astro / SvelteKit / TanStack Start with shadcn opt-in.</li>
+          <li><strong>Backend-API</strong> — skips the framework scaffolder; brings its own (<code>cargo init</code>, <code>poetry new</code>, <code>uvicorn new</code>, whatever).</li>
+          <li><strong>Mobile-Desktop</strong> — skips it too (<code>flutter create</code>, <code>npx react-native init</code>, <code>cargo tauri init</code>).</li>
+          <li><strong>Other</strong> — pure scaffold-free path, just installs the docs and skills.</li>
+        </ul>
+        <p>
+          The coding standards file (<code>coding-standards.md</code>) ships with Web/TypeScript
+          defaults. <code>/workflow-init</code> rewrites the stack-specific sections based on your
+          actual stack pick. The other context docs are stack-neutral by design.
+        </p>
+
+        <!-- =================== /workflow-init =================== -->
+        <h2 id="workflow-init"><code>/workflow-init</code> · 10 stages<a href="#workflow-init" class="anchor">#</a></h2>
+        <p>
+          The bootstrap flow. Ten stages, flat numbering (no 1a / 1b / 2a), each one skippable. Roughly
+          5–15 minutes end-to-end depending on how much you elaborate.
+        </p>
+
+        <h3>Stage 00 · Idempotency check</h3>
+        <p>
+          Looks for prior runs in the target directory — checks for <code>CLAUDE.md</code>,
+          <code>AGENTS.md</code>, <code>docs/context/</code>, and friends. If found, offers four paths:
+        </p>
+        <ul>
+          <li><strong>Resume</strong> — pick up where you left off in a partial run.</li>
+          <li><strong>Refresh</strong> — overwrite the workflow files but keep your filled-in answers.</li>
+          <li><strong>Start fresh</strong> — nuke and re-install from scratch.</li>
+          <li><strong>Abort</strong> — bail out.</li>
+        </ul>
+
+        <h3>Stage 01 · Pre-flight</h3>
+        <p>
+          Asks the project type. This single answer routes the rest of the flow: Web takes you to
+          the scaffold stage; everything else skips it.
+        </p>
+
+        <h3>Stage 02 · Scaffold (Web only)</h3>
+        <p>
+          If you picked Web, optionally scaffolds a framework: Next.js, Astro, SvelteKit, or
+          TanStack Start, each with a shadcn opt-in. Non-Web project types skip this entirely.
+        </p>
+
+        <div class="callout not-prose">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 L2 22 L22 22 Z" />
+            <line x1="12" y1="9" x2="12" y2="14" />
+            <line x1="12" y1="18" x2="12.01" y2="18" />
+          </svg>
+          <div>
+            <strong>The scaffolder uses real framework CLIs.</strong>
+            <p>It calls <code>create-next-app</code>, <code>create astro</code>, etc., with flags that pre-answer every prompt. If a framework CLI changes its flags, the scaffolder may fall behind — file an issue, we'll bump it.</p>
+          </div>
+        </div>
+
+        <h3>Stage 03 · Install workflow files</h3>
+        <p>
+          Drops the scaffold files into the project. This is the "everything" stage:
+        </p>
+        <ul>
+          <li><code>CLAUDE.md</code> / <code>AGENTS.md</code> / <code>GEMINI.md</code> — root briefs</li>
+          <li><code>docs/context/</code> — the five auto-imported docs plus roadmap and backlog</li>
+          <li><code>docs/specs/project-spec.md</code> — authoritative spec template</li>
+          <li><code>.claude/skills/feature/</code> — the <code>/feature</code> action files</li>
+          <li><code>.claude/skills/cleanup/</code> — the <code>/cleanup</code> skill</li>
+          <li><code>.claude/agents/code-scanner.md</code> — the review agent</li>
+        </ul>
+
+        <h3>Stage 04 · Discovery interview</h3>
+        <p>
+          Four buckets of questions: <strong>Identity</strong> (who you are, what you're building),
+          <strong>Stack</strong> (frameworks, hosting, database, auth), <strong>Strategy</strong>
+          (thesis, moat, first product, positioning), <strong>Surfaces</strong> (the views and
+          screens you'll need to ship).
+        </p>
+        <p>
+          Each prose question has an elaboration loop — you can think out loud, or jump straight to
+          "move on" if you've nothing to add. Nothing gets saved until you've confirmed.
+        </p>
+
+        <h3>Stage 05 · MCP decision</h3>
+        <p>
+          Recommends MCPs (Model Context Protocol servers) that would be useful for your stack —
+          for example a Postgres MCP if you're using Postgres, a Stripe MCP if you mentioned
+          payments, a Playwright MCP for browser-driven testing. Also asks an explicit "will you
+          call external services?" question.
+        </p>
+        <p>
+          <strong>Crucially, it does <em>not</em> install MCPs here.</strong> The install commands
+          are recorded in <code>project-overview.md</code> and surfaced at the very end (Stage 09)
+          so the agent restart they trigger doesn't wipe the interview context.
+        </p>
+
+        <h3>Stage 06 · Roadmap proposal</h3>
+        <p>
+          Drafts a <code>Now / Next / Later</code> roadmap based on your stack and strategy
+          answers, iterates with you, then saves to <code>roadmap.md</code>. Skipped for existing
+          projects with a populated roadmap.
+        </p>
+
+        <h3>Stage 07 · Fill templates</h3>
+        <p>
+          Walks through every installed doc and replaces <code>&#123;&#123;Placeholders&#125;&#125;</code> with your
+          actual answers from the interview. By the end of this stage your docs are no longer
+          templates — they're your project's actual documentation.
+        </p>
+
+        <h3>Stage 08 · Recommend first feature</h3>
+        <p>
+          Picks the smallest item from the roadmap's <code>Now</code> phase and offers to run
+          <code>/feature spec</code> on it immediately. If you accept, you go straight into the
+          feature lifecycle without breaking flow.
+        </p>
+
+        <h3>Stage 09 · Hand off</h3>
+        <p>
+          Surfaces the MCP install commands you decided on in Stage 05 — safe to restart now,
+          because the entire interview is already on disk. Plus next-steps for the
+          <code>/feature</code> lifecycle so you know what to do tomorrow.
+        </p>
+
+        <!-- =================== /feature =================== -->
+        <h2 id="feature"><code>/feature</code> · the lifecycle<a href="#feature" class="anchor">#</a></h2>
+        <p>
+          The <code>/feature</code> skill is a five-command loop for shipping work. Each command
+          is a separate action file in <code>.claude/skills/feature/actions/</code> — they're
+          invoked by subcommand and run in fixed order. The actual coding happens between
+          <code>start</code> and <code>review</code>.
+        </p>
+
+<pre><code>/feature spec   →   /feature load   →   /feature start
+                                              ↓
+                                       implement + verify
+                                              ↓
+History entry  ←  /feature complete  ←  /feature review</code></pre>
+
+        <h3><code>/feature spec</code></h3>
+        <p>
+          Interviews you about the feature you want to build. Writes a per-feature spec to
+          <code>docs/context/features/&lt;slug&gt;-spec.md</code> with goals, non-goals, design
+          references (Figma, screenshots, Loom, etc.), and an implementation plan. The spec is
+          the source of truth for the rest of the lifecycle.
+        </p>
+
+        <h3><code>/feature load</code></h3>
+        <p>
+          Pulls the spec file into the agent's context. Lightweight — just reads the file in. Useful
+          when you've come back to a feature after a break and the agent needs the full spec, not
+          just <code>current-feature.md</code>'s summary.
+        </p>
+
+        <h3><code>/feature start</code></h3>
+        <p>
+          Cuts a git branch named <code>feature/&lt;slug&gt;</code> (or <code>fix/&lt;slug&gt;</code> for
+          bugfixes) and updates <code>current-feature.md</code> with the active feature's name and
+          status. From here, you implement.
+        </p>
+
+        <h3><code>/feature review</code></h3>
+        <p>
+          Optional. Runs the <code>code-scanner</code> agent on the diff and reports issues across
+          quality, security, and performance. Use it before <code>/feature complete</code> for
+          anything non-trivial.
+        </p>
+
+        <h3><code>/feature explain</code></h3>
+        <p>
+          Optional. Generates a plain-English summary of the diff for the PR description, commit
+          message, or your own future self. Reads <code>git diff</code> against the base branch.
+        </p>
+
+        <h3><code>/feature complete</code></h3>
+        <p>
+          Final step. Merges the branch into main, deletes the feature branch, and writes a history
+          entry into <code>current-feature.md</code> with what shipped. Asks before committing,
+          merging, or pushing — never destructive.
+        </p>
+
+        <div class="callout not-prose">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <strong>Bug fixes use a lighter path.</strong>
+            <p>Bug fixes get a <code>fix/&lt;slug&gt;</code> branch and skip the spec / load / start ceremony — they're reactive, not planned. Cut a branch, fix, merge, delete branch. Only add them to the history if they're substantial (more than a day of work).</p>
+          </div>
+        </div>
+
+        <!-- =================== /cleanup =================== -->
+        <h2 id="cleanup"><code>/cleanup</code><a href="#cleanup" class="anchor">#</a></h2>
+        <p>
+          A housekeeping skill for routine project maintenance. Invoke it when you're between
+          features and want a tidy state — removes empty directories, normalizes stale files,
+          checks that the workflow files haven't drifted from their canonical state.
+        </p>
+        <p>
+          Read-only by default — invoke with <code>/cleanup run</code> to actually execute the
+          fixes it identifies.
+        </p>
+
+        <!-- =================== code-scanner =================== -->
+        <h2 id="code-scanner"><code>code-scanner</code> agent<a href="#code-scanner" class="anchor">#</a></h2>
+        <p>
+          A project-local subagent for code review. Scans the repo (or just the current diff,
+          depending on how you invoke it) for issues across three buckets:
+        </p>
+        <ul>
+          <li><strong>Quality</strong> — dead code, anti-patterns, complexity hotspots, missing tests.</li>
+          <li><strong>Security</strong> — exposed secrets, insecure defaults, OWASP-class issues.</li>
+          <li><strong>Performance</strong> — N+1 queries, unbounded loops, missing memoization.</li>
+        </ul>
+        <p>
+          Lives at <code>.claude/agents/code-scanner.md</code>. Read-only — it reports findings,
+          you decide what to fix.
+        </p>
+
+        <!-- =================== Project layout =================== -->
+        <h2 id="layout">Project layout<a href="#layout" class="anchor">#</a></h2>
+        <p>
+          Every file the scaffold installs has a job. The layout is small enough to fit in your head
+          once you understand the three-folder split: <strong>root briefs</strong> live at the project
+          root, <strong>docs/</strong> holds the human-readable context the agent reads, and
+          <strong>.claude/</strong> holds the agent-executable commands and subagents.
+        </p>
+
+<pre><code>project-root/
+├── CLAUDE.md                     ← root brief · Claude Code reads this
+├── AGENTS.md                     ← root brief · most other agents read this
+├── GEMINI.md                     ← root brief · Gemini reads this
+├── docs/
+│   ├── context/                  ← AUTO-IMPORTED every session
+│   │   ├── thesis.md
+│   │   ├── project-overview.md
+│   │   ├── coding-standards.md
+│   │   ├── ai-interaction.md
+│   │   ├── current-feature.md
+│   │   ├── roadmap.md
+│   │   ├── backlog.md
+│   │   └── features/             ← per-feature specs land here
+│   │       └── &lt;slug&gt;-spec.md
+│   └── specs/                    ← READ ON DEMAND
+│       └── project-spec.md
+└── .claude/
+    ├── agents/                   ← invokable subagents
+    │   └── code-scanner.md
+    └── skills/                   ← invokable slash commands
+        ├── feature/
+        │   ├── skill.md
+        │   └── actions/
+        │       ├── spec.md
+        │       ├── load.md
+        │       ├── start.md
+        │       ├── review.md
+        │       ├── explain.md
+        │       └── complete.md
+        └── cleanup/
+            └── skill.md</code></pre>
+
+        <p>
+          The split maps onto the <a href="#three-layers">three layers of context</a>: root briefs +
+          <code>docs/context/</code> are <strong>auto-imported</strong>, <code>docs/specs/</code> and
+          <code>docs/context/features/</code> are <strong>read on demand</strong>, and
+          <code>.claude/</code> is <strong>executed</strong>.
+        </p>
+
+        <!-- =================== Root briefs =================== -->
+        <h2 id="root-files">Root briefs<a href="#root-files" class="anchor">#</a></h2>
+
+        <h4>What</h4>
+        <p>
+          Three top-level files at the project root: <code>CLAUDE.md</code>, <code>AGENTS.md</code>,
+          <code>GEMINI.md</code>. Each one is a one-page pointer that tells whichever agent is opening
+          your project where to find the actual context (the docs in <code>docs/context/</code>).
+        </p>
+
+        <h4>Why three of them</h4>
+        <p>
+          Different agents look for different filenames by convention. Claude Code reads
+          <code>CLAUDE.md</code> (and supports <code>@</code>-import syntax to auto-load other files).
+          Cursor, Cline, Aider, Continue, Windsurf, Copilot, and OpenCode read <code>AGENTS.md</code>.
+          Gemini-based tools read <code>GEMINI.md</code>. Shipping all three means collaborators on
+          the same project can use whatever agent they prefer without re-scaffolding.
+        </p>
+
+        <h4>How to use</h4>
+        <p>
+          Edit the project-name and project-layout sections to match your repo. <strong>Leave the
+          <code>@</code>-imports in <code>CLAUDE.md</code> alone</strong> — they're what makes the
+          five context docs auto-load every session. If you change where the context docs live,
+          update the import paths to match.
+        </p>
+
+        <table>
+          <thead>
+            <tr><th>File</th><th>For</th><th>How it loads context</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>CLAUDE.md</code></td>
+              <td>Claude Code</td>
+              <td>Uses <code>@docs/context/&lt;file&gt;.md</code> syntax to auto-import.</td>
+            </tr>
+            <tr>
+              <td><code>AGENTS.md</code></td>
+              <td>Cursor, Cline, Aider, Continue, Windsurf, Copilot, OpenCode</td>
+              <td>Tells the agent to read <code>docs/context/</code> manually at session start.</td>
+            </tr>
+            <tr>
+              <td><code>GEMINI.md</code></td>
+              <td>Gemini Code Assist and Gemini-based agents</td>
+              <td>Same as <code>AGENTS.md</code>, addressed to Gemini.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- =================== docs/context/ =================== -->
+        <h2 id="context-docs"><code>docs/context/</code> · auto-imported<a href="#context-docs" class="anchor">#</a></h2>
+
+        <h4>What</h4>
+        <p>
+          Seven markdown files that load into the agent's context <strong>every session</strong>.
+          They are short on purpose — the auto-import budget is small. Anything in this folder
+          should be load-bearing across every conversation; anything that isn't goes in
+          <code>docs/specs/</code> instead.
+        </p>
+
+        <h4>Why we have it</h4>
+        <p>
+          The biggest waste in AI-assisted coding is re-explaining things the agent already should
+          know — your stack, your conventions, what you're working on. <code>docs/context/</code>
+          ends that cycle. Once filled in, the agent walks into every session already briefed.
+        </p>
+
+        <h4>How to use</h4>
+        <p>
+          Three files determine whether the context is genuinely useful or just noise. Spend an hour
+          on these on day one: <code>thesis.md</code>, <code>project-overview.md</code>,
+          <code>coding-standards.md</code>. The rest fills in as you go.
+        </p>
+
+        <h3><code>thesis.md</code> · the strategic memo</h3>
+        <p>
+          A founder's memo. Why this product exists, the bet you're making, the moat that compounds
+          over time, the failure modes you've already flirted with. Written in your voice, updated
+          rarely. The doc you re-read when you're tempted to chase a satisfying problem instead of a
+          useful one.
+        </p>
+
+        <h3><code>project-overview.md</code> · the polished summary</h3>
+        <p>
+          Diagram-augmented. Scope, stack, surfaces, decisions log, tech-stack table,
+          definition-of-done. The doc that catches a new collaborator up in five minutes. Derived
+          from the deeper <code>docs/specs/project-spec.md</code>.
+        </p>
+
+        <h3><code>coding-standards.md</code> · the style guide</h3>
+        <p>
+          Ships with sensible defaults for the stack you picked in <code>/workflow-init</code> — TypeScript
+          strict, functional components, server components by default in Next.js, Tailwind v4
+          CSS-config, Drizzle migrations. Edit it as you discover conventions you care about.
+        </p>
+
+        <h3><code>ai-interaction.md</code> · the rules of engagement</h3>
+        <p>
+          How the agent communicates and works on this project. Branching strategy, commit policy,
+          what triggers <code>/feature</code> vs <code>fix/</code>, when to commit, when to push.
+          Copy as-is — edit only if you've thought about it.
+        </p>
+
+        <h3><code>current-feature.md</code> · the working file</h3>
+        <p>
+          Empty by default. <code>/feature start</code> populates it with the active feature.
+          <code>/feature complete</code> moves the entry to history. The agent reads this every
+          session to know what you're actually working on right now. Don't edit by hand unless you
+          know why.
+        </p>
+
+        <h3><code>roadmap.md</code> · Now / Next / Later</h3>
+        <p>
+          Phased plan. Drafted in Stage 06 of <code>/workflow-init</code>, lived in afterwards.
+          <strong>Bug fixes don't go here</strong> — they're reactive. Refactors and chores only
+          land here if they're substantial.
+        </p>
+
+        <h3><code>backlog.md</code> · deferred items</h3>
+        <p>
+          Categorized list of things that got cut from completed features. Acts as the input to the
+          next roadmap-revisit conversation. Cleaner than scattering TODO comments across the
+          codebase.
+        </p>
+
+        <!-- =================== docs/specs/ =================== -->
+        <h2 id="specs"><code>docs/specs/</code> · source of truth<a href="#specs" class="anchor">#</a></h2>
+
+        <h4>What</h4>
+        <p>
+          The deep, authoritative project spec. <code>project-spec.md</code> ships as the template.
+          You can add sibling docs (<code>data-layer.md</code>, <code>architecture-principles.md</code>,
+          <code>content-types.md</code>) as the project grows.
+        </p>
+
+        <h4>Why we have it</h4>
+        <p>
+          Schema, contracts, env keys, infrastructure decisions — anything detailed enough that
+          loading it every session would burn context unnecessarily. <code>project-overview.md</code>
+          is the polished summary the agent always sees; <code>docs/specs/</code> is the
+          full-resolution version it reads only when the task touches system-level concerns.
+        </p>
+
+        <h4>How to use</h4>
+        <p>
+          Treat <code>project-spec.md</code> as your project's constitution. Write it deliberately,
+          revise it when decisions actually change, link to it from <code>project-overview.md</code>.
+          When the agent needs deep detail, it'll read this on demand.
+        </p>
+
+        <div class="callout">
+          <span class="callout-label">Mental model</span>
+          <p>
+            <strong><code>docs/specs/</code> is your <em>constitution</em></strong> — slow-moving,
+            foundational, evolves with the project. <strong><code>docs/context/features/</code> is
+            your <em>session log</em></strong> — fast-moving, per-task, written and archived inside
+            a single feature's lifetime. They look similar but serve opposite purposes; see below.
+          </p>
+        </div>
+
+        <!-- =================== docs/context/features/ =================== -->
+        <h2 id="features-folder"><code>docs/context/features/</code> · per-feature specs<a href="#features-folder" class="anchor">#</a></h2>
+
+        <h4>What</h4>
+        <p>
+          One markdown file per feature you ship — written by <code>/feature spec</code>, named
+          <code>&lt;slug&gt;-spec.md</code>. Goals, non-goals, design references, implementation plan.
+        </p>
+
+        <h4>Why we have it</h4>
+        <p>
+          A feature spec is too narrow to live in <code>docs/specs/</code> (which is project-level)
+          and too detailed to live in <code>current-feature.md</code> (which is a one-page working
+          summary). Per-feature specs are the persistent record of what a given piece of work was
+          and why.
+        </p>
+
+        <h4>How it's used in the lifecycle</h4>
+        <ul>
+          <li><code>/feature spec</code> writes the file.</li>
+          <li><code>/feature load</code> pulls it into context when you return to the feature.</li>
+          <li><code>/feature start</code> uses it to summarize into <code>current-feature.md</code>.</li>
+          <li><code>/feature complete</code> archives the entry into the history section of <code>current-feature.md</code>.</li>
+        </ul>
+        <p>
+          The file itself can stay in the repo after the feature ships, as a record of what
+          happened. Or you can delete it — the history entry in <code>current-feature.md</code> is
+          the durable summary.
+        </p>
+
+        <!-- =================== .claude/ =================== -->
+        <h2 id="claude-folder"><code>.claude/</code> · the executable layer<a href="#claude-folder" class="anchor">#</a></h2>
+
+        <h4>What</h4>
+        <p>
+          Everything in <code>.claude/</code> is something an agent can <em>run</em> — not read,
+          but execute. Two subfolders: <code>agents/</code> (subagents the main agent can delegate
+          to) and <code>skills/</code> (slash commands you invoke directly).
+        </p>
+
+        <h4>Why we have it</h4>
+        <p>
+          Documentation tells the agent what to do; skills and agents are <em>how</em> it does it.
+          Slash commands codify multi-step workflows (the <code>/feature</code> lifecycle, the
+          <code>/cleanup</code> housekeeping pass) so you don't have to re-explain them.
+          Subagents codify specialist roles (the <code>code-scanner</code> reviewer) so the main
+          agent can delegate cleanly.
+        </p>
+
+        <h4>Why <code>.claude/</code> specifically</h4>
+        <p>
+          This is Claude Code's convention for project-local skills and agents. Other agents may
+          look in different paths in future versions; for now, Claude Code is the only tool that
+          reads from <code>.claude/</code> directly. Other agents still get the workflow benefits
+          via the root briefs and <code>docs/context/</code>.
+        </p>
+
+        <h3 id="claude-skills"><code>.claude/skills/</code> · slash commands</h3>
+        <p>
+          Each skill is a folder with a <code>skill.md</code> manifest. If the skill has subcommands
+          (like <code>/feature spec</code>, <code>/feature load</code>), each subcommand is a separate
+          markdown file in an <code>actions/</code> directory. The agent reads the manifest to
+          discover what subcommands exist, then reads the relevant action file when you invoke it.
+        </p>
+
+        <ul>
+          <li><strong><code>feature/</code></strong> — the <a href="#feature">/feature lifecycle</a>. Six action files: spec, load, start, review, explain, complete.</li>
+          <li><strong><code>cleanup/</code></strong> — the <a href="#cleanup">/cleanup skill</a>. Single action file for project housekeeping.</li>
+        </ul>
+
+        <p>
+          Skills are read-only by default — they describe the steps. Mutations (creating branches,
+          editing files, committing) happen through the agent's normal tools and require permission
+          the same as any other edit.
+        </p>
+
+        <h3 id="claude-agents"><code>.claude/agents/</code> · subagents</h3>
+        <p>
+          Each agent is a single markdown file describing a specialist role, the tools it has access
+          to, and the focus of its work. The main agent invokes a subagent via the Agent tool when
+          a task fits the subagent's scope.
+        </p>
+
+        <ul>
+          <li><strong><code>code-scanner.md</code></strong> — the <a href="#code-scanner">code-scanner agent</a>. Reviews quality, security, and performance issues. Read-only.</li>
+        </ul>
+
+        <p>
+          Agents differ from skills in invocation style: skills are <em>commands you run</em>;
+          agents are <em>roles the main agent delegates to</em>. A skill is a recipe; an agent is a
+          contractor.
+        </p>
+
+        <!-- =================== Compatibility =================== -->
+        <h2 id="compatibility">Compatibility<a href="#compatibility" class="anchor">#</a></h2>
+        <p>
+          Three agents have confirmed slash-command support via the <a href="https://www.skills.sh" target="_blank" rel="noopener noreferrer">open agent skills</a>
+          standard. Many more read the root briefs (<code>AGENTS.md</code>, <code>CLAUDE.md</code>,
+          <code>GEMINI.md</code>) and follow them to the context docs.
+        </p>
+
+        <table>
+          <thead>
+            <tr><th>Agent</th><th>Slash command</th><th>Reads root brief</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Claude Code</td><td><code>/workflow-init</code></td><td><code>CLAUDE.md</code></td></tr>
+            <tr><td>Codex</td><td><code>$workflow-init</code></td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Gemini CLI</td><td><code>/workflow-init</code></td><td><code>GEMINI.md</code></td></tr>
+            <tr><td>Cursor</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Cline</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Aider</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Continue</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Windsurf</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Copilot</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>OpenCode</td><td>—</td><td><code>AGENTS.md</code></td></tr>
+            <tr><td>Gemini Code Assist</td><td>—</td><td><code>GEMINI.md</code></td></tr>
+          </tbody>
+        </table>
+        <p>
+          For agents without slash-command support yet: install drops the root briefs and context
+          docs as usual. The agent reads them; you skip the auto-interview / template-fill /
+          first-feature pitch and edit the templates manually (or ask the agent to walk you
+          through them).
+        </p>
+
+        <!-- =================== Legacy CLI =================== -->
+        <h2 id="legacy-cli">Legacy CLI<a href="#legacy-cli" class="anchor">#</a></h2>
+        <p>
+          The original CLI that pre-dates the open-skills ecosystem. Still works — kept for
+          backwards compatibility — but supports only Claude Code, Codex, and Gemini (vs ~15+ via
+          <code>npx skills add</code>).
+        </p>
+
+<pre><code>npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
+npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini, no prompts
+npx @digitaloutbreak/workflow --claude              Just Claude Code
+npx @digitaloutbreak/workflow --claude --gemini     Specific combo
+npx @digitaloutbreak/workflow --codex               Add Codex later, leave others
+npx @digitaloutbreak/workflow ./my-new-app          Target a specific path
+npx @digitaloutbreak/workflow init [target]         (advanced) Drop workflow files directly into target
+npx @digitaloutbreak/workflow --help                Show usage
+
+# Pre-publish fallback (still works)
+npx github:DigitalOutbreak/workflow                 Run straight from GitHub</code></pre>
+
+        <!-- =================== FAQ =================== -->
+        <h2 id="faq">FAQ<a href="#faq" class="anchor">#</a></h2>
+
+        <h3>How do I update to a newer version?</h3>
+        <p>
+          Re-run the install. <code>npx skills add DigitalOutbreak/workflow -g -y</code> overwrites
+          the global skill files with the latest. Existing projects don't auto-update — re-run
+          <code>/workflow-init</code> in a project to refresh its scaffold (it'll offer Refresh as
+          one of the idempotency options).
+        </p>
+
+        <h3>Will this conflict with my existing CLAUDE.md / AGENTS.md?</h3>
+        <p>
+          The idempotency check (Stage 00) detects existing workflow files and offers Resume /
+          Refresh / Start fresh / Abort. You'll be asked before anything is overwritten.
+        </p>
+
+        <h3>Can I customize the skills for my project?</h3>
+        <p>
+          Yes — once installed, the files in <code>.claude/skills/</code> and
+          <code>.claude/agents/</code> live in your project repo. Edit them freely. If you improve
+          something worth sharing, copy the change back into the public scaffold and PR it.
+        </p>
+
+        <h3>Does this work without an agent?</h3>
+        <p>
+          The files are useful documentation on their own — <code>project-overview.md</code> and the
+          spec template work as project docs regardless. But the value compounds when an agent
+          actively reads them every session.
+        </p>
+
+        <h3>What if my framework isn't in the scaffolder?</h3>
+        <p>
+          Pick the project type closest to yours (or "Other") and the scaffold flow skips the
+          framework-install step. The workflow files install regardless. Then bring your own
+          framework setup.
+        </p>
+
+        <h3>How is this different from a rules file or instructions file?</h3>
+        <p>
+          A rules file is one document — it tells the agent how to behave. This is a system: rules
+          (<code>ai-interaction.md</code>), strategic context (<code>thesis.md</code>,
+          <code>project-overview.md</code>), tactical state (<code>current-feature.md</code>), and
+          executable skills (<code>/feature</code>, <code>/cleanup</code>, code-scanner). The rules
+          file is one layer. This is all four.
+        </p>
+
+        <h3>Where do I report bugs or request features?</h3>
+        <p>
+          <a href="https://github.com/DigitalOutbreak/workflow/issues" target="_blank" rel="noopener noreferrer">GitHub issues</a>. Include the version (<code>v0.15.8</code> as of writing), the agent you're using, and the command that triggered the issue.
+        </p>
+
+        <hr/>
+
+        <p class="not-prose mt-10 text-sm text-[var(--color-fg-dim)]">
+          Last updated for <code class="mono text-[var(--color-fg-muted)]">v0.15.8</code>. Spotted
+          something out of date? <a href="https://github.com/DigitalOutbreak/workflow/edit/main/README.md" target="_blank" rel="noopener noreferrer" class="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] underline decoration-[var(--color-border-strong)] underline-offset-2">Edit on GitHub</a>.
+        </p>
+      </article>
+    </div>
+  </div>
+
+  <Footer />
+</Layout>

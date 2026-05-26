@@ -60,15 +60,6 @@ Ten-stage guided bootstrap (~5-15 min depending on how much you elaborate):
 8. **Recommend first feature** — picks the smallest thing from the roadmap's `Now` phase and offers to `/feature spec` it immediately
 9. **Hand off** — MCP install commands appear here (safe to restart now; the interview is all on disk). Plus next-steps for `/feature` lifecycle
 
-### Non-interactive install
-
-```sh
-npx @digitaloutbreak/workflow --all                       # Claude + Codex + Gemini
-npx @digitaloutbreak/workflow --claude                    # just Claude Code
-npx @digitaloutbreak/workflow --claude --gemini           # specific combo
-npx @digitaloutbreak/workflow --codex                     # add Codex later, leave others
-```
-
 ### Where the slash command lives, per agent
 
 - `~/.claude/skills/workflow-init/skill.md` — Claude Code (markdown + YAML frontmatter)
@@ -85,47 +76,24 @@ The CLI generates each tool's expected format from the same source skill (markdo
 
 The `/workflow-init` flow is the full experience: it optionally scaffolds a fresh framework (Next.js / Astro / SvelteKit / TanStack Start, with or without shadcn), drops in the workflow files, runs a guided discovery interview (with back-and-forth elaboration loops), fills the templates with your actual answers, and recommends a first feature to ship.
 
-### Other agents (Cursor, Cline, Aider, Gemini, etc.)
+### Other agents (Cursor, Cline, Aider, Continue, etc.)
 
-Each agent's slash-command mechanism uses a different folder/format. Confirmed support so far is Claude Code + Codex (above). For other tools, the raw CLI works in any terminal:
+`npx skills add DigitalOutbreak/workflow -g` already covers ~15 agents — the picker lists every one detected on your machine, including Cursor, Cline, Aider, Continue, Windsurf, OpenCode, and more. Tick the ones you want.
 
-```sh
-npx @digitaloutbreak/workflow
-```
-
-That drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + the five context docs + `.claude/` into the target directory. Your agent then reads its respective root file (`AGENTS.md` for Cursor/Cline/Aider, `GEMINI.md` for Gemini Code Assist, `CLAUDE.md` for Claude Code) and follows it to `docs/context/`.
+For agents that don't expose a slash-command mechanism yet, the install still drops `CLAUDE.md` + `AGENTS.md` + `GEMINI.md` + the five context docs + `.claude/` into the project. Your agent reads its respective root file (`AGENTS.md` for Cursor/Cline/Aider/Continue, `GEMINI.md` for Gemini Code Assist, `CLAUDE.md` for Claude Code) and follows it to `docs/context/`.
 
 You won't get the auto-interview / template-fill / first-feature pitch in those tools — that's driven by the slash-command skill. You'll edit the templates manually (or ask your agent to walk you through them).
 
-*More tool integrations are planned* — Cursor (`~/.cursor/commands/`), GitHub Copilot (`.github/prompts/`), and Gemini CLI as their formats are verified.
-
 ### Target a specific path
 
-```sh
-npx @digitaloutbreak/workflow ./my-new-app
-```
-
-> Until the package was published, you could run it straight from GitHub. That still works as a fallback:
-> ```sh
-> npx github:DigitalOutbreak/workflow
-> ```
-
-## Use the slash command (optional)
-
-Install once per machine to add `/workflow-init` to every Claude Code session:
+`npx skills add` installs relative to your current working directory (project-local) or your home (`-g`). To install into a specific path, `cd` there first:
 
 ```sh
-npx @digitaloutbreak/workflow --install-skill
+cd ./my-new-app
+npx skills add DigitalOutbreak/workflow
 ```
 
-Then from any Claude Code session, in any project directory:
-
-```
-/workflow-init                  # install starter into current dir
-/workflow-init ./my-new-app     # or specify a path
-```
-
-The slash command is a thin wrapper that calls the same `npx … init` command. Skip the install step if you'd rather always type the full npx command — the functionality is identical.
+> The legacy CLI (below) accepts a path argument directly: `npx @digitaloutbreak/workflow ./my-new-app`.
 
 ## What gets installed
 
@@ -199,17 +167,25 @@ Three root-level briefs ship together — pick whichever your agent reads:
 
 The starter installs all three root files (CLAUDE.md / AGENTS.md / GEMINI.md) so collaborators on the same project can use whatever agent they prefer. All three point at the same five context docs in `docs/context/`.
 
-## CLI reference
+## Legacy CLI reference
+
+The preferred install path is `npx skills add DigitalOutbreak/workflow -g` (see [Two-step setup](#two-step-setup-one-for-life) above). The legacy CLI below predates that ecosystem and is kept for backwards compatibility — it only supports Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`).
 
 ```
 npx @digitaloutbreak/workflow                       Interactive — install slash command for chosen agents
 npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini, no prompts
+npx @digitaloutbreak/workflow --claude              Just Claude Code
 npx @digitaloutbreak/workflow --claude --gemini     Install for specific agents
+npx @digitaloutbreak/workflow --codex               Add Codex later, leave others
+npx @digitaloutbreak/workflow ./my-new-app          Target a specific path
 npx @digitaloutbreak/workflow init [target]         (advanced) Drop workflow files directly into target
 npx @digitaloutbreak/workflow --help                Show usage
 
-# Backwards compat
-npx @digitaloutbreak/workflow --install-skill       Same as bare invocation (kept as alias)
+# Pre-publish fallback (still works)
+npx github:DigitalOutbreak/workflow                 Run straight from GitHub
+
+# Backwards-compat alias
+npx @digitaloutbreak/workflow --install-skill       Same as bare invocation
 ```
 
 ## Don't have npx?

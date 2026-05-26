@@ -1,0 +1,48 @@
+---
+const stages = [
+  { n: '00', title: 'Idempotency check',       body: 'Detects prior runs in the target dir. Offers Resume / Refresh / Start fresh / Abort.' },
+  { n: '01', title: 'Pre-flight',              body: 'Asks the project type — Web · Backend · Mobile-Desktop · Other. Sets the path through the rest of the flow.' },
+  { n: '02', title: 'Scaffold (Web only)',     body: 'Optional Next.js / Astro / SvelteKit / TanStack Start with a shadcn opt-in. Non-Web types skip this.' },
+  { n: '03', title: 'Install workflow files',  body: 'Drops CLAUDE.md / AGENTS.md / GEMINI.md, docs/context/, docs/specs/, .claude/skills/, .claude/agents/.' },
+  { n: '04', title: 'Discovery interview',     body: 'Identity · Stack · Strategy · Surfaces. Elaboration loops after each prose question.' },
+  { n: '05', title: 'MCP decision',            body: 'Recommends MCPs based on stack + external-services answer. Records commands; install deferred.' },
+  { n: '06', title: 'Roadmap proposal',        body: 'Drafts a Now / Next / Later roadmap. Iterates before saving. Skipped for existing projects.' },
+  { n: '07', title: 'Fill templates',          body: 'Replaces every {{Placeholder}} in the installed docs with your actual answers.' },
+  { n: '08', title: 'Recommend first feature', body: 'Picks the smallest item from Now. Offers to /feature spec it immediately.' },
+  { n: '09', title: 'Hand off',                body: 'Surfaces MCP install commands (safe to restart now — interview is on disk) and next steps for /feature.' },
+];
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+      <div class="max-w-2xl">
+        <span class="eyebrow">/workflow-init · 10 stages</span>
+        <h2
+          class="mt-3 text-[var(--color-ink)] text-balance font-semibold"
+          style="font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; letter-spacing: -0.025em;"
+        >
+          From empty dir to first feature, in one flow.
+        </h2>
+      </div>
+      <p class="text-[var(--color-ink-muted)] md:max-w-sm text-[15px] leading-[1.55]">
+        Roughly 5–15 minutes depending on how much you elaborate. Every stage is observable and
+        skippable — nothing happens you didn't ask for.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-3 md:grid-cols-2">
+      {stages.map((s) => (
+        <div class="card p-5 group">
+          <div class="flex items-start gap-4">
+            <div class="shrink-0 font-mono text-[12px] text-[var(--color-ink-tertiary)] mt-0.5 w-7">{s.n}</div>
+            <div class="min-w-0">
+              <h3 class="text-[var(--color-ink)] font-semibold text-[15px] tracking-tight">{s.title}</h3>
+              <p class="mt-1 text-[14px] text-[var(--color-ink-muted)] leading-[1.55]">{s.body}</p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

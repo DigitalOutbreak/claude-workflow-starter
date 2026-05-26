@@ -1,0 +1,122 @@
+---
+const groups = [
+  {
+    title: 'Getting started',
+    items: [
+      { href: '#introduction', label: 'Introduction' },
+      { href: '#installation', label: 'Installation' },
+      { href: '#first-project', label: 'Your first project' },
+    ],
+  },
+  {
+    title: 'Concepts',
+    items: [
+      { href: '#philosophy', label: 'Philosophy' },
+      { href: '#three-layers', label: 'Three layers of context' },
+      { href: '#project-agnostic', label: 'Project-agnostic design' },
+    ],
+  },
+  {
+    title: 'Commands',
+    items: [
+      { href: '#workflow-init', label: '/workflow-init' },
+      { href: '#feature', label: '/feature' },
+      { href: '#cleanup', label: '/cleanup' },
+      { href: '#code-scanner', label: 'code-scanner agent' },
+    ],
+  },
+  {
+    title: 'Project layout',
+    items: [
+      { href: '#layout', label: 'Overview' },
+      { href: '#root-files', label: 'Root briefs' },
+      { href: '#context-docs', label: 'docs/context/' },
+      { href: '#specs', label: 'docs/specs/' },
+      { href: '#features-folder', label: 'context/features/' },
+      { href: '#claude-folder', label: '.claude/' },
+      { href: '#claude-skills', label: '.claude/skills/' },
+      { href: '#claude-agents', label: '.claude/agents/' },
+    ],
+  },
+  {
+    title: 'Reference',
+    items: [
+      { href: '#compatibility', label: 'Compatibility' },
+      { href: '#legacy-cli', label: 'Legacy CLI' },
+      { href: '#faq', label: 'FAQ' },
+    ],
+  },
+];
+---
+
+<aside class="hidden lg:block w-60 shrink-0">
+  <div class="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pr-4 -mr-4">
+    <nav class="space-y-6 text-[14px]">
+      {groups.map((g) => (
+        <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-ink-tertiary)] mb-2">
+            {g.title}
+          </div>
+          <ul class="space-y-0.5">
+            {g.items.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  data-docs-link
+                  class="docs-link block px-3 py-1.5 rounded-md text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface-1)] transition-colors"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  </div>
+</aside>
+
+<style>
+  /* Linear-style active state — background-only, no side stripe */
+  .docs-link[data-active="true"] {
+    color: var(--color-ink);
+    background: var(--color-surface-1);
+  }
+</style>
+
+<script>
+  const linkList = Array.from(document.querySelectorAll('[data-docs-link]')) as HTMLAnchorElement[];
+  const idToLink = new Map<string, HTMLAnchorElement>();
+  for (const a of linkList) {
+    const href = a.getAttribute('href') || '';
+    if (href.startsWith('#')) idToLink.set(href.slice(1), a);
+  }
+
+  const sections = Array.from(idToLink.keys())
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => !!el);
+
+  const setActive = (id: string | null) => {
+    for (const a of linkList) {
+      const href = a.getAttribute('href') || '';
+      if (id && href === `#${id}`) {
+        a.setAttribute('data-active', 'true');
+      } else {
+        a.removeAttribute('data-active');
+      }
+    }
+  };
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.filter((e) => e.isIntersecting);
+      if (visible.length) {
+        visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        setActive(visible[0].target.id);
+      }
+    },
+    { rootMargin: '-20% 0% -70% 0%', threshold: [0, 1] }
+  );
+
+  for (const s of sections) io.observe(s);
+</script>

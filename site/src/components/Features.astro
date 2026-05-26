@@ -1,0 +1,78 @@
+---
+const features = [
+  {
+    cmd: '/workflow-init',
+    title: 'Guided bootstrap',
+    body: 'Ten-stage discovery flow that drops in the scaffold, runs an interview about your stack and strategy, then fills the templates with your actual answers.',
+    points: [
+      'Detects prior runs · resume / refresh / fresh',
+      'Optional Next.js / Astro / SvelteKit / TanStack scaffold',
+      'Recommends MCPs based on your stack',
+      'Drafts a Now / Next / Later roadmap',
+    ],
+  },
+  {
+    cmd: '/feature',
+    title: 'Feature lifecycle',
+    body: 'A fixed six-step loop for shipping work. Spec it, load it into context, start the branch, review it, complete it.',
+    points: [
+      'spec · load · start · review · explain · complete',
+      'Branch + spec + history entry, automatic',
+      'Each step is a separate action file',
+      'Works on bugfixes via fix/<slug> too',
+    ],
+  },
+  {
+    cmd: '/cleanup + scanner',
+    title: 'Housekeeping + reviews',
+    body: 'A cleanup skill for routine maintenance and a code-scanner agent for quality, security, and performance reviews on demand.',
+    points: [
+      'Project-local code-scanner agent',
+      'Scans for quality / security / perf issues',
+      'Runs on demand, not in CI',
+      'Read-only — never edits without permission',
+    ],
+  },
+];
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div id="features" class="max-w-2xl scroll-mt-20">
+      <span class="eyebrow">What it ships</span>
+      <h2
+        class="mt-3 text-[var(--color-ink)] text-balance font-semibold"
+        style="font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; letter-spacing: -0.025em;"
+      >
+        Three skills, one agent, every project.
+      </h2>
+      <p class="mt-5 text-[var(--color-ink-muted)] text-pretty" style="font-size: 18px; line-height: 1.55; letter-spacing: -0.005em;">
+        The scaffold installs a small but opinionated surface area. Each piece is invokable
+        through your agent's native slash-command mechanism — no special harness, no background
+        daemon, no lock-in.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-5 md:grid-cols-3">
+      {features.map((f) => (
+        <article class="card p-6 md:p-7 flex flex-col">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-[12px] px-2 py-1 rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink)] border border-[var(--color-hairline)]">{f.cmd}</span>
+          </div>
+          <h3 class="mt-5 text-[var(--color-ink)] font-semibold" style="font-size: 22px; line-height: 1.25; letter-spacing: -0.018em;">{f.title}</h3>
+          <p class="mt-2 text-[var(--color-ink-muted)] text-[15px] leading-[1.55]">{f.body}</p>
+          <ul class="mt-5 pt-5 border-t border-[var(--color-hairline)] space-y-2.5 text-[14px]">
+            {f.points.map((p) => (
+              <li class="flex items-start gap-2.5 text-[var(--color-ink-muted)] leading-[1.5]">
+                <svg class="mt-1 shrink-0 text-[var(--color-accent)]" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>{p}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>

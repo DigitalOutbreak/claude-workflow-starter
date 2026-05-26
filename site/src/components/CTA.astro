@@ -1,0 +1,47 @@
+---
+const installCmd = 'npx skills add DigitalOutbreak/workflow -g';
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div class="card p-10 md:p-14 text-center">
+      <span class="eyebrow">Ready to drop it in</span>
+      <h2
+        class="mt-4 text-[var(--color-ink)] text-balance font-semibold"
+        style="font-size: clamp(2.25rem, 5vw, 3.75rem); line-height: 1.05; letter-spacing: -0.03em;"
+      >
+        One command, one workflow, every project.
+      </h2>
+      <p class="mt-5 max-w-xl mx-auto text-[var(--color-ink-muted)] text-pretty" style="font-size: 17px; line-height: 1.55; letter-spacing: -0.005em;">
+        Install once. Use forever. The scaffold doesn't lock you in — it's MIT-licensed, ~21 files,
+        and everything is in your repo.
+      </p>
+
+      <div class="mt-9 flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3">
+        <button type="button" data-copy={installCmd} class="command-pill group mx-auto sm:mx-0" aria-label="Copy install command">
+          <span class="prompt">$</span>
+          <code class="font-mono">{installCmd}</code>
+          <span data-copy-icon class="copy-icon inline-flex items-center justify-center h-6 w-6">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </span>
+          <span data-copied-icon class="inline-flex items-center justify-center h-6 w-6">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </span>
+        </button>
+
+        <a href="https://github.com/DigitalOutbreak/workflow" target="_blank" rel="noopener noreferrer" class="button-secondary">
+          View on GitHub
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="7" y1="17" x2="17" y2="7" />
+            <polyline points="7 7 17 7 17 17" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

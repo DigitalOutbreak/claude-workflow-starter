@@ -1,0 +1,103 @@
+---
+const layers = [
+  {
+    label: '01',
+    name: 'Auto-imported',
+    when: 'Every session',
+    path: 'docs/context/*.md',
+    body: 'Five context docs that load with every conversation — thesis, project overview, coding standards, AI interaction rules, current feature.',
+  },
+  {
+    label: '02',
+    name: 'Read on demand',
+    when: 'When relevant',
+    path: 'docs/specs · features · backlog.md',
+    body: 'The deep specs, per-feature specs, and backlog. Pulled into context only when the task makes them relevant — so the auto-context stays light.',
+  },
+  {
+    label: '03',
+    name: 'Executed',
+    when: 'When invoked',
+    path: '.claude/skills · .claude/agents',
+    body: 'Slash commands (/feature, /cleanup) and agents (code-scanner) — invoked explicitly, never auto-fired. Predictable, observable, opt-in.',
+  },
+];
+
+const loopSteps = [
+  { label: 'spec' },
+  { label: 'load' },
+  { label: 'start' },
+  { label: 'review' },
+  { label: 'complete' },
+];
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div id="workflow" class="max-w-2xl scroll-mt-20">
+      <span class="eyebrow">How it works</span>
+      <h2
+        class="mt-3 text-[var(--color-ink)] text-balance font-semibold"
+        style="font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; letter-spacing: -0.025em;"
+      >
+        Three layers of context, loaded by need.
+      </h2>
+      <p class="mt-5 text-[var(--color-ink-muted)] text-pretty" style="font-size: 18px; line-height: 1.55; letter-spacing: -0.005em;">
+        The workflow is structured so the agent always knows enough — and never too much. Stable strategy at
+        the top. Deep detail in the middle. Action at the bottom. Each layer is loaded only when its job
+        demands it.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-5 lg:grid-cols-3">
+      {layers.map((layer) => (
+        <div class="card p-6 md:p-7">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[12px] text-[var(--color-ink-tertiary)]">{layer.label}</span>
+            <span class="status-badge !text-[11px]">{layer.when}</span>
+          </div>
+          <h3 class="mt-4 text-[var(--color-ink)] font-semibold" style="font-size: 22px; line-height: 1.25; letter-spacing: -0.018em;">{layer.name}</h3>
+          <code class="mt-2 inline-block font-mono text-[12px] text-[var(--color-ink-muted)] bg-[var(--color-surface-2)] px-2 py-1 rounded-md">
+            {layer.path}
+          </code>
+          <p class="mt-4 text-[var(--color-ink-muted)] text-[14px] leading-[1.55]">{layer.body}</p>
+        </div>
+      ))}
+    </div>
+
+    <!-- /feature loop -->
+    <div class="mt-12 card p-7 md:p-9">
+      <div class="flex flex-wrap items-baseline justify-between gap-3">
+        <h3 class="text-[var(--color-ink)] font-semibold" style="font-size: 20px; letter-spacing: -0.015em;">
+          The <span class="font-mono text-[var(--color-accent)]">/feature</span> loop
+        </h3>
+        <span class="font-mono text-[12px] text-[var(--color-ink-tertiary)]">5 commands · fixed order · git-aware</span>
+      </div>
+
+      <div class="mt-7 flex flex-wrap items-center gap-x-3 gap-y-3 font-mono text-[13px]">
+        {loopSteps.map((step, i) => (
+          <>
+            <span class="px-3 py-1.5 rounded-md border border-[var(--color-hairline-strong)] bg-[var(--color-surface-2)] text-[var(--color-ink)]">
+              /feature {step.label}
+            </span>
+            {i < loopSteps.length - 1 && (
+              <svg width="14" height="12" viewBox="0 0 14 12" fill="none" class="text-[var(--color-ink-tertiary)] shrink-0">
+                <path d="M1 6h11M8 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            )}
+          </>
+        ))}
+      </div>
+
+      <p class="mt-6 text-[14px] text-[var(--color-ink-muted)] max-w-3xl leading-[1.55]">
+        Five slash commands, one fixed order. You write the code between
+        <code class="font-mono text-[0.92em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">start</code>
+        and
+        <code class="font-mono text-[0.92em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">review</code>;
+        the rest is git plumbing. Spec writes a per-feature doc. Load pulls it into context. Start cuts the
+        branch and updates <code class="font-mono text-[0.92em] text-[var(--color-ink)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">current-feature.md</code>.
+        Complete merges, deletes the branch, and writes a history entry.
+      </p>
+    </div>
+  </div>
+</section>

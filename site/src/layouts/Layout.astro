@@ -1,0 +1,62 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = 'A drop-in workflow scaffold for AI-assisted coding. /workflow-init, /feature, /cleanup, code-scanner — across Claude Code, Codex, Cursor, Gemini, and ~12 more.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0e0f12" />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+    <script is:inline>
+      // Copy-to-clipboard for [data-copy] buttons.
+      // Sets data-copied="true" briefly — CSS handles the visual feedback
+      // (icon swap, border tint). Text content is never touched, so the
+      // button does not change width on click.
+      const COPY_TIMERS = new WeakMap();
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-copy]');
+        if (!btn) return;
+        const text = btn.getAttribute('data-copy');
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(() => {
+          btn.dataset.copied = 'true';
+          if (COPY_TIMERS.has(btn)) clearTimeout(COPY_TIMERS.get(btn));
+          COPY_TIMERS.set(btn, setTimeout(() => {
+            delete btn.dataset.copied;
+            COPY_TIMERS.delete(btn);
+          }, 1400));
+        });
+      });
+    </script>
+  </body>
+</html>

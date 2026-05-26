@@ -1,0 +1,551 @@
+@import "tailwindcss";
+
+@theme {
+  /* ──────────────────────────────────────────────────────────────────
+     Linear-style tokens. Reference:
+     github.com/voltagent/awesome-design-md/.../linear.app/DESIGN.md
+     ────────────────────────────────────────────────────────────────── */
+
+  /* Surface ladder — off-black, never pure. Subtle cool tint
+     (a touch of blue) ties into the lavender accent. */
+  --color-canvas: #0e0f12;
+  --color-surface-1: #16181c;
+  --color-surface-2: #1c1e23;
+  --color-surface-3: #21232a;
+  --color-surface-4: #25272e;
+
+  /* Hairlines */
+  --color-hairline: #2a2d34;
+  --color-hairline-strong: #3a3e46;
+  --color-hairline-tertiary: #44484f;
+
+  /* Text — off-white, never pure. Same cool tint as the surfaces. */
+  --color-ink: #ededee;
+  --color-ink-muted: #c8ccd2;
+  --color-ink-subtle: #888c95;
+  --color-ink-tertiary: #62666d;
+
+  /* Accent — Linear lavender-blue. Single chromatic. */
+  --color-accent: #5e6ad2;
+  --color-accent-hover: #828fff;
+  --color-accent-focus: #5e69d1;
+  --color-accent-secure: #7a7fad;
+
+  /* Semantic — used very sparingly */
+  --color-success: #27a644;
+
+  /* Fonts — Inter as the Linear Display/Text stand-in (Linear's face is an
+     Inter derivative). JetBrains Mono for actual code. */
+  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Radii — Linear: 12px for cards, 16px for product-screenshot frames */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-xxl: 24px;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background: var(--color-canvas);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-ink);
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-canvas); }
+  ::-webkit-scrollbar-thumb { background: var(--color-surface-2); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-hairline-strong); }
+}
+
+@layer components {
+  /* ──────────────────────────────────────────────────────────────────
+     Page container
+     ────────────────────────────────────────────────────────────────── */
+  .container-page {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) {
+    .container-page { padding-inline: 2rem; }
+  }
+  @media (min-width: 1280px) {
+    .container-page { padding-inline: 2.5rem; }
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Buttons — Linear-style: 8px radius, 8/14 padding, no glow
+     ────────────────────────────────────────────────────────────────── */
+  .button-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-accent);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .button-primary:hover {
+    background: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
+
+  .button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--color-ink);
+    background: var(--color-surface-1);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-hairline);
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .button-secondary:hover {
+    background: var(--color-surface-2);
+    border-color: var(--color-hairline-strong);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Card — Linear: surface-1, 12px radius, 1px hairline, no glow
+     ────────────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+  .card-featured {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+  .card:hover {
+    border-color: var(--color-hairline-strong);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Status badge — pill, surface-2, ink-muted text
+     ────────────────────────────────────────────────────────────────── */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-ink-muted);
+    background: var(--color-surface-2);
+    border-radius: 9999px;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-success);
+  }
+
+  /* Eyebrow — small uppercase label */
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    color: var(--color-ink-subtle);
+    text-transform: uppercase;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Command pill — copyable inline command
+     ────────────────────────────────────────────────────────────────── */
+  .command-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem 0.6rem 1rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .command-pill:hover {
+    border-color: var(--color-hairline-strong);
+    background: var(--color-surface-2);
+  }
+  .command-pill .prompt {
+    color: var(--color-ink-subtle);
+    user-select: none;
+  }
+  .command-pill .copy-icon {
+    color: var(--color-ink-subtle);
+    transition: color 0.15s ease;
+  }
+  .command-pill:hover .copy-icon {
+    color: var(--color-ink);
+  }
+  .command-pill[data-copied="true"] {
+    border-color: var(--color-accent);
+  }
+
+  /* Icon-swap visual feedback on copy. The default icon shows always;
+     the copied icon (checkmark) reveals when [data-copied="true"]. Width
+     of the button does not change because both icons share the same slot. */
+  [data-copy] [data-copied-icon] { display: none; }
+  [data-copy][data-copied="true"] [data-copy-icon] { display: none; }
+  [data-copy][data-copied="true"] [data-copied-icon] {
+    display: inline-flex;
+    color: var(--color-accent);
+  }
+  [data-copy][data-copied="true"] {
+    border-color: var(--color-accent);
+  }
+
+  /* ──────────────────────────────────────────────────────────────────
+     Product-screenshot frame — for the terminal preview
+     16px radius like Linear's product-screenshot-card
+     ────────────────────────────────────────────────────────────────── */
+  .product-frame {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+  .product-frame-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem 0.9rem;
+    border-bottom: 1px solid var(--color-hairline);
+    background: var(--color-surface-2);
+  }
+}
+
+@layer components {
+  /* ──────────────────────────────────────────────────────────────────
+     Long-form docs prose
+     ────────────────────────────────────────────────────────────────── */
+  .docs-prose {
+    color: var(--color-ink-muted);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.55;
+    letter-spacing: -0.005em;
+    max-width: 42rem;
+  }
+
+  .docs-prose > * + * {
+    margin-top: 1.15em;
+  }
+
+  .docs-prose h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--color-ink);
+    margin-top: 0;
+  }
+
+  .docs-prose .lead {
+    font-size: 18px;
+    color: var(--color-ink-muted);
+    line-height: 1.5;
+    margin-top: 1rem;
+    letter-spacing: -0.005em;
+  }
+
+  .docs-prose h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--color-ink);
+    margin-top: 4rem;
+  }
+
+  .docs-prose h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--color-ink);
+    margin-top: 2.5rem;
+  }
+
+  .docs-prose h4 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-ink);
+    margin-top: 1.75rem;
+  }
+
+  .docs-prose p {
+    color: var(--color-ink-muted);
+    text-wrap: pretty;
+  }
+
+  .docs-prose strong {
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+
+  .docs-prose a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .docs-prose a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .docs-prose code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .docs-prose pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.55;
+    background: var(--color-surface-1);
+    color: var(--color-ink);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin-top: 1.25rem;
+  }
+
+  .docs-prose pre code {
+    font-size: inherit;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+  }
+
+  .docs-prose ul,
+  .docs-prose ol {
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+  }
+  .docs-prose ul { list-style: disc; }
+  .docs-prose ol { list-style: decimal; }
+  .docs-prose li::marker { color: var(--color-ink-tertiary); }
+  .docs-prose li + li { margin-top: 0.4rem; }
+  .docs-prose li > p:not(:first-child) { margin-top: 0.5rem; }
+
+  /* Blockquote — no border-left (impeccable absolute-ban). Use indent + leading quote glyph. */
+  .docs-prose blockquote {
+    margin-top: 1.25rem;
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-style: italic;
+    position: relative;
+  }
+  .docs-prose blockquote::before {
+    content: '\201C';
+    position: absolute;
+    left: 0;
+    top: -0.25rem;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--color-accent);
+    font-style: normal;
+    line-height: 1;
+  }
+
+  .docs-prose hr {
+    border: 0;
+    height: 1px;
+    background: var(--color-hairline);
+    margin: 3rem 0;
+  }
+
+  .docs-prose table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 1.25rem;
+  }
+  .docs-prose th {
+    text-align: left;
+    color: var(--color-ink);
+    font-weight: 600;
+    padding: 0.65rem 0.8rem 0.65rem 0;
+    border-bottom: 1px solid var(--color-hairline-strong);
+  }
+  .docs-prose td {
+    padding: 0.65rem 0.8rem 0.65rem 0;
+    border-bottom: 1px solid var(--color-hairline);
+    vertical-align: top;
+  }
+  .docs-prose tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* Callout — surface card, no border-left, lavender accent label */
+  .docs-prose .callout {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .docs-prose .callout-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-accent);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .docs-prose .callout strong { color: var(--color-ink); }
+  .docs-prose .callout p + p { margin-top: 0.5rem; }
+
+  /* Anchor on heading hover */
+  .docs-prose h2 .anchor,
+  .docs-prose h3 .anchor {
+    opacity: 0;
+    color: var(--color-ink-tertiary);
+    margin-left: 0.5rem;
+    font-weight: 400;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+  }
+  .docs-prose h2:hover .anchor,
+  .docs-prose h3:hover .anchor { opacity: 1; }
+  .docs-prose h2 .anchor:hover,
+  .docs-prose h3 .anchor:hover { color: var(--color-accent); }
+}
+
+@layer components {
+  /* Subtle hero background — dot grid + faint horizontal scanlines, masked
+     to a soft ellipse so it never looks like a feature, just texture. Not a
+     spotlight, not a glow, not a gradient — just light pattern over canvas. */
+  .hero-texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at center, rgba(247, 248, 248, 0.045) 1px, transparent 1.4px),
+      linear-gradient(
+        to bottom,
+        rgba(247, 248, 248, 0.012) 0,
+        rgba(247, 248, 248, 0.012) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    background-size: 26px 26px, 100% 3px;
+    background-position: 0 0, 0 0;
+    -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 35%, #000 30%, transparent 80%);
+            mask-image: radial-gradient(ellipse 70% 55% at 50% 35%, #000 30%, transparent 80%);
+  }
+
+  /* A whisper of warmth at the top — single hairline rule + a barely-there
+     soft luminance bump to anchor the headline without becoming a "glow". */
+  .hero-floor {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-hairline) 20%,
+      var(--color-hairline) 80%,
+      transparent
+    );
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+  .font-display { font-family: var(--font-display); }
+  .font-body { font-family: var(--font-body); }
+  .font-mono { font-family: var(--font-mono); }
+  .animate-fade-up {
+    animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  height: 1em;
+  background: var(--color-accent);
+  vertical-align: -0.12em;
+  margin-left: 0.15rem;
+  animation: blink 1.05s steps(1) infinite;
+}

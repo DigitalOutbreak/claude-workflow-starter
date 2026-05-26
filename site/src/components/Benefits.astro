@@ -1,0 +1,55 @@
+---
+const benefits = [
+  {
+    title: 'One workflow across every agent',
+    body: 'Claude Code, Codex, Cursor, Gemini, Cline, Aider, Continue, Windsurf, OpenCode — they all read the same CLAUDE.md / AGENTS.md / GEMINI.md and the same context docs. Switch tools, keep your project context.',
+  },
+  {
+    title: 'Project-type aware',
+    body: 'Web, Backend-API, Mobile-Desktop, Other. The scaffold flow adapts — Web gets framework picker + shadcn opt-in; backends skip the UI bits; everything still gets the same workflow brain.',
+  },
+  {
+    title: 'Strategy docs, not just code patterns',
+    body: 'thesis.md gives the agent the why. project-overview.md gives the what. coding-standards.md gives the how. Decisions you make once stop getting re-asked every session.',
+  },
+  {
+    title: 'Real feature lifecycle, real branches',
+    body: 'The /feature loop is git-aware: it cuts branches, writes per-feature specs, updates current-feature.md, merges back, and writes history. Not a thin chat wrapper.',
+  },
+  {
+    title: 'Predictable, opt-in execution',
+    body: 'Slash commands and agents never auto-fire. /cleanup runs when you ask. code-scanner reviews on demand. Mutations need permission. The agent acts like a teammate, not a poltergeist.',
+  },
+  {
+    title: 'Updates compound',
+    body: 'Improve a skill in a real project, copy it back into the npm package, bump the version. Your future self and your collaborators inherit the improvement on the next install.',
+  },
+];
+---
+
+<section class="relative">
+  <div class="container-page py-24 md:py-32 border-t border-[var(--color-hairline)]">
+    <div class="max-w-2xl">
+      <span class="eyebrow">Why bother</span>
+      <h2
+        class="mt-3 text-[var(--color-ink)] text-balance font-semibold"
+        style="font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.1; letter-spacing: -0.025em;"
+      >
+        What you get.
+      </h2>
+      <p class="mt-5 text-[var(--color-ink-muted)] text-pretty" style="font-size: 18px; line-height: 1.55; letter-spacing: -0.005em;">
+        Six things the scaffold does for you on every project so you don't have to set them up by
+        hand each time.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-px bg-[var(--color-hairline)] border border-[var(--color-hairline)] rounded-[12px] overflow-hidden md:grid-cols-2 lg:grid-cols-3">
+      {benefits.map((b) => (
+        <div class="bg-[var(--color-surface-1)] p-6 md:p-7 hover:bg-[var(--color-surface-2)] transition-colors">
+          <h3 class="text-[var(--color-ink)] font-semibold text-[16px] tracking-tight">{b.title}</h3>
+          <p class="mt-2 text-[14px] text-[var(--color-ink-muted)] leading-[1.55]">{b.body}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
