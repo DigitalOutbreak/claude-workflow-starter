@@ -9,20 +9,20 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 From inside any new project directory:
 
 ```sh
-npx @digitaloutbreak/claude-workflow init
+npx @digitaloutbreak/workflow-init
 ```
 
 Or target an explicit path:
 
 ```sh
-npx @digitaloutbreak/claude-workflow init ./my-new-app
+npx @digitaloutbreak/workflow-init ./my-new-app
 ```
 
 That's it. No clone, no PATH setup, no folder structure assumptions. `npx` handles caching; the installer refuses to overwrite if any target files already exist.
 
 > Until the package is published to npm, you can still run it straight from GitHub:
 > ```sh
-> npx github:DigitalOutbreak/claude-workflow-starter init
+> npx github:DigitalOutbreak/claude-workflow-starter
 > ```
 
 ## Use the slash command (optional)
@@ -30,7 +30,7 @@ That's it. No clone, no PATH setup, no folder structure assumptions. `npx` handl
 Install once per machine to add `/workflow-init` to every Claude Code session:
 
 ```sh
-npx @digitaloutbreak/claude-workflow install
+npx @digitaloutbreak/workflow-init --install-skill
 ```
 
 Then from any Claude Code session, in any project directory:
@@ -110,9 +110,9 @@ The starter installs both — collaborators can use whatever tool they prefer.
 ## CLI reference
 
 ```
-npx @digitaloutbreak/claude-workflow init [target]   Install starter into target (default: cwd)
-npx @digitaloutbreak/claude-workflow install         Install the /workflow-init global skill
-npx @digitaloutbreak/claude-workflow --help          Show usage
+npx @digitaloutbreak/workflow-init [target]   Install starter into target (default: cwd)
+npx @digitaloutbreak/workflow-init --install-skill         Install the /workflow-init global skill
+npx @digitaloutbreak/workflow-init --help          Show usage
 ```
 
 ## Don't have npx?

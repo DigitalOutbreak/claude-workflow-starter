@@ -6,7 +6,7 @@ argument-hint: [target-dir]
 
 # Workflow Init
 
-Installs the [`@digitaloutbreak/claude-workflow`](https://github.com/DigitalOutbreak/claude-workflow-starter) starter into a target directory by invoking its `npx` command.
+Installs the [`@digitaloutbreak/workflow-init`](https://github.com/DigitalOutbreak/claude-workflow-starter) starter into a target directory by invoking its `npx` command.
 
 ## Task
 
@@ -25,10 +25,10 @@ Execute one of these (pick based on whether the package is published yet):
 
 ```bash
 # Once published to npm:
-npx @digitaloutbreak/claude-workflow init "$TARGET"
+npx @digitaloutbreak/workflow-init "$TARGET"
 
 # Until published — run directly from GitHub:
-npx github:DigitalOutbreak/claude-workflow-starter init "$TARGET"
+npx github:DigitalOutbreak/claude-workflow-starter "$TARGET"
 ```
 
 Quote the CLI's output back to the user — it lists each file added and ends with a numbered next-steps list (edit CLAUDE.md, fill in thesis.md, fill in project-overview.md, etc.).

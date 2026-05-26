@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// claude-workflow-starter — Node CLI
+// workflow-init — Node CLI for @digitaloutbreak/workflow-init
 //
 // Usage:
-//   npx @digitaloutbreak/claude-workflow init [target]   # install starter into target (default cwd)
-//   npx @digitaloutbreak/claude-workflow install         # install the /workflow-init global skill
-//   npx @digitaloutbreak/claude-workflow --help
+//   npx @digitaloutbreak/workflow-init                  Install starter into current dir
+//   npx @digitaloutbreak/workflow-init ./my-app         Install into ./my-app
+//   npx @digitaloutbreak/workflow-init --install-skill  Install /workflow-init global slash command
+//   npx @digitaloutbreak/workflow-init --help
 //
 // No external deps — uses Node's built-in fs/path/os only.
 
@@ -76,9 +77,8 @@ const bold = (t) => color("1", t);
 
 // ────────────────────────────────────────────────────────────────────── init
 
-function cmdInit(args) {
-  const targetArg = args[0] || ".";
-  const target = path.resolve(process.cwd(), targetArg);
+function cmdInit(targetArg) {
+  const target = path.resolve(process.cwd(), targetArg || ".");
 
   if (!exists(target)) {
     console.error(red(`error: target '${target}' does not exist.`));
@@ -147,9 +147,9 @@ function cmdInit(args) {
   console.log("  6. Start a Claude session — CLAUDE.md and the @-imports load automatically.");
 }
 
-// ────────────────────────────────────────────────────────────────────── install
+// ────────────────────────────────────────────────────────────────────── install-skill
 
-function cmdInstall() {
+function cmdInstallSkill() {
   const skillSrc = path.join(PKG_ROOT, "skill", "workflow-init", "skill.md");
   if (!exists(skillSrc)) {
     console.error(red(`error: skill source not found at ${skillSrc}`));
@@ -173,7 +173,7 @@ function cmdInstall() {
   console.log("");
   console.log(
     dim(
-      "The skill just delegates to `npx @digitaloutbreak/claude-workflow init` —"
+      "The skill just delegates to `npx @digitaloutbreak/workflow-init` —"
     )
   );
   console.log(
@@ -187,22 +187,22 @@ function cmdInstall() {
 
 function cmdHelp() {
   const help = `
-${bold("claude-workflow-starter")} — drop-in workflow scaffold for Claude Code projects
+${bold("@digitaloutbreak/workflow-init")} — drop-in workflow scaffold for Claude Code projects
 
 ${bold("Usage:")}
-  npx @digitaloutbreak/claude-workflow ${green("init")} ${dim("[target]")}     Install starter into target (default: cwd)
-  npx @digitaloutbreak/claude-workflow ${green("install")}              Install the /workflow-init global skill
-  npx @digitaloutbreak/claude-workflow ${green("--help")}               Show this message
+  npx @digitaloutbreak/workflow-init ${dim("[target]")}        Install starter into target (default: cwd)
+  npx @digitaloutbreak/workflow-init ${green("--install-skill")}    Install the /workflow-init global slash command
+  npx @digitaloutbreak/workflow-init ${green("--help")}             Show this message
 
 ${bold("Examples:")}
   ${dim("# From a fresh project directory")}
-  npx @digitaloutbreak/claude-workflow init
+  npx @digitaloutbreak/workflow-init
 
   ${dim("# Targeting a specific path")}
-  npx @digitaloutbreak/claude-workflow init ./my-app
+  npx @digitaloutbreak/workflow-init ./my-app
 
-  ${dim("# Install the global slash command")}
-  npx @digitaloutbreak/claude-workflow install
+  ${dim("# Install the global slash command (one-time, per machine)")}
+  npx @digitaloutbreak/workflow-init --install-skill
 
   ${dim("# Then from any Claude Code session:")}
   /workflow-init
@@ -212,7 +212,7 @@ ${bold("What gets installed:")}
   CLAUDE.md, AGENTS.md, docs/context/* (5 docs), docs/specs/project-spec.md,
   .claude/agents/code-scanner.md, .claude/skills/feature/, .claude/skills/cleanup/
 
-The init command refuses to overwrite existing files — safe to run anywhere.
+The default command refuses to overwrite existing files — safe to run anywhere.
 
 ${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
 `;
@@ -222,25 +222,34 @@ ${bold("Repo:")} https://github.com/DigitalOutbreak/claude-workflow-starter
 // ────────────────────────────────────────────────────────────────────── main
 
 function main() {
-  const [cmd, ...args] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const first = args[0];
 
-  if (!cmd || cmd === "--help" || cmd === "-h" || cmd === "help") {
+  // Help variants
+  if (first === "--help" || first === "-h" || first === "help") {
     cmdHelp();
     return;
   }
 
-  switch (cmd) {
-    case "init":
-      cmdInit(args);
-      break;
-    case "install":
-    case "install-skill":
-      cmdInstall();
-      break;
-    default:
-      console.error(red(`unknown command: ${cmd}`));
-      console.error(`Run ${green("npx @digitaloutbreak/claude-workflow --help")} for usage.`);
-      process.exit(1);
+  // Install-skill flag
+  if (first === "--install-skill" || first === "install-skill" || first === "install") {
+    cmdInstallSkill();
+    return;
+  }
+
+  // Reject unknown flags
+  if (first && first.startsWith("-")) {
+    console.error(red(`unknown flag: ${first}`));
+    console.error(`Run ${green("npx @digitaloutbreak/workflow-init --help")} for usage.`);
+    process.exit(1);
+  }
+
+  // Default action: init. Optional first arg is the target path.
+  // Also accept "init" as an explicit subcommand for backwards compat.
+  if (first === "init") {
+    cmdInit(args[1]);
+  } else {
+    cmdInit(first);
   }
 }
 
