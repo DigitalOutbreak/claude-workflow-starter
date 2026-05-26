@@ -93,13 +93,15 @@ Pick the command set based on the user's Stage 1 choice.
 cd "$PARENT" && npx create-next-app@latest <name> \
   --typescript \
   --tailwind \
+  --eslint \
   --app \
   --turbopack \
   --import-alias '@/*' \
   --use-npm \
-  --yes \
-  --no-eslint
+  --yes
 ```
+
+(All Next.js framework defaults included: TypeScript, Tailwind v4, ESLint, App Router, Turbopack, `@/*` import alias.)
 
 If they picked **Next.js + shadcn**, follow up with:
 
@@ -122,6 +124,8 @@ cd "$PARENT" && npm create astro@latest <name> -- \
 cd "$PARENT/<name>" && npx astro add tailwind --yes
 ```
 
+(Astro doesn't ship ESLint as a default convention — `astro check` is the type checker and Prettier handles formatting. If the user wants ESLint, they can `npm i -D eslint` later. Tailwind is added explicitly because no Astro template includes it by default.)
+
 If they picked **Astro + shadcn**, follow up with the React integration *first* (shadcn requires React in Astro):
 
 ```bash
@@ -135,12 +139,12 @@ cd "$PARENT/<name>" && npx shadcn@latest init --yes --base-color zinc
 cd "$PARENT" && npx sv create <name> \
   --template minimal \
   --types ts \
-  --no-add-ons \
+  --add-ons eslint,prettier,tailwindcss \
   --install npm \
   --no-git
-
-cd "$PARENT/<name>" && npx sv add --tailwindcss
 ```
+
+(Adds the SvelteKit-recommended defaults: ESLint, Prettier, Tailwind. The `sv create` CLI handles all three as add-ons in one shot — no separate `sv add` step needed.)
 
 If they picked **SvelteKit + shadcn-svelte**, follow up:
 
@@ -154,9 +158,11 @@ cd "$PARENT/<name>" && npx shadcn-svelte@latest init --base-color zinc
 
 ```bash
 cd "$PARENT" && npx create-tsrouter-app@latest <name> \
-  --add-ons start,tailwind \
+  --add-ons start,tailwind,eslint,prettier \
   --package-manager npm
 ```
+
+(Includes TanStack's recommended add-ons: Start SSR + Tailwind + ESLint + Prettier.)
 
 If they picked **TanStack Start + shadcn**:
 
