@@ -10,7 +10,7 @@ Snapshot of the workflow running in [DigitalOutbreak/digitaloutbreak-os](https:/
 
 ```sh
 # 1. Install GLOBALLY — shows you a picker of every agent you have installed
-npx skills add DigitalOutbreak/workflow -g -s workflow-init
+npx skills add DigitalOutbreak/workflow -g
 
 # 2. From any project dir, in your agent:
 /workflow-init
@@ -18,9 +18,8 @@ npx skills add DigitalOutbreak/workflow -g -s workflow-init
 
 The first command uses the open [agent skills](https://www.skills.sh) ecosystem CLI:
 
-- `-g` forces a **global** install. Without it the CLI auto-detects scope — if you happen to be standing in a git repo, it'd install project-local, which isn't what you want for a slash command you use everywhere.
-- `-s workflow-init` says **just install the bootstrap skill**. The repo ships three skills total — `workflow-init` (the bootstrap entry point), `feature` (lifecycle workflow), and `cleanup` (housekeeping). The last two are **project-local** by design — they get copied into each new project by `/workflow-init` itself. You don't want them as global slash commands.
-- **No `-y`** — the CLI will show you a picker of every detected agent on your machine (Claude Code, Codex, Cursor, Gemini, Copilot, Windsurf, OpenCode, and ~10 more) so you can tick the ones you actually want. Press the spacebar to toggle, Enter to confirm.
+- `-g` forces a **global** install. Without it the CLI auto-detects scope — if you happen to be standing in a git repo, it'd install project-local.
+- The CLI then shows you a picker of every detected agent on your machine (Claude Code, Codex, Cursor, Gemini, Copilot, Windsurf, OpenCode, and ~10 more) so you can tick the ones you actually want. Press the spacebar to toggle, Enter to confirm.
 
 The second is what you'll actually use every time you start a project.
 
@@ -29,7 +28,7 @@ The second is what you'll actually use every time you start a project.
 Add `-y` if you want one-shot install without picking:
 
 ```sh
-npx skills add DigitalOutbreak/workflow -g -y -s workflow-init
+npx skills add DigitalOutbreak/workflow -g -y
 ```
 
 ### Install project-local instead of global
@@ -37,7 +36,7 @@ npx skills add DigitalOutbreak/workflow -g -y -s workflow-init
 Omit `-g` to install into the current project's `.agents/skills/` (skills are then checked into version control with the project):
 
 ```sh
-npx skills add DigitalOutbreak/workflow -s workflow-init
+npx skills add DigitalOutbreak/workflow
 ```
 
 > Prefer our own CLI? Backwards-compat fallback:
