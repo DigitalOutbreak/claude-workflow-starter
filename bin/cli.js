@@ -271,6 +271,24 @@ function getTargets(skillContent) {
   ];
 }
 
+// Compare what's currently installed at a target with what we'd write.
+// Returns { action, label } where action is "new" | "updated" | "unchanged".
+function describeState(target) {
+  if (!exists(target.dest)) {
+    return { action: "new", label: "not installed" };
+  }
+  let current;
+  try {
+    current = fs.readFileSync(target.dest, "utf8");
+  } catch {
+    return { action: "updated", label: "exists, will replace" };
+  }
+  if (current === target.content) {
+    return { action: "unchanged", label: "already up-to-date" };
+  }
+  return { action: "updated", label: "outdated — will update" };
+}
+
 async function cmdInstallSkill(args) {
   const skillSrc = path.join(PKG_ROOT, "skill", "workflow-init", "skill.md");
   if (!exists(skillSrc)) {
@@ -308,13 +326,22 @@ async function cmdInstallSkill(args) {
     }
 
     // Ask Y/n per agent using a single shared readline.
+    // Show current status (not installed / up-to-date / will update) per target,
+    // and default the prompt accordingly — "already up-to-date" defaults to No.
     console.log("Pick which agents to install the /workflow-init skill for.");
     console.log(dim("(Press Enter to accept the default, type 'n' to skip.)"));
     console.log("");
-    const prompts = allTargets.map((t) => ({
-      text: `  Install for ${t.tool}?`,
-      defaultYes: true,
-    }));
+
+    const prompts = allTargets.map((t) => {
+      const status = describeState(t);
+      // Default Yes for "not installed" or "will update". Default No for "up-to-date".
+      const defaultYes = status.action !== "unchanged";
+      return {
+        text: `  Install for ${t.tool}? ${dim(`(${status.label})`)}`,
+        defaultYes,
+      };
+    });
+
     const answers = await askMany(prompts);
     selectedKeys = allTargets
       .filter((_, i) => answers[i])
@@ -331,15 +358,34 @@ async function cmdInstallSkill(args) {
   console.log(`${dim("source:")} ${skillSrc}`);
   console.log("");
 
+  // Count per outcome so the summary line is honest about what actually happened.
+  let counts = { new: 0, updated: 0, unchanged: 0 };
+
   for (const target of selected) {
-    fs.mkdirSync(path.dirname(target.dest), { recursive: true });
-    fs.writeFileSync(target.dest, target.content);
-    console.log(`  ${green("+")} ${target.tool}`);
+    const state = describeState(target);
+    counts[state.action]++;
+
+    if (state.action === "unchanged") {
+      // Don't touch the file — it's identical. Skip the write to avoid
+      // bumping mtime unnecessarily.
+      console.log(`  ${dim("·")} ${target.tool} ${dim("(already up-to-date)")}`);
+    } else {
+      fs.mkdirSync(path.dirname(target.dest), { recursive: true });
+      fs.writeFileSync(target.dest, target.content);
+      const marker = state.action === "new" ? green("+") : green("↻");
+      const note = state.action === "new" ? "" : dim(" (updated)");
+      console.log(`  ${marker} ${target.tool}${note}`);
+    }
     console.log(`    ${dim(target.dest)}`);
   }
 
   console.log("");
-  console.log(green(`Installed /workflow-init skill for ${selected.length} agent${selected.length === 1 ? "" : "s"}.`));
+  // Summary line reflects what actually happened.
+  const parts = [];
+  if (counts.new > 0) parts.push(`${counts.new} installed`);
+  if (counts.updated > 0) parts.push(`${counts.updated} updated`);
+  if (counts.unchanged > 0) parts.push(`${counts.unchanged} already up-to-date`);
+  console.log(green(`/workflow-init skill: ${parts.join(", ")}.`));
   console.log("");
 
   // Print the invocations only for what was actually installed.
