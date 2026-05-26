@@ -8,6 +8,15 @@ argument-hint: [target-dir]
 
 > Marketing-site sibling to `/workflow-init`. Same machinery, slimmer file set. Skip this and use `/workflow-init` if you're building a product app with a database, auth, and a feature lifecycle.
 
+## Prompt style — when to use a picker vs prose
+
+This skill mixes two prompt styles. Pick the right one for each question or the UX gets ugly.
+
+- **Picker (e.g. `AskUserQuestion`)** — use ONLY when the answer is one of a small, fixed set of options the agent can enumerate honestly. Examples: "new site or existing?", "Astro / Next.js / SvelteKit?", "MDX or headless CMS?". **Every option must be a real, mutually-exclusive choice** — never pad to hit a minimum with placeholders.
+- **Free-text prose** — use for any answer the user has to invent: project names, audience descriptions, brand voice adjectives, banned words, URLs, refs. **Never** wrap these in a picker with canned defaults like "marketing-site / site / www" — those options are noise. Ask in plain prose and let the user type.
+
+Cross-agent note: in Claude Code, the picker is `AskUserQuestion`; in Codex / other agents, it's prose with a clear option list. The free-text style is the same everywhere — a plain question with no canned answers.
+
 End-to-end bootstrap for marketing / agency / brand sites. Eight stages:
 
 ```
@@ -59,7 +68,7 @@ Run a directory listing (`ls -A` or equivalent) and decide:
 | CWD shape | How to tell | Default behavior |
 |---|---|---|
 | **Project root** | CWD itself contains `package.json`, `astro.config.*`, `next.config.*`, `svelte.config.*`, `src/`, `app/`, `pages/`, etc. | Assume **existing site** in CWD. Skip the "new vs existing" question — go straight to confirming "Add workflow files to this existing site at `<cwd>`?" |
-| **Workspace / parent dir** | CWD contains multiple subdirectories that themselves look like projects (each with their own `package.json`, framework configs, or `.git`), AND CWD has no framework config of its own. Examples: `~/Developer/projects/`, `~/Developer/_starters/`, anything that looks like a folder full of unrelated projects. | Assume **new site, scaffold here as a subdir**. Ask only for the new project's name; DO NOT list the sibling project dirs as options to bootstrap into. |
+| **Workspace / parent dir** | CWD contains multiple subdirectories that themselves look like projects (each with their own `package.json`, framework configs, or `.git`), AND CWD has no framework config of its own. Examples: `~/Developer/projects/`, `~/Developer/_starters/`, anything that looks like a folder full of unrelated projects. | Assume **new site, scaffold here as a subdir**. Ask only for the new project's folder name — **plain prose prompt, free-text input, NO picker, NO canned defaults** like "marketing-site / site / www". The user invents the name. Example prompt: *"What's the folder name for the new site? (will be created under `<cwd>`)"* DO NOT list the sibling project dirs as options to bootstrap into. |
 | **Empty or sparse dir** | CWD is empty, or contains only dotfiles / a single placeholder. | Assume **new site, scaffold in place** (no subdir). |
 | **User passed a target arg** | `$ARGUMENTS` is non-empty | Resolve the arg as the parent dir. Apply the same classification to it. |
 
@@ -135,36 +144,38 @@ The CLI refuses to overwrite existing files of the same name — surfaces confli
 
 ## Stage 4 — Interview
 
-Short interview (~5 minutes). Five rounds. Use structured-question prompts where the agent supports them (Claude Code: `AskUserQuestion`); otherwise prose with clear option lists.
+Short interview (~5 minutes). Five rounds.
 
-### Round 1 — Identity
+**Prompt style for this stage: free-text prose for almost every question** — site names, descriptions, audience, offer, brand-voice adjectives, banned words are all invention answers, not multiple-choice. Use a picker ONLY where the answer is genuinely one of a small fixed set (the conversion-event question and the palette-starting-point question below). Re-read the *"Prompt style"* section at the top of this file if unsure.
+
+### Round 1 — Identity *(free-text prose)*
+
+Ask each as a plain prose question:
+
+1. **Site name** — one short string. What goes in the `{{Site Name}}` placeholder. *(Free text. No picker.)*
+2. **One-line description** — "[Site Name] — [what it is] for [who]". *(Free text.)*
+3. **Production URL** — if it exists; "not yet" is a valid answer for new sites. *(Free text.)*
+
+### Round 2 — Audience & offer *(mostly free-text)*
 
 Ask:
 
-1. **Site name** (one short string — what to put in the `{{Site Name}}` placeholder)
-2. **One-line description** ("[Site Name] — [what it is] for [who]")
-3. **Production URL** (if it exists; "not yet" is a valid answer for new sites)
+4. **Who's the audience?** Title, company size, the moment they're in when they land. *(Free text.)*
+5. **What do you sell?** List the offers. Don't accept "everything" — push for the top 1-3. *(Free text.)*
+6. **What's the primary conversion event?** *(Picker is OK here — it's a small fixed set.)* Options: Booked call · Form submit · Newsletter signup · Email reply · Purchase · Other (free text). Pick ONE.
 
-### Round 2 — Audience & offer
-
-Ask:
-
-4. **Who's the audience?** Title, company size, the moment they're in when they land.
-5. **What do you sell?** List the offers. Don't accept "everything" — push for the top 1-3.
-6. **What's the primary conversion event?** Booked call? Form submit? Newsletter signup? Email reply? Buy now? Pick ONE.
-
-After capturing answers, ask a follow-up elaboration round:
+After capturing answers, ask a follow-up elaboration round as plain prose:
 
 > "Anything I missed about the audience or the offer that should shape how the site sounds?"
 
 Capture freeform text — it feeds `brand.md` and `site-brief.md`.
 
-### Round 3 — Brand voice
+### Round 3 — Brand voice *(free-text prose)*
 
 Ask:
 
-7. **Three adjectives that describe the voice.** Push back if they pick generic ones ("professional, innovative, friendly" — recommend more specific). Good answers sound like "direct, blunt, founder-led" or "warm, observant, quietly confident."
-8. **Three words or phrases this site will NEVER use.** These go in `brand.md`'s "Words we avoid" section. Common candidates: "solutions," "world-class," "synergy," "we're passionate about."
+7. **Three adjectives that describe the voice.** *(Free text — the user types three words.)* Push back if they pick generic ones ("professional, innovative, friendly" — recommend more specific). Good answers sound like "direct, blunt, founder-led" or "warm, observant, quietly confident."
+8. **Three words or phrases this site will NEVER use.** *(Free text.)* These go in `brand.md`'s "Words we avoid" section. Common candidates: "solutions," "world-class," "synergy," "we're passionate about."
 
 If the user struggles, offer the example list from `brand.md` and ask them to pick which they hate.
 
@@ -172,8 +183,8 @@ If the user struggles, offer the example list from `brand.md` and ask them to pi
 
 Ask:
 
-9. **Refs / inspiration** — Pinterest board, links to sites they want to feel like, or "no refs yet, recommend something."
-10. **Palette starting point** — one of: "I have brand colors already" / "Use a neutral palette to start" / "Bold and saturated" / "Show me options."
+9. **Refs / inspiration** *(free text)* — Pinterest board, links to sites they want to feel like, or "no refs yet, recommend something."
+10. **Palette starting point** *(picker is OK — fixed set)* — one of: "I have brand colors already" / "Use a neutral palette to start" / "Bold and saturated" / "Show me options."
 
 ### Round 5 — Stack confirm
 
