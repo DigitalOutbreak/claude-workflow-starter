@@ -42,10 +42,10 @@ Only ask if Step 1a was "Scaffold a new project."
 
 | Option | What runs (high-level) |
 |---|---|
-| **Next.js** *(recommended)* | `create-next-app` — TS + Tailwind + App Router + Turbopack |
-| **Astro** | `npm create astro` (minimal, strictest TS) + `astro add tailwind` |
-| **SvelteKit** | `npx -y sv create` (minimal, TS) + `sv add tailwindcss` |
-| **TanStack Start** | `npx create-tsrouter-app` with Start + Tailwind add-ons |
+| **Next.js** *(recommended)* | With shadcn → `shadcn@latest init --template next` (one-command scaffold). Without → `create-next-app` (TS + Tailwind + App Router + Turbopack) |
+| **Astro** | With shadcn → `shadcn@latest init --template astro` (scaffolds + React + Tailwind + shadcn in one). Without → `npm create astro` (minimal, strictest TS) + `astro add tailwind` |
+| **SvelteKit** | `npx -y sv create` (minimal, TS) + `sv add tailwindcss`. shadcn opt-in uses `shadcn-svelte` (community Svelte port) |
+| **TanStack Start** | With shadcn → `shadcn@latest init --template start` (one-command). Without → `create-tsrouter-app` with Start + Tailwind + ESLint + Prettier add-ons |
 
 Frame: "Which framework?" — recommend Next.js as the default for new React UI projects.
 
@@ -91,7 +91,15 @@ Invoke the elaboration loop if the user wants to brainstorm names. Once settled,
 
 Pick the command set based on the user's Stage 1 choice.
 
-**For Next.js (with or without shadcn):**
+**For Next.js + shadcn (use shadcn's unified scaffolder — one command):**
+
+```bash
+cd "$PARENT" && npx -y shadcn@latest init --template next --name <name> --yes
+```
+
+This is the modern path. shadcn scaffolds Next.js + installs shadcn in one step. Different (and slightly better) result than `create-next-app` followed by `shadcn init` — fewer post-hoc config tweaks, shadcn's preferred defaults baked in.
+
+**For Next.js without shadcn (Tailwind only, no UI lib):**
 
 ```bash
 cd "$PARENT" && npx -y create-next-app@latest <name> \
@@ -107,15 +115,15 @@ cd "$PARENT" && npx -y create-next-app@latest <name> \
 
 (All Next.js framework defaults included: TypeScript, Tailwind v4, ESLint, App Router, Turbopack, `@/*` import alias.)
 
-If they picked **Next.js + shadcn**, follow up with:
+**For Astro + shadcn (use shadcn's unified scaffolder — one command):**
 
 ```bash
-cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
+cd "$PARENT" && npx -y shadcn@latest init --template astro --name <name> --yes
 ```
 
-Zinc is a neutral default. If the user has a strong preference (slate / stone / gray / neutral / red / etc.), ask which they prefer before running shadcn.
+shadcn scaffolds Astro + adds React + Tailwind + initializes shadcn in one step.
 
-**For Astro:**
+**For Astro without shadcn (content site, no React UI needed):**
 
 ```bash
 cd "$PARENT" && npm create astro@latest <name> -- \
@@ -128,14 +136,7 @@ cd "$PARENT" && npm create astro@latest <name> -- \
 cd "$PARENT/<name>" && npx -y astro add tailwind --yes
 ```
 
-(Astro doesn't ship ESLint as a default convention — `astro check` is the type checker and Prettier handles formatting. If the user wants ESLint, they can `npm i -D eslint` later. Tailwind is added explicitly because no Astro template includes it by default.)
-
-If they picked **Astro + shadcn**, follow up with the React integration *first* (shadcn requires React in Astro):
-
-```bash
-cd "$PARENT/<name>" && npx -y astro add react --yes
-cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
-```
+(Astro doesn't ship ESLint as a default convention — `astro check` is the type checker and Prettier handles formatting. Tailwind is added explicitly because no Astro template includes it by default.)
 
 **For SvelteKit:**
 
@@ -158,7 +159,15 @@ cd "$PARENT/<name>" && npx -y shadcn-svelte@latest init --base-color zinc
 
 (Note: `shadcn-svelte` is the community Svelte port of shadcn, not the official `shadcn` CLI — different package.)
 
-**For TanStack Start:**
+**For TanStack Start + shadcn (use shadcn's unified scaffolder — one command):**
+
+```bash
+cd "$PARENT" && npx -y shadcn@latest init --template start --name <name> --yes
+```
+
+shadcn scaffolds TanStack Start + initializes shadcn in one step.
+
+**For TanStack Start without shadcn:**
 
 ```bash
 cd "$PARENT" && npx -y create-tsrouter-app@latest <name> \
@@ -167,14 +176,6 @@ cd "$PARENT" && npx -y create-tsrouter-app@latest <name> \
 ```
 
 (Includes TanStack's recommended add-ons: Start SSR + Tailwind + ESLint + Prettier.)
-
-If they picked **TanStack Start + shadcn**:
-
-```bash
-cd "$PARENT/<name>" && npx -y shadcn@latest init --yes --base-color zinc
-```
-
-(TanStack Start is React under the hood, so the official shadcn CLI works directly.)
 
 CLI flag names occasionally shift between versions across all four scaffolders. If a flag is rejected, drop the offending flag and re-run rather than tweaking endlessly — the defaults are reasonable.
 
