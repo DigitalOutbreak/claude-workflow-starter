@@ -46,8 +46,8 @@ made it real. Living history, accumulated as `/feature complete` runs. -->
 
 <!-- Things to do on a schedule, not as one-off milestones. -->
 
-- Run audit pass (UI critique + accessibility) every 2 milestones.
-- Run refactor scanner every 3 milestones.
+- Every 2-3 milestones, spawn the bundled `code-scanner` agent (`.claude/agents/code-scanner.md`) on the changed areas — security + quality + dead-code pass in parallel.
+- Every 2-3 milestones, do a manual UI audit pass: walk the user-facing flows, check accessibility (keyboard nav + screen reader + contrast), check responsive breakpoints. Use harness-built-in slash commands if your agent has them (`/audit`, `/critique`, `/polish` in Claude Code).
 - Bugfixes go on `fix/<slug>` branches — NOT in this roadmap.
 
 ## Relationship to other docs

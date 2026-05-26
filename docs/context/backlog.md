@@ -2,7 +2,7 @@
 
 Consolidated list of items that have been **explicitly deferred from a shipped feature**, with the reasoning and the history entry where the punt was made.
 
-This is not the full v2 roadmap — that lives in [`project-overview.md`](./project-overview.md) (§ Phased Roadmap). This doc bridges tactical deferrals: things we decided NOT to do inside a shipped PR, that someone should later remember to pick up.
+This is not the full roadmap — that lives in [`roadmap.md`](./roadmap.md) (the living `Now` / `Next` / `Later` phases). This doc bridges tactical deferrals: things we decided NOT to do inside a shipped PR, that someone should later remember to pick up. When a backlog item gets picked up, it's promoted to a feature spec under whatever `roadmap.md` milestone it fits.
 
 When something here gets picked up:
 1. Move the relevant requirements into a feature spec (`docs/context/features/<slug>-spec.md`).

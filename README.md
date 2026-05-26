@@ -48,11 +48,17 @@ npx skills add DigitalOutbreak/workflow
 
 ### What `/workflow-init` does
 
-- Optional Next.js / Astro / SvelteKit / TanStack Start scaffold (with shadcn opt-in)
-- Drops CLAUDE.md + AGENTS.md + GEMINI.md + `docs/context/` + `.claude/` into the project
-- Discovery interview with elaboration loops (identity / stack / strategy / surfaces)
-- Fills the templates with your actual answers
-- Recommends a first feature and offers to `/feature spec` it
+Ten-stage guided bootstrap (~5-15 min depending on how much you elaborate):
+
+1. **Idempotency check** — detects prior runs in the target dir and offers Resume / Refresh / Start fresh / Abort
+2. **Pre-flight** — asks the project type (Web / Backend-API / Mobile-Desktop / Other). For Web, optionally scaffolds with Next.js / Astro / SvelteKit / TanStack Start + shadcn opt-in. Non-Web project types skip the scaffolder (you bring your own `cargo init` / `flutter create` / etc.)
+3. **Install workflow files** — drops CLAUDE.md + AGENTS.md + GEMINI.md + `docs/context/` + `.claude/skills/` + `.claude/agents/code-scanner.md` into the project
+4. **Discovery interview** — identity / stack / strategy / surfaces, with elaboration loops after every prose question so you can think out loud or jump straight to "move on"
+5. **MCP decision** — recommends MCPs based on your stack + an explicit "will you call external services?" question. Records install commands in `project-overview.md` but does NOT install yet (would force a context-wiping restart mid-flow)
+6. **Roadmap proposal** — drafts a `Now` / `Next` / `Later` roadmap based on stack + strategy, iterates with you before saving. Skipped for existing projects
+7. **Fill templates** — replaces `{{Placeholders}}` in all installed docs with your actual answers
+8. **Recommend first feature** — picks the smallest thing from the roadmap's `Now` phase and offers to `/feature spec` it immediately
+9. **Hand off** — MCP install commands appear here (safe to restart now; the interview is all on disk). Plus next-steps for `/feature` lifecycle
 
 ### Non-interactive install
 

@@ -595,23 +595,26 @@ Files to update, in priority order:
 ### `docs/context/project-overview.md`
 - Top — product description, "Built for", v1 scope from user's answers.
 - Tech stack table — update Framework, Database, ORM, Auth from Round 2.
-- **§ Agent capabilities** (NEW SECTION) — list the MCPs chosen in Stage 5 with their install commands. **MCPs are NOT yet installed** — the user runs the commands at the end of Stage 9 to keep the install + restart out of this conversation. Write the section with status "Recommended — install at end of `/workflow-init`":
-  ```markdown
-  ## 🤖 Agent capabilities
+- **§ Agent capabilities** — handle in three cases:
+  - **Stage 5 ran and user chose MCPs** → rewrite the section's table with the actual chosen MCPs + their install commands. **MCPs are NOT yet installed** — the user runs the commands at the end of Stage 9. Status header: "Recommended — install at end of `/workflow-init`":
+    ```markdown
+    ## 🤖 Agent capabilities
 
-  MCPs recommended for this stack. Install commands run at the end of `/workflow-init`
-  (Stage 9 hand-off) — keeping installs out of the discovery flow means an agent
-  restart never wipes the interview context.
+    MCPs recommended for this stack. Install commands run at the end of `/workflow-init`
+    (Stage 9 hand-off) — keeping installs out of the discovery flow means an agent
+    restart never wipes the interview context.
 
-  | MCP | Purpose | Install command (Claude Code) |
-  |---|---|---|
-  | `context7` | Up-to-date library docs | `claude mcp add context7 --scope user -- npx -y @upstash/context7-mcp` |
-  | `playwright` | Browser-driven testing | `claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest` |
-  | `neon` | DB introspection + queries | `claude mcp add neon --scope user -- npx -y mcp-remote@latest https://mcp.neon.tech/sse` |
+    | MCP | Purpose | Install command (Claude Code) |
+    |---|---|---|
+    | `context7` | Up-to-date library docs | `claude mcp add context7 --scope user -- npx -y @upstash/context7-mcp` |
+    | `playwright` | Browser-driven testing | `claude mcp add playwright --scope user -- npx -y @playwright/mcp@latest` |
+    | `neon` | DB introspection + queries | `claude mcp add neon --scope user -- npx -y mcp-remote@latest https://mcp.neon.tech/sse` |
 
-  After install: restart your agent. Verify with `claude mcp list`.
-  ```
-  Use the actual MCP set captured in Stage 5. If running on Codex/Gemini, swap the install command syntax to that agent's equivalent.
+    After install: restart your agent. Verify with `claude mcp list`.
+    ```
+    Use the actual MCP set captured in Stage 5. If running on Codex/Gemini, swap the install command syntax to that agent's equivalent.
+  - **Stage 5 ran but user chose no MCPs** → replace the template's placeholder content with a one-line note: `_No MCPs recommended for this project — agent works fine without external integrations._`
+  - **Stage 5 was skipped entirely (simple project)** → DELETE the entire `## 🤖 Agent capabilities` section. Leave no placeholder behind. A simple project's overview shouldn't carry a TBD that'll never resolve.
 - "What we're building → v1 surfaces" — populate from Round 4.
 - "Definition of done for v1" — derive 3-5 concrete behaviors.
 

@@ -108,20 +108,22 @@ flowchart LR
 
 ## 🤖 Agent capabilities
 
-MCPs installed in this project so AI agents can do meaningful work without copy-paste:
+MCPs **recommended** for this project so AI agents can do meaningful work without copy-paste. **Run the install commands below at the end of `/workflow-init` (Stage 9 hand-off)** — they require an agent restart, so installing earlier would wipe the discovery interview context.
 
-| MCP | Purpose | Install |
+| MCP | Purpose | Install command (Claude Code) |
 |---|---|---|
-| `<mcp-name>` | <what it unlocks for the agent> | `<install command from MCP docs>` |
+| `<mcp-name>` | <what it unlocks for the agent> | `claude mcp add <name> --scope user -- npx -y <package>` |
 
-> Populated by `/workflow-init` based on stack picks. Common picks:
+After install: restart your agent. Verify with `claude mcp list`.
+
+> Populated by `/workflow-init` based on stack + answer to "will you call external services?" question. Common picks:
 > - `neon` or `postgres` MCP for DB introspection
 > - `context7` for up-to-date library docs
-> - `playwright` for browser-driven testing
+> - `playwright` for browser-driven testing (web/desktop-web only)
 > - `vercel` / `cloudflare` MCPs for deploy ops
 > - `stripe` MCP for payment testing
 >
-> Each user installs locally on their machine — these aren't auto-installed by cloning the repo.
+> Each user installs locally on their machine — these aren't auto-installed by cloning the repo. If `/workflow-init` was skipped or this is a simple project (no DB, no auth, no external calls), this whole section can be deleted.
 
 ---
 
