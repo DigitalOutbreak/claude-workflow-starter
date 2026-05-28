@@ -303,6 +303,24 @@ function getTargetsForSkill(skillName, skillContent) {
       ),
       content: skillContent,
     },
+    {
+      key: "antigravity",
+      tool: "Antigravity (Google)",
+      flag: "--antigravity",
+      // Antigravity reads GLOBAL skills from ~/.gemini/config/skills/ — a
+      // different path from Gemini CLI / Codex (~/.agents/skills/). Without an
+      // explicit write here the skill is invisible to Antigravity. It also
+      // auto-discovers skills by context rather than slash-invocation.
+      dest: path.join(
+        os.homedir(),
+        ".gemini",
+        "config",
+        "skills",
+        skillName,
+        "SKILL.md"
+      ),
+      content: skillContent,
+    },
   ];
 }
 
@@ -346,6 +364,7 @@ async function cmdInstallSkill(args) {
     { key: "claude", tool: "Claude Code", flag: "--claude" },
     { key: "codex", tool: "Codex (CLI / IDE / app)", flag: "--codex" },
     { key: "gemini", tool: "Gemini CLI", flag: "--gemini" },
+    { key: "antigravity", tool: "Antigravity (Google)", flag: "--antigravity" },
   ];
 
   const flags = new Set(args);
@@ -368,6 +387,7 @@ async function cmdInstallSkill(args) {
       console.error(`  ${green("--claude")}           install for Claude Code`);
       console.error(`  ${green("--codex")}            install for Codex`);
       console.error(`  ${green("--gemini")}           install for Gemini CLI`);
+      console.error(`  ${green("--antigravity")}      install for Antigravity (Google)`);
       console.error("");
       console.error("Flags are combinable, e.g. `--claude --gemini`.");
       process.exit(1);
@@ -481,6 +501,7 @@ async function cmdInstallSkill(args) {
     claude: (s) => `Claude Code:  /${s}`,
     codex: (s) => `Codex:        $${s}  (or via /skills picker)`,
     gemini: (s) => `Gemini CLI:   /${s}`,
+    antigravity: (s) => `Antigravity:  describe the task, or name the ${s} skill (no slash command)`,
   };
   console.log("Try them from your agent:");
   for (const key of selectedKeys) {
@@ -526,7 +547,7 @@ ${bold("Two ways to install:")}
 
   ${dim("Or via this CLI directly (legacy / fallback):")}
     ${dim("npx @digitaloutbreak/workflow             # interactive picker")}
-    ${dim("npx @digitaloutbreak/workflow --all       # install for all 3 agents")}
+    ${dim("npx @digitaloutbreak/workflow --all       # install for all 4 agents")}
 
 ${bold("Then from any project dir, in your agent:")}
   ${green("/workflow-init")}  for product apps with a database, auth, feature lifecycle
@@ -544,17 +565,18 @@ ${bold("/site-init project types:")}
 
 ${bold("Usage:")}
   npx @digitaloutbreak/workflow                       Interactive — install slash commands for chosen agents
-  npx @digitaloutbreak/workflow ${green("--all")}                 Install for all three agents, no prompts
+  npx @digitaloutbreak/workflow ${green("--all")}                 Install for all four agents, no prompts
   npx @digitaloutbreak/workflow ${green("--claude")} ${green("--gemini")}      Install for specific agents
   npx @digitaloutbreak/workflow ${green("init")} ${dim("[target]")}          ${dim("(advanced)")} Drop product-workflow files into target
   npx @digitaloutbreak/workflow ${green("init-site")} ${dim("[target]")}     ${dim("(advanced)")} Drop marketing-site files into target
   npx @digitaloutbreak/workflow ${green("--help")}                Show this message
 
 ${bold("Agent flags:")}
-  ${green("--claude")}     →  ~/.claude/skills/{workflow-init,site-init}/skill.md
-  ${green("--codex")}      →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md
-  ${green("--gemini")}     →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md  ${dim("(same path as --codex — Gemini CLI v0.43+ reads the open agent-skills standard)")}
-  ${green("--all")}        →  all three
+  ${green("--claude")}        →  ~/.claude/skills/{workflow-init,site-init}/skill.md
+  ${green("--codex")}         →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md
+  ${green("--gemini")}        →  ~/.agents/skills/{workflow-init,site-init}/SKILL.md  ${dim("(same path as --codex — Gemini CLI v0.43+ reads the open agent-skills standard)")}
+  ${green("--antigravity")}   →  ~/.gemini/config/skills/{workflow-init,site-init}/SKILL.md  ${dim("(Antigravity's global skills path — discovered by context, not slash)")}
+  ${green("--all")}           →  all four
 
 ${bold("Direct file install — no agent involvement:")}
   npx @digitaloutbreak/workflow init ./my-app        ${dim("# product workflow")}
@@ -577,6 +599,7 @@ const SKILL_FLAGS = new Set([
   "--claude",
   "--codex",
   "--gemini",
+  "--antigravity",
 ]);
 
 async function main() {

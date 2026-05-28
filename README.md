@@ -49,10 +49,10 @@ npx skills add DigitalOutbreak/workflow
 
 > Prefer our own CLI? Backwards-compat fallback:
 > ```sh
-> npx @digitaloutbreak/workflow        # interactive: pick from Claude / Codex / Gemini
-> npx @digitaloutbreak/workflow --all  # install for Claude + Codex + Gemini, no prompts
+> npx @digitaloutbreak/workflow        # interactive: pick from Claude / Codex / Gemini / Antigravity
+> npx @digitaloutbreak/workflow --all  # install for Claude + Codex + Gemini + Antigravity, no prompts
 > ```
-> Same end result but smaller agent set — only Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`). `npx skills add` is preferred.
+> Same end result but smaller agent set — only Claude Code, Codex, Gemini, and Antigravity (vs ~15+ via `npx skills add`). `npx skills add` is preferred.
 
 ### Which one should I use?
 
@@ -97,8 +97,11 @@ Both `/workflow-init` and `/site-init` install side-by-side:
 
 - `~/.claude/skills/{workflow-init,site-init}/skill.md` — Claude Code (markdown + YAML frontmatter)
 - `~/.agents/skills/{workflow-init,site-init}/SKILL.md` — **Codex AND Gemini CLI v0.43+** (the open agent-skills standard)
+- `~/.gemini/config/skills/{workflow-init,site-init}/SKILL.md` — **Antigravity (Google)** — its global skills path
 
 Codex and Gemini CLI both read from the same path — the open agent-skills standard at `~/.agents/skills/`. `--codex` and `--gemini` in the CLI both resolve to that path; the install is deduped so the same file isn't written twice.
+
+> **Antigravity ≠ Gemini CLI.** Despite the shared "Gemini" name, Google's Antigravity does *not* read `~/.agents/skills/`. Its **global** skills live in `~/.gemini/config/skills/`, and **workspace** skills in `<project>/.agents/skills/`. The `--antigravity` flag writes to the global path. Antigravity also auto-discovers skills by context — there's no slash-command; describe the task or name the skill.
 
 > Note: earlier versions of this CLI wrote a Gemini-specific TOML file at `~/.gemini/commands/<name>.toml`. That format predates the agent-skills standard and isn't used by modern Gemini CLI. If you have stale TOML files there from a prior install, you can delete them — they're harmless but inert.
 
@@ -107,6 +110,7 @@ Codex and Gemini CLI both read from the same path — the open agent-skills stan
 | **Claude Code** | `/workflow-init` · `/site-init` |
 | **Codex** | `$workflow-init` · `$site-init` (or pick from the `/skills` picker) |
 | **Gemini CLI** | `/workflow-init` · `/site-init` |
+| **Antigravity (Google)** | Describe the task, or name the `workflow-init` / `site-init` skill (no slash command) |
 
 ### Other agents (Cursor, Cline, Aider, Continue, etc.)
 
@@ -234,13 +238,14 @@ The starter installs all three root files (CLAUDE.md / AGENTS.md / GEMINI.md) so
 
 ## Legacy CLI reference
 
-The preferred install path is `npx skills add DigitalOutbreak/workflow -g` (see [Two-step setup](#two-step-setup-one-for-life) above). The legacy CLI below predates that ecosystem and is kept for backwards compatibility — it only supports Claude Code, Codex, and Gemini (vs ~15+ via `npx skills add`).
+The preferred install path is `npx skills add DigitalOutbreak/workflow -g` (see [Two-step setup](#two-step-setup-one-for-life) above). The legacy CLI below predates that ecosystem and is kept for backwards compatibility — it only supports Claude Code, Codex, Gemini, and Antigravity (vs ~15+ via `npx skills add`).
 
 ```
 npx @digitaloutbreak/workflow                       Interactive — install both slash commands for chosen agents
-npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini, no prompts
+npx @digitaloutbreak/workflow --all                 Install for Claude + Codex + Gemini + Antigravity, no prompts
 npx @digitaloutbreak/workflow --claude              Just Claude Code (installs both /workflow-init and /site-init)
 npx @digitaloutbreak/workflow --claude --gemini     Install for specific agents
+npx @digitaloutbreak/workflow --antigravity         Just Antigravity (~/.gemini/config/skills/)
 npx @digitaloutbreak/workflow --codex               Add Codex later, leave others
 npx @digitaloutbreak/workflow init [target]         (advanced) Drop product-workflow files directly into target
 npx @digitaloutbreak/workflow init-site [target]    (advanced) Drop marketing-site files directly into target
