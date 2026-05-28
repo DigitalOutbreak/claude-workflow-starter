@@ -1,16 +1,16 @@
-# Personal dev context — @digitaloutbreak/workflow (the scaffold itself)
+# Developing @digitaloutbreak/workflow
 
-> **For Joey's local dev only.** This file does not ship to npm (excluded via `.npmignore`).
-> It loads alongside `CLAUDE.md` and overrides the template placeholders with real context
-> for the workflow scaffold project.
+> A guide for working on the scaffold itself — repo layout, what ships vs what doesn't,
+> common dev tasks, and gotchas to watch for. Visible to anyone browsing this repo;
+> not shipped to npm installs (excluded via `.npmignore`).
 >
 > The shipped `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, and `docs/context/*.md` are *templates*
-> that users fill in via `/workflow-init`. This file gives you the filled-in version for
-> *this* project so you can work on the scaffold itself with proper agent context.
+> that users fill in via `/workflow-init`. This file gives the real, filled-in context for
+> *this* repository — useful when working on the scaffold or contributing.
 
 ---
 
-## What this project actually is
+## What this project is
 
 **`@digitaloutbreak/workflow`** is an opinionated, cross-agent scaffold for AI coding workflows.
 It installs into any project to give Claude Code, Codex, Cursor, Gemini CLI (and ~12 more) a
@@ -63,7 +63,7 @@ claude-workflow/
 ├── README.md                     # SHIPS to npm — install + reference docs
 ├── LICENSE                       # SHIPS to npm — MIT
 ├── package.json                  # SHIPS to npm
-├── CLAUDE.local.md               # THIS FILE — local dev only, npmignored
+├── DEVELOPING.md                 # THIS FILE — dev/maintainer notes, npmignored
 └── .npmignore                    # exclusion list for npm publish
 ```
 
@@ -82,7 +82,7 @@ Plus `.npmignore` excludes specific files from those directories:
 README.html               # bulky duplicate of README.md
 .impeccable*              # design-skill outputs
 site/blog-preview*.html   # local preview renders
-CLAUDE.local.md           # this file
+DEVELOPING.md             # this file
 ```
 
 Run `npm pack --dry-run` before any publish to verify the tarball is clean.
