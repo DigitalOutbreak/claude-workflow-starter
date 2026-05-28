@@ -10,3 +10,10 @@
 # Local-only
 .env*
 !.env.example
+.claude/settings.local.json
+
+# Design-skill outputs (e.g. /impeccable)
+.impeccable*
+
+# Standalone blog post previews (review-only, not part of the site build)
+site/blog-preview*.html

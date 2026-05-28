@@ -1,0 +1,14 @@
+# Files that should never ship to npm users.
+# .npmignore takes precedence over .gitignore for `npm publish`.
+
+# Local Claude Code settings — contains machine-specific paths
+**/settings.local.json
+
+# HTML duplicate of README.md — markdown is the source of truth on npm/GitHub
+README.html
+
+# Design-skill outputs (e.g. /impeccable)
+.impeccable*
+
+# Standalone blog previews (development-only, not part of the scaffold)
+site/blog-preview*.html
