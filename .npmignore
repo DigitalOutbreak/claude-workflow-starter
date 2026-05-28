@@ -12,3 +12,6 @@ README.html
 
 # Standalone blog previews (development-only, not part of the scaffold)
 site/blog-preview*.html
+
+# Joey's personal dev context for working on the scaffold itself
+CLAUDE.local.md
