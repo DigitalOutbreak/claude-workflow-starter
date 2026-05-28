@@ -1,0 +1,934 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+
+const title = 'The skills-vs-markdown debate is the wrong fight.';
+const description =
+  "A genre of post argues that agent hallucinations come from skills, and the fix is to replace them with markdown indices. The fix is real. The diagnosis is wrong — and what actually moves the needle is something neither side is selling.";
+const date = '2026-05-28';
+const readingMinutes = 8;
+
+const dateFmt = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const toc = [
+  { id: 'tldr', label: 'TL;DR' },
+  { id: 'the-claim', label: 'The claim', num: '01' },
+  { id: 'what-actually-works', label: 'What actually reduces hallucination', num: '02' },
+  { id: 'worked-example', label: 'A worked example', num: '03' },
+  { id: 'post-gets-right', label: 'What the post gets right', num: '04' },
+  { id: 'ranked-fixes', label: 'If you must rank fixes', num: '05' },
+  { id: 'faq', label: 'FAQ' },
+];
+
+const faqs = [
+  {
+    q: "Isn't this basically the same argument with extra steps?",
+    a: "In spirit, yes. We agree hallucination is structural and that configuration matters. We disagree on which configuration. The article prescribes smaller flat files. I prescribe layered structure with a forced lifecycle. Same goal, different mechanism — and the mechanism is the whole game.",
+  },
+  {
+    q: "What if my project is tiny? Do I really need a lifecycle?",
+    a: "For a one-file script, no. For anything you'd put on a branch, yes. The lifecycle isn't there because the project is complex. It's there because the agent doesn't know which lies it's about to tell, and you need a place where those lies have to survive contact with reality.",
+  },
+  {
+    q: "Don't skills add complexity over plain markdown?",
+    a: "They add discoverability and reusability, not complexity — if they have a clear exit condition. A skill that does one thing and reports completion is simpler than the markdown file describing how to do that same thing manually. The complexity problem is unbounded skills with no defined 'done.'",
+  },
+  {
+    q: "How is this different from AGENTS.md or CLAUDE.md alone?",
+    a: "Those files describe how the agent should behave. They don't enforce it. The agent reads, then drifts. A skill with a gate is enforced — it literally won't fire until conditions hold. That's the difference between a rule and a constraint.",
+  },
+  {
+    q: "What about MCP servers — does the same argument apply?",
+    a: "MCP servers are tools, not skills. They benefit from constraints too, but the failure mode is different — they hallucinate inputs more than they invent outputs. The fix there is good schemas and small surfaces, not lifecycles.",
+  },
+  {
+    q: "Won't a strict lifecycle slow me down?",
+    a: "The first feature takes longer because you write the spec first. Features 2 through N are faster because the agent isn't re-asking what the project is, what the patterns are, or what the gates are. The lifecycle pays back at feature three.",
+  },
+  {
+    q: "Is this Claude Code-specific?",
+    a: "No. The scaffold ships AGENTS.md, CLAUDE.md, and GEMINI.md root briefs, and the lifecycle works in any agent that loads markdown skills — Codex, Cursor, Cline, Aider, Continue, Windsurf, OpenCode, and roughly a dozen more.",
+  },
+  {
+    q: "Does model choice matter at all?",
+    a: "Last 10%. A better model on a structured workflow beats a worse model on a structured workflow. But a worse model on a structured workflow beats a better model thrashing in a flat one. Buy the structure first, then upgrade the model.",
+  },
+];
+---
+
+<Layout title={`${title} — workflow`} description={description}>
+  <Nav />
+
+  <main class="blog-shell">
+    <!-- TOC sidebar -->
+    <aside class="blog-toc" aria-label="Table of contents">
+      <div class="toc-label">On this page</div>
+      <ul class="toc-list">
+        {
+          toc.map((item) => (
+            <li>
+              <a href={`#${item.id}`} data-toc-link>
+                {item.num && <span class="toc-num">{item.num}</span>}
+                <span class="toc-text">{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <!-- Article -->
+    <article class="blog-content">
+      <!-- Breadcrumb -->
+      <div class="breadcrumb">
+        <a href="/">workflow</a>
+        <span>/</span>
+        <a href="/blog">blog</a>
+        <span>/</span>
+        <span class="here">skills-vs-markdown</span>
+      </div>
+
+      <!-- Title block -->
+      <header class="post-header">
+        <div class="eyebrow">Essay · Workflow design</div>
+        <h1>{title}</h1>
+        <p class="lead">
+          A genre of post argues that agent hallucinations come from <em>skills</em>, and the fix is to
+          replace them with markdown indices. The fix is real. The diagnosis is wrong — and what actually
+          moves the needle is something neither side is selling.
+        </p>
+        <div class="meta">
+          <time datetime={date}>{dateFmt.format(new Date(date))}</time>
+          <span class="meta-dot"></span>
+          <span>{readingMinutes} min read</span>
+          <span class="meta-dot"></span>
+          <span>by DigitalOutbreak</span>
+        </div>
+      </header>
+
+      <!-- TL;DR -->
+      <aside id="tldr" class="tldr">
+        <div class="tldr-label">TL;DR</div>
+        <ul>
+          <li><strong>The popular argument:</strong> agent hallucination comes from skills. Replace them with a single markdown index. Trim everything under 5k tokens.</li>
+          <li><strong>What's right:</strong> hallucination is structural, not inherent to the model. Configuration matters.</li>
+          <li><strong>What's wrong:</strong> skills aren't the variable. The shape of the work is. Plenty of agents hallucinate over thin markdown, and plenty behave well inside an opinionated skill.</li>
+          <li><strong>What actually works:</strong> a lifecycle the agent can't skip past, context that's tiered (not capped), and a spec the agent didn't write.</li>
+          <li><strong>The right answer is both:</strong> a small set of skills inside a forced lifecycle, reading from layered context. Not markdown alone. Not skills alone.</li>
+        </ul>
+      </aside>
+
+      <!-- Section 01 -->
+      <section id="the-claim" class="post-section">
+        <div class="section-num">01</div>
+        <h2>The claim</h2>
+        <p>
+          I've shipped this workflow scaffold across fifteen agents. The skills-versus-markdown framing
+          keeps showing up — usually with a ranked list of fixes, a recommended token budget, and a new
+          capital-letter filename (<code>SOUL.md</code>, <code>MEMORY.md</code>, <code>BRAIN.md</code>).
+          The advice gets close to the right answer. It misses on the part that matters.
+        </p>
+
+        <p>The argument, fairly summarized:</p>
+
+        <ol class="claim-list">
+          <li><strong>Skills are dangerous.</strong> They're executable code with too many degrees of freedom. The agent invents inputs, loops on failures, fabricates outputs.</li>
+          <li><strong>Replace skills with a markdown knowledge index.</strong> The agent looks facts up instead of generating them.</li>
+          <li><strong>Trim total context.</strong> Keep your auto-loaded files under 5,000 tokens combined.</li>
+          <li><strong>Add a verification sentence.</strong> Tell the agent in a top-level file to verify before reporting done.</li>
+          <li><strong>Cap tool calls per turn.</strong> Five to ten, max.</li>
+        </ol>
+
+        <p>
+          Each item has a real grain of truth, which is what makes the framing sticky. But the load-bearing
+          claim — <em>skills cause hallucination, markdown prevents it</em> — is wrong. I've seen plenty
+          of agents hallucinate over a thin markdown index, and plenty more behave well inside an opinionated
+          skill. The variable isn't <em>which file format you used</em>. It's <em>whether the work has a
+          shape</em>.
+        </p>
+
+        <div class="comparison-grid">
+          <div class="comparison-col">
+            <div class="comparison-label">The post's diagnosis</div>
+            <ul>
+              <li>Skills are the cause</li>
+              <li>Markdown is the cure</li>
+              <li>Trim tokens by file size</li>
+              <li>Cap tool calls</li>
+              <li>Model choice is high-leverage</li>
+            </ul>
+          </div>
+          <div class="comparison-col">
+            <div class="comparison-label">What I'd say instead</div>
+            <ul>
+              <li>Unconstrained work is the cause</li>
+              <li>Forced lifecycle is the cure</li>
+              <li>Trim tokens by <em>when they load</em></li>
+              <li>Constrain the work, not the tool count</li>
+              <li>Model choice is the last 10%</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 02 -->
+      <section id="what-actually-works" class="post-section">
+        <div class="section-num">02</div>
+        <h2>What actually reduces hallucination</h2>
+        <p>Three things, in order of how much they move the needle.</p>
+
+        <h3>A lifecycle the agent can't skip past</h3>
+        <p>
+          The reason a feature ships clean in this scaffold isn't the context docs. It's that
+          <code>/feature</code> has six actions —
+          <code>spec</code>, <code>load</code>, <code>start</code>, <code>review</code>,
+          <code>explain</code>, <code>complete</code> — and <code>complete</code> refuses to fire until
+          gates pass and the human signs off. The agent can invent whatever it wants in the middle.
+          The structure catches it at the end.
+        </p>
+        <p>
+          Verification rules in a file are theater without a place to enforce them. A loop with a forced
+          gate is not. Or, the way the docs put it:
+        </p>
+
+        <blockquote class="pull-quote">
+          A rules file is one document — it tells the agent how to behave. This is a system: rules,
+          strategic context, tactical state, and executable skills.
+        </blockquote>
+
+        <h3>Context that's layered, not flat</h3>
+        <p>The scaffold loads context in three tiers:</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Layer</th><th>Where</th><th>When it loads</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Auto-imported</strong></td><td><code>docs/context/*.md</code></td><td>Every session</td></tr>
+              <tr><td><strong>Read on demand</strong></td><td><code>docs/specs/</code>, feature specs, backlog</td><td>When the task needs it</td></tr>
+              <tr><td><strong>Executed</strong></td><td><code>.claude/skills/</code>, <code>.claude/agents/</code></td><td>When invoked</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The "trim everything under five thousand tokens" advice optimizes the wrong number. Tokens aren't
+          the cost. <em>Cognitive load on every turn</em> is. A 12-thousand-token <code>project-spec.md</code>
+          that loads on demand is cheaper than a 4-thousand-token <code>AGENTS.md</code> that loads every
+          turn and is mostly irrelevant to the current task.
+        </p>
+        <p>
+          Density beats length. A token budget without a tier system is just a smaller version of the same
+          flat problem.
+        </p>
+
+        <h3>Constraints expressed as flow, not as caps</h3>
+        <p>
+          <code>maxToolCalls: 5</code> solves tool-loop spam. It does not solve hallucination. Tool-loop
+          spam is loud and easy to detect — you can see the agent thrashing. Hallucination is quiet, and
+          a tool cap won't catch it.
+        </p>
+        <p>
+          What catches it is the <em>shape</em> of the flow: a spec the human approved, a branch the agent
+          cut, a build that has to pass, an eyeball test the agent has to ask for. Each step is a checkpoint
+          where the lie has to survive contact with something real.
+        </p>
+      </section>
+
+      <!-- Section 03 -->
+      <section id="worked-example" class="post-section">
+        <div class="section-num">03</div>
+        <h2>A worked example</h2>
+        <p>
+          Same task, two agents, two setups. The task: <em>add a column to the leads table and surface it
+          in the dashboard.</em>
+        </p>
+
+        <h3>Without a lifecycle</h3>
+        <p>
+          The agent reads <code>AGENTS.md</code>. It opens the leads table file. It writes a migration.
+          It writes a UI patch. It tells you "done — added the column and the dashboard pill." The
+          migration never ran. The dashboard pill reads from a property that doesn't exist on the type yet.
+          You find this in production three days later.
+        </p>
+        <p>
+          The agent didn't lie on purpose. It hallucinated because nothing in the workflow forced the lie
+          to confront a build.
+        </p>
+
+        <h3>With the lifecycle</h3>
+        <p>
+          The agent runs <code>/feature spec</code>. You approve the spec. <code>/feature start</code> cuts
+          the branch and updates <code>current-feature.md</code>. The agent writes the migration and the UI
+          patch. It runs <code>/feature complete</code>. The complete action checks the build. The build
+          fails because the migration wasn't applied. The agent reports the failure instead of the success.
+          You catch the bug in five minutes instead of three days.
+        </p>
+        <p>
+          Same model. Same hallucination instinct. Different outcome — because the lifecycle had a place
+          where the lie had to survive contact with the compiler.
+        </p>
+      </section>
+
+      <!-- Section 04 -->
+      <section id="post-gets-right" class="post-section">
+        <div class="section-num">04</div>
+        <h2>What the post gets right</h2>
+        <p>
+          One thing, and it's the important one:
+          <strong>hallucination is structural, not inherent to the model.</strong> The instinct to fix it
+          with configuration rather than wait for a smarter checkpoint is correct. We just disagree on the
+          configuration.
+        </p>
+        <p>
+          The other thing, which the post buries: hallucination and creativity are the same trait viewed
+          from different angles. You don't want to eliminate it. You want to put it inside a loop that
+          catches the bad guesses before they get committed.
+        </p>
+      </section>
+
+      <!-- Section 05 -->
+      <section id="ranked-fixes" class="post-section">
+        <div class="section-num">05</div>
+        <h2>If you must rank fixes</h2>
+        <ol class="ranked-list">
+          <li><strong>Give your work a lifecycle</strong> with a gate that won't fire until something verifiable holds.</li>
+          <li><strong>Tier your context</strong> — auto, on-demand, executed — instead of capping it.</li>
+          <li><strong>Write the spec before the code</strong>, every time. The agent can't fabricate against a spec it didn't write.</li>
+          <li><strong>Skills are fine.</strong> Use them. The problem isn't that they exist; it's that they often have no exit condition.</li>
+          <li><strong>Model choice is last.</strong> A worse model on structured work beats a better model on unstructured work.</li>
+        </ol>
+      </section>
+
+      <!-- Key takeaways -->
+      <aside class="takeaways">
+        <div class="takeaways-label">Five things to remember</div>
+        <ol>
+          <li>Hallucination is structural. Configuration is the fix.</li>
+          <li>The variable isn't skills vs markdown. It's whether the work has a shape.</li>
+          <li>A lifecycle with a forced gate beats a rules file every time.</li>
+          <li>Tier context by <em>when</em> it loads, not by total tokens.</li>
+          <li>Skills aren't dangerous. Unbounded skills are.</li>
+        </ol>
+      </aside>
+
+      <!-- FAQ -->
+      <section id="faq" class="post-section faq-section">
+        <div class="section-num">FAQ</div>
+        <h2>Questions people have asked</h2>
+        {
+          faqs.map((faq) => (
+            <details class="faq-item">
+              <summary>
+                <span class="faq-q">{faq.q}</span>
+                <span class="faq-toggle" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="faq-a"><p>{faq.a}</p></div>
+            </details>
+          ))
+        }
+      </section>
+
+      <!-- CTA -->
+      <aside class="cta-card">
+        <div class="cta-eyebrow">Try the scaffold</div>
+        <h3 class="cta-title">Install in one line. Bootstrap any project.</h3>
+        <div class="cta-cmd">
+          <span class="prompt">$</span>
+          <code>npx skills add DigitalOutbreak/workflow -g</code>
+        </div>
+        <p class="cta-sub">
+          Then <code>/workflow-init</code> in any project. Fifteen-plus agents supported.
+          See the <a href="/docs">docs</a> for the full lifecycle.
+        </p>
+      </aside>
+
+      <!-- Footer nav -->
+      <nav class="post-footer-nav">
+        <a href="/blog" class="footer-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          All posts
+        </a>
+        <a href="/docs" class="footer-cta">
+          Read the docs
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </nav>
+    </article>
+
+    <!-- Symmetry spacer so article stays visually centered -->
+    <div class="blog-spacer" aria-hidden="true"></div>
+  </main>
+
+  <Footer />
+
+  <!-- Scrollspy: highlight active TOC entry -->
+  <script is:inline>
+    (function () {
+      const links = Array.from(document.querySelectorAll('[data-toc-link]'));
+      if (!links.length) return;
+
+      const sections = links
+        .map((link) => {
+          const id = link.getAttribute('href').slice(1);
+          return { link, el: document.getElementById(id) };
+        })
+        .filter((s) => s.el);
+
+      function update() {
+        const triggerLine = window.scrollY + window.innerHeight * 0.3;
+        let active = sections[0];
+        for (const s of sections) {
+          if (s.el.offsetTop <= triggerLine) active = s;
+        }
+        links.forEach((l) => l.removeAttribute('data-active'));
+        active.link.setAttribute('data-active', 'true');
+      }
+
+      let ticking = false;
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              update();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+      update();
+    })();
+  </script>
+</Layout>
+
+<style>
+  /* ──────────────────────────────────────────────────────────────
+     Outer shell: TOC | content | spacer (article stays centered)
+     ────────────────────────────────────────────────────────────── */
+  .blog-shell {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  @media (min-width: 1024px) {
+    .blog-shell {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 3rem;
+      padding: 4.5rem 1.5rem 8rem;
+    }
+  }
+
+  /* TOC */
+  .blog-toc { display: none; }
+  @media (min-width: 1024px) {
+    .blog-toc {
+      display: block;
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 4.75rem;
+      align-self: flex-start;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      padding: 0.25rem 0 1rem;
+    }
+    /* Subtle scrollbar */
+    .blog-toc::-webkit-scrollbar { width: 4px; }
+    .blog-toc::-webkit-scrollbar-track { background: transparent; }
+    .blog-toc::-webkit-scrollbar-thumb { background: var(--color-hairline); border-radius: 2px; }
+  }
+  .toc-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-tertiary);
+    margin-bottom: 0.85rem;
+    padding-left: 0.85rem;
+  }
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--color-hairline);
+  }
+  .toc-list li { margin: 0; }
+  .toc-list a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.45rem 0 0.45rem 0.85rem;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    border-left: 1px solid transparent;
+    margin-left: -1px;
+    text-wrap: pretty;
+  }
+  .toc-list a:hover { color: var(--color-ink-muted); }
+  .toc-list a[data-active="true"] {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    flex-shrink: 0;
+  }
+  .toc-list a[data-active="true"] .toc-num { color: var(--color-accent); }
+  .toc-text { display: inline-block; }
+
+  /* Content column — article visually centered between TOC + spacer */
+  .blog-content {
+    width: 100%;
+    max-width: 44rem;
+    margin: 0 auto;
+    min-width: 0;
+  }
+  .blog-spacer { display: none; }
+  @media (min-width: 1024px) {
+    .blog-spacer {
+      display: block;
+      width: 200px;
+      flex-shrink: 0;
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+     Article styles
+     ────────────────────────────────────────────────────────────── */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+  }
+  .breadcrumb a {
+    color: var(--color-ink-tertiary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .breadcrumb a:hover { color: var(--color-ink-muted); }
+  .breadcrumb .here { color: var(--color-ink-muted); }
+
+  .post-header { margin-top: 2rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+  }
+  .post-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--color-ink);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lead {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+    margin-top: 1.5rem;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+  }
+  .lead em { color: var(--color-ink); font-style: italic; }
+  .meta {
+    margin-top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+    flex-wrap: wrap;
+  }
+  .meta-dot {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--color-hairline-strong);
+  }
+
+  .tldr {
+    margin-top: 3rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    position: relative;
+    scroll-margin-top: 5.5rem;
+  }
+  .tldr::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 1.5rem;
+    width: 2.5rem;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
+  .tldr-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .tldr ul li::marker { color: var(--color-ink-tertiary); }
+  .tldr ul li + li { margin-top: 0.5rem; }
+  .tldr strong { color: var(--color-ink); font-weight: 600; }
+
+  .post-section {
+    margin-top: 4.5rem;
+    scroll-margin-top: 5.5rem;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: 0.6rem;
+  }
+  .post-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.625rem, 3vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--color-ink);
+    margin: 0 0 1.5rem;
+  }
+  .post-section h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--color-ink);
+    margin: 2.5rem 0 1rem;
+  }
+  .post-section p {
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    margin: 0 0 1.15em;
+    text-wrap: pretty;
+  }
+  .post-section p:last-child { margin-bottom: 0; }
+  .post-section strong { color: var(--color-ink); font-weight: 600; }
+  .post-section em { color: var(--color-ink); font-style: italic; }
+  .post-section a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .post-section a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post-section code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .claim-list, .ranked-list {
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    list-style: decimal;
+  }
+  .claim-list li::marker, .ranked-list li::marker {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+  .claim-list li, .ranked-list li { margin-top: 0.6rem; }
+
+  .comparison-grid {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .comparison-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  }
+  .comparison-col {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.25rem;
+  }
+  .comparison-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-subtle);
+    margin-bottom: 0.65rem;
+  }
+  .comparison-col ul {
+    margin: 0;
+    padding-left: 1.05rem;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+  .comparison-col ul li { margin-top: 0.35rem; }
+  .comparison-col ul li:first-child { margin-top: 0; }
+  .comparison-col ul li::marker { color: var(--color-ink-tertiary); }
+
+  .pull-quote {
+    margin: 2rem 0 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(94, 106, 210, 0.04), transparent);
+    border-left: 2px solid var(--color-accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--color-ink);
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+
+  .table-wrap {
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+  }
+  .post-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0;
+  }
+  .post-section th {
+    text-align: left;
+    color: var(--color-ink);
+    font-weight: 600;
+    padding: 0.7rem 1rem;
+    background: var(--color-surface-1);
+    border-bottom: 1px solid var(--color-hairline-strong);
+    font-size: 13px;
+  }
+  .post-section td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+    vertical-align: top;
+    color: var(--color-ink-muted);
+  }
+  .post-section tr:last-child td { border-bottom: 0; }
+
+  .takeaways {
+    margin-top: 4rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+  .takeaways-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .takeaways ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+    list-style: decimal;
+  }
+  .takeaways ol li::marker { color: var(--color-accent); font-family: var(--font-mono); font-weight: 500; }
+  .takeaways ol li + li { margin-top: 0.5rem; }
+
+  .faq-section { margin-top: 4.5rem; }
+  .faq-item {
+    border-top: 1px solid var(--color-hairline);
+    padding: 1.15rem 0;
+  }
+  .faq-item:last-of-type { border-bottom: 1px solid var(--color-hairline); }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-right: 0.25rem;
+    transition: color 0.15s ease;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-q {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .faq-toggle {
+    color: var(--color-ink-tertiary);
+    transition: transform 0.2s ease, color 0.15s ease;
+    flex-shrink: 0;
+    display: inline-flex;
+  }
+  .faq-item[open] .faq-toggle { transform: rotate(180deg); color: var(--color-accent); }
+  .faq-item summary:hover .faq-q { color: var(--color-accent-hover); }
+  .faq-a {
+    margin-top: 0.75rem;
+    color: var(--color-ink-muted);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+  .faq-a p { margin: 0; text-wrap: pretty; }
+
+  .cta-card {
+    margin-top: 4rem;
+    padding: 1.75rem 1.75rem 1.9rem;
+    background:
+      linear-gradient(180deg, rgba(94, 106, 210, 0.06), transparent),
+      var(--color-surface-1);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-lg);
+  }
+  .cta-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.5rem;
+  }
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    margin: 0 0 1.15rem;
+    line-height: 1.2;
+  }
+  .cta-cmd {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    overflow-x: auto;
+  }
+  .cta-cmd .prompt { color: var(--color-accent); }
+  .cta-cmd code {
+    background: transparent;
+    padding: 0;
+    color: var(--color-ink);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .cta-sub {
+    margin: 0.9rem 0 0;
+    color: var(--color-ink-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .cta-sub code {
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+  .cta-sub a { color: var(--color-accent); text-decoration: none; }
+  .cta-sub a:hover { color: var(--color-accent-hover); text-decoration: underline; }
+
+  .post-footer-nav {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 14px;
+  }
+  .footer-back, .footer-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-back:hover, .footer-cta:hover { color: var(--color-ink); }
+  .footer-cta { color: var(--color-accent); }
+  .footer-cta:hover { color: var(--color-accent-hover); }
+</style>

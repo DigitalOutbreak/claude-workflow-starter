@@ -1,0 +1,113 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+
+const posts = [
+  {
+    slug: 'how-feature-works',
+    title: 'How /feature keeps your context lean across sessions.',
+    summary:
+      'A tour through the six-action lifecycle — spec, load, start, review, explain, complete — and the trick that lets the always-loaded file stay tiny even after fifty shipped features.',
+    date: '2026-05-30',
+    readingMinutes: 11,
+  },
+  {
+    slug: 'agents-md-is-a-constructor',
+    title: 'Your AGENTS.md is a constructor.',
+    summary:
+      "Programmers who've worked with main() or a class constructor already have the right mental model for AI coding workflows — they just haven't realized they're looking at one. A mapping, a reframing, and the implication.",
+    date: '2026-05-29',
+    readingMinutes: 9,
+  },
+  {
+    slug: 'skills-vs-markdown',
+    title: 'The skills-vs-markdown debate is the wrong fight.',
+    summary:
+      'A genre of post is going around arguing that agent hallucinations come from skills, and the fix is to replace them with markdown indices. The fix is real. The diagnosis is wrong.',
+    date: '2026-05-28',
+    readingMinutes: 8,
+  },
+];
+
+const dateFmt = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+---
+
+<Layout
+  title="Blog — workflow"
+  description="Notes from shipping an opinionated workflow scaffold across 15+ AI coding agents."
+>
+  <Nav />
+
+  <main class="container-page py-16 md:py-24">
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-2 mono text-xs text-[var(--color-ink-tertiary)]">
+        <a href="/" class="hover:text-[var(--color-ink-muted)] transition-colors">workflow</a>
+        <span>/</span>
+        <span class="text-[var(--color-ink-muted)]">blog</span>
+      </div>
+
+      <h1
+        class="mt-3 font-display font-semibold text-[var(--color-ink)]"
+        style="font-size: clamp(2.25rem, 5.5vw, 3.5rem); line-height: 1.05; letter-spacing: -0.03em;"
+      >
+        Notes from shipping.
+      </h1>
+
+      <p class="mt-5 text-[17px] leading-[1.55] text-[var(--color-ink-muted)]">
+        Short, opinionated pieces on what actually moves the needle when you wire AI coding agents
+        into real projects. Written from the work, not the discourse.
+      </p>
+    </div>
+
+    <ul class="mt-16 md:mt-20 max-w-3xl flex flex-col gap-10 md:gap-14">
+      {
+        posts.map((post) => (
+          <li>
+            <a href={`/blog/${post.slug}`} class="group block">
+              <div class="flex items-center gap-3 mono text-[12px] text-[var(--color-ink-tertiary)]">
+                <time datetime={post.date}>{dateFmt.format(new Date(post.date))}</time>
+                <span class="inline-block h-px w-6 bg-[var(--color-hairline)]" />
+                <span>{post.readingMinutes} min read</span>
+              </div>
+
+              <h2
+                class="mt-3 font-display font-semibold text-[var(--color-ink)] transition-colors group-hover:text-[var(--color-accent-hover)]"
+                style="font-size: clamp(1.5rem, 2.6vw, 1.875rem); line-height: 1.15; letter-spacing: -0.02em;"
+              >
+                {post.title}
+              </h2>
+
+              <p class="mt-3 text-[15.5px] leading-[1.55] text-[var(--color-ink-muted)] max-w-2xl">
+                {post.summary}
+              </p>
+
+              <span class="mt-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--color-accent)] group-hover:text-[var(--color-accent-hover)] transition-colors">
+                Read
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+
+  <Footer />
+</Layout>

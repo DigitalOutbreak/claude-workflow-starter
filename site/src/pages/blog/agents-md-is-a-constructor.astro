@@ -1,0 +1,1004 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+
+const title = 'Your AGENTS.md is a constructor.';
+const description =
+  "Programmers who've worked with main() or a class constructor already have the right mental model for AI coding workflows — they just haven't realized they're looking at one. A mapping, a reframing, and the implication.";
+const date = '2026-05-29';
+const readingMinutes = 9;
+
+const dateFmt = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const toc = [
+  { id: 'tldr', label: 'TL;DR' },
+  { id: 'mapping', label: 'The mapping', num: '01' },
+  { id: 'loading-strategies', label: 'Three loading strategies', num: '02' },
+  { id: 'repo-is-program', label: 'The repo is the program', num: '03' },
+  { id: 'programmers-ship-cleaner', label: 'Why programmers ship cleaner workflows', num: '04' },
+  { id: 'silent-failure', label: 'Hallucination is silent failure', num: '05' },
+  { id: 'faq', label: 'FAQ' },
+];
+
+const faqs = [
+  {
+    q: "Isn't this just OOP for prompts?",
+    a: "No — OOP is a much heavier abstraction. This is structural typing for files. Lighter, declarative, no inheritance. Closer to ML modules or Rust traits than Java classes.",
+  },
+  {
+    q: "I'm not a programmer. Does this still apply?",
+    a: "Yes. The shapes hold. Replace 'main()' with 'the file your project starts at.' If anything, programmers built this scaffold so non-programmers don't have to invent the architecture from scratch. Copy the structure; the intuitions come with it.",
+  },
+  {
+    q: "What about Python? There's no main() function strictly.",
+    a: "Python has if __name__ == '__main__'. JavaScript has the entry point in package.json. Rust and C++ have literal main(). Every language has the concept of 'the thing that runs first.' That's your CLAUDE.md or AGENTS.md.",
+  },
+  {
+    q: "What's the equivalent of inheritance?",
+    a: "Composition. The scaffold deliberately doesn't model inheritance — skills don't extend other skills, context docs don't extend other docs. Composition over inheritance is a thirty-year-old lesson. We kept it.",
+  },
+  {
+    q: "Where does memory fit in this metaphor?",
+    a: "Persistent storage / database. The agent's per-project memory directory is file-backed state across sessions. Not part of the program — read and written by the program.",
+  },
+  {
+    q: "Doesn't this just say 'be more structured'?",
+    a: "It says: be structured the same way you already are when you write code. The point isn't more structure. It's the right shape of structure — one you already know in your bones if you've written any production software.",
+  },
+  {
+    q: "What about MCP servers?",
+    a: "Foreign function interface. They're calls into a different runtime — a separate process, a different language sometimes. Useful, but architecturally distinct from your scaffold's internals. Same FFI rules apply: small surfaces, good schemas, expect failure at the boundary.",
+  },
+  {
+    q: "If the agent is the runtime, can I swap runtimes?",
+    a: "That's exactly what cross-agent compat is for. The scaffold ships AGENTS.md, CLAUDE.md, and GEMINI.md as parallel entry points to the same program. Different runtimes — Claude Code, Codex, Cursor, Gemini, Cline — same source. Your program is portable.",
+  },
+];
+---
+
+<Layout title={`${title} — workflow`} description={description}>
+  <Nav />
+
+  <main class="blog-shell">
+    <aside class="blog-toc" aria-label="Table of contents">
+      <div class="toc-label">On this page</div>
+      <ul class="toc-list">
+        {
+          toc.map((item) => (
+            <li>
+              <a href={`#${item.id}`} data-toc-link>
+                {item.num && <span class="toc-num">{item.num}</span>}
+                <span class="toc-text">{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <article class="blog-content">
+      <div class="breadcrumb">
+        <a href="/">workflow</a>
+        <span>/</span>
+        <a href="/blog">blog</a>
+        <span>/</span>
+        <span class="here">agents-md-is-a-constructor</span>
+      </div>
+
+      <header class="post-header">
+        <div class="eyebrow">Essay · Mental models</div>
+        <h1>{title}</h1>
+        <p class="lead">
+          Most writing about AI coding workflows starts with prompts. The wrong starting point.
+          If you've written a <code>main()</code> function or a class constructor, you already have
+          the right mental model — you just haven't realized you're looking at one.
+        </p>
+        <div class="meta">
+          <time datetime={date}>{dateFmt.format(new Date(date))}</time>
+          <span class="meta-dot"></span>
+          <span>{readingMinutes} min read</span>
+          <span class="meta-dot"></span>
+          <span>by DigitalOutbreak</span>
+        </div>
+      </header>
+
+      <aside id="tldr" class="tldr">
+        <div class="tldr-label">TL;DR</div>
+        <ul>
+          <li><strong>The model:</strong> <code>CLAUDE.md</code> / <code>AGENTS.md</code> is a constructor. It doesn't do the work — it wires up what does.</li>
+          <li><strong>The mapping:</strong> context files are pure modules, skills are methods with side effects, agents are subroutines.</li>
+          <li><strong>The strategy:</strong> three ways to load — eager (auto-import), lazy (on-demand), invoked (skill) — are the same three strategies programming has solved for decades.</li>
+          <li><strong>The reframing:</strong> the agent isn't the program. The agent is the <em>runtime</em>. Your repo is the program.</li>
+          <li><strong>The implication:</strong> hallucination is silent failure — a function returning without anything forcing the return to confront reality.</li>
+        </ul>
+      </aside>
+
+      <section id="mapping" class="post-section">
+        <div class="section-num">01</div>
+        <h2>The mapping</h2>
+        <p>
+          A clean correspondence between programming concepts you already use and the parts of an
+          AI coding workflow that show up in every scaffold worth shipping:
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Programming concept</th><th>Workflow equivalent</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>main()</code> / constructor</td><td><code>CLAUDE.md</code> / <code>AGENTS.md</code></td></tr>
+              <tr><td>Static import / <code>require</code></td><td><code>@</code>-import at the top of <code>CLAUDE.md</code></td></tr>
+              <tr><td>Pure module (read-only)</td><td><code>docs/context/*.md</code></td></tr>
+              <tr><td>Lazy-loaded module</td><td><code>docs/specs/*.md</code>, feature specs</td></tr>
+              <tr><td>Class method (effectful)</td><td><code>.claude/skills/*</code></td></tr>
+              <tr><td>Subroutine / callable</td><td><code>.claude/agents/*</code></td></tr>
+              <tr><td>Runtime / interpreter</td><td>The AI agent itself</td></tr>
+              <tr><td>Program output</td><td>The shipped feature</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          Look at what a <code>CLAUDE.md</code> with <code>@</code>-imports actually does, transliterated:
+        </p>
+
+        <pre><code>// CLAUDE.md, expressed as code:
+import thesis from './docs/context/thesis.md'
+import overview from './docs/context/project-overview.md'
+import standards from './docs/context/coding-standards.md'
+import rules from './docs/context/ai-interaction.md'
+import current from './docs/context/current-feature.md'
+
+const context = &#123; thesis, overview, standards, rules, current &#125;
+// agent runs against this context</code></pre>
+
+        <p>
+          That is not a metaphor. That is what <code>@</code>-imports <em>literally do</em>. The agent
+          starts every session by running this constructor, reading these modules into memory, and
+          then handling whatever you ask. The shape is identical to any program's entry point.
+        </p>
+
+        <p>
+          The cleaner you keep that constructor — small, declarative, dependency-listed — the
+          easier the rest of your program is to reason about. The exact same rule that applies to
+          every <code>main()</code> file you've ever written.
+        </p>
+      </section>
+
+      <section id="loading-strategies" class="post-section">
+        <div class="section-num">02</div>
+        <h2>Three loading strategies programming already solved</h2>
+        <p>
+          Every programming language has three ways of loading code, and all three map directly onto
+          context architecture. The discourse about "context bloat" is the discourse about loading
+          strategy, badly named.
+        </p>
+
+        <div class="comparison-grid">
+          <div class="comparison-col">
+            <div class="comparison-label">Programming</div>
+            <ul>
+              <li><strong>Eager:</strong> top-of-file <code>import</code> — paid once at startup</li>
+              <li><strong>Lazy:</strong> dynamic <code>import()</code>, <code>require()</code> in function — paid first access</li>
+              <li><strong>Invoked:</strong> <code>f()</code> — paid on explicit call</li>
+            </ul>
+          </div>
+          <div class="comparison-col">
+            <div class="comparison-label">Workflow</div>
+            <ul>
+              <li><strong>Auto-imported:</strong> <code>docs/context/*</code> via <code>@</code>-import — paid once per session</li>
+              <li><strong>On-demand:</strong> <code>docs/specs/*</code>, feature specs — paid when relevant</li>
+              <li><strong>Invoked:</strong> <code>/feature</code>, <code>/cleanup</code>, agents — paid when called</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>
+          "Put everything in <code>AGENTS.md</code> and trim it under five thousand tokens" is the
+          architectural equivalent of "inline every function into <code>main()</code>." Nobody
+          would do this in code. Nobody should do it for an agent either.
+        </p>
+
+        <blockquote class="pull-quote">
+          The right number of tokens to auto-load is the same as the right number of lines in your
+          <code>main()</code>: enough to wire up the dependencies, not so much that you've inlined
+          the whole program.
+        </blockquote>
+
+        <p>
+          The tier system isn't a workflow opinion. It's a forty-year-old solution to a problem the
+          AI-tools discourse keeps re-discovering.
+        </p>
+      </section>
+
+      <section id="repo-is-program" class="post-section">
+        <div class="section-num">03</div>
+        <h2>The repo is the program. The agent is the runtime.</h2>
+        <p>
+          This is the reframing the rest of the discourse misses, and it changes how you reason about
+          everything else.
+        </p>
+
+        <p>
+          You are not "prompting the AI." You are not even "building an agent." You are writing a
+          program. The agent is the interpreter that executes against it. The
+          <code>CLAUDE.md</code> is your entry point. The context docs are your modules. The skills
+          are your methods. The shipped feature is your output.
+        </p>
+
+        <p>
+          When Python programmers debate "should I use 3.11 or 3.12," they are not debating which
+          version writes cleaner code. They are debating performance and features of the
+          <em>runtime</em>. The code is theirs. The interpreter is the language's. Same with agents.
+          A better model on the same program runs faster and hallucinates less. But the program is
+          still yours to write.
+        </p>
+
+        <p>This reframing explains a lot of things at once:</p>
+
+        <ul class="claim-list">
+          <li><strong>Why model choice is the last 10%.</strong> Upgrading the interpreter helps. Writing a better program helps more.</li>
+          <li><strong>Why cross-agent compat matters.</strong> A portable program runs on multiple runtimes. <code>AGENTS.md</code> / <code>CLAUDE.md</code> / <code>GEMINI.md</code> are just entry points for different interpreters of the same source.</li>
+          <li><strong>Why "prompt engineering" is the wrong framing.</strong> You're not crafting magical strings. You're writing a program that happens to be addressed to a probabilistic interpreter.</li>
+          <li><strong>Why a one-shot ChatGPT message can't substitute for this.</strong> Pasting code into a chat window is the <code>eval()</code> of agent development — it runs, but it isn't a program.</li>
+        </ul>
+      </section>
+
+      <section id="programmers-ship-cleaner" class="post-section">
+        <div class="section-num">04</div>
+        <h2>Why programmers ship cleaner workflows</h2>
+        <p>
+          If you've written production software, you already have the intuitions. You don't need new
+          ones to design good context architecture — you need to apply the ones you have.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Intuition you already have</th><th>How it shows up in the scaffold</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Separation of concerns</td><td>Strategy (<code>thesis.md</code>) ≠ architecture (<code>project-overview.md</code>) ≠ style (<code>coding-standards.md</code>)</td></tr>
+              <tr><td>Single-responsibility</td><td>Each context doc is one thing. <code>current-feature.md</code> is state. <code>coding-standards.md</code> is rules.</td></tr>
+              <tr><td>Pure vs effectful</td><td>Context = pure reads. Skills = effectful (write files, cut branches).</td></tr>
+              <tr><td>Lazy evaluation</td><td>Tier on-demand specs so the agent pays only when relevant.</td></tr>
+              <tr><td>Explicit returns</td><td><code>/feature complete</code> has gates. The function literally won't return until conditions hold.</td></tr>
+              <tr><td>Module boundaries</td><td>The <code>docs/</code> vs <code>.claude/</code> split mirrors the source vs build split.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          This is why programmers reading the scaffold for the first time say "oh, that makes
+          sense" within thirty seconds, while non-programmers ask "but what does it <em>do</em>." It
+          doesn't <em>do</em> anything. It's a program structure. The doing is in the runtime.
+        </p>
+
+        <p>
+          The non-programmer path is the same as it always is in software: stand on the shoulders
+          of people who already solved the architectural problem. Don't reinvent module loading.
+          Copy the scaffold and add your domain.
+        </p>
+      </section>
+
+      <section id="silent-failure" class="post-section">
+        <div class="section-num">05</div>
+        <h2>Hallucination is silent failure</h2>
+        <p>
+          Programming has a name for "a function ran, returned a value, the caller trusted it, and
+          the value was wrong": <em>silent failure</em>. The build passed. The tests passed. The
+          bug shipped.
+        </p>
+
+        <p>
+          Hallucination is silent failure. The agent "returned" — it said "done." But nothing
+          forced the return to confront a build, a test, a human eye. The interpreter happily
+          continues, and the lie compounds into the next function call.
+        </p>
+
+        <p>
+          A lifecycle is a forced <code>assert()</code> at the end of the function. The agent's
+          <code>return</code> has to clear a gate — the build runs, the tests pass, you say it
+          looks right — before the work counts as complete. The lifecycle doesn't prevent the
+          agent from imagining. It prevents the imagination from being treated as truth.
+        </p>
+
+        <blockquote class="pull-quote">
+          <code>maxToolCalls: 5</code> doesn't help with hallucination. It limits how many times
+          the function loops before returning. The function still returns whatever it wants. You
+          have to constrain the <em>return</em>, not the body.
+        </blockquote>
+
+        <p>
+          That's what a forced lifecycle does. That's what a markdown file with a "please verify"
+          sentence doesn't. The shape of the program is what enforces correctness — not the
+          eloquence of the comments.
+        </p>
+      </section>
+
+      <aside class="takeaways">
+        <div class="takeaways-label">Five things to remember</div>
+        <ol>
+          <li>Your <code>CLAUDE.md</code> is a constructor. Keep it short, declarative, dependency-listed.</li>
+          <li>Context docs are pure modules. Skills are methods. Agents are subroutines.</li>
+          <li>Three loading strategies: eager, lazy, invoked. Pick deliberately, not by default.</li>
+          <li>The agent is the runtime. Your repo is the program. Optimize the program first.</li>
+          <li>Hallucination is silent failure. The fix is a forced return contract, not a polite request.</li>
+        </ol>
+      </aside>
+
+      <section id="faq" class="post-section faq-section">
+        <div class="section-num">FAQ</div>
+        <h2>Questions people have asked</h2>
+        {
+          faqs.map((faq) => (
+            <details class="faq-item">
+              <summary>
+                <span class="faq-q">{faq.q}</span>
+                <span class="faq-toggle" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="faq-a"><p>{faq.a}</p></div>
+            </details>
+          ))
+        }
+      </section>
+
+      <aside class="cta-card">
+        <div class="cta-eyebrow">Try the scaffold</div>
+        <h3 class="cta-title">A constructor, pre-written. Bootstrap any project.</h3>
+        <div class="cta-cmd">
+          <span class="prompt">$</span>
+          <code>npx skills add DigitalOutbreak/workflow -g</code>
+        </div>
+        <p class="cta-sub">
+          Then <code>/workflow-init</code> in any project. Fifteen-plus runtimes supported.
+          See the <a href="/docs">docs</a> for the full module graph.
+        </p>
+      </aside>
+
+      <nav class="post-footer-nav">
+        <a href="/blog" class="footer-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          All posts
+        </a>
+        <a href="/docs" class="footer-cta">
+          Read the docs
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </nav>
+    </article>
+
+    <div class="blog-spacer" aria-hidden="true"></div>
+  </main>
+
+  <Footer />
+
+  <script is:inline>
+    (function () {
+      const links = Array.from(document.querySelectorAll('[data-toc-link]'));
+      if (!links.length) return;
+      const sections = links
+        .map((link) => {
+          const id = link.getAttribute('href').slice(1);
+          return { link, el: document.getElementById(id) };
+        })
+        .filter((s) => s.el);
+      function update() {
+        const triggerLine = window.scrollY + window.innerHeight * 0.3;
+        let active = sections[0];
+        for (const s of sections) {
+          if (s.el.offsetTop <= triggerLine) active = s;
+        }
+        links.forEach((l) => l.removeAttribute('data-active'));
+        active.link.setAttribute('data-active', 'true');
+      }
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => { update(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+      update();
+    })();
+  </script>
+</Layout>
+
+<style>
+  .blog-shell {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  @media (min-width: 1024px) {
+    .blog-shell {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 3rem;
+      padding: 4.5rem 1.5rem 8rem;
+    }
+  }
+
+  .blog-toc { display: none; }
+  @media (min-width: 1024px) {
+    .blog-toc {
+      display: block;
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 4.75rem;
+      align-self: flex-start;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      padding: 0.25rem 0 1rem;
+    }
+    .blog-toc::-webkit-scrollbar { width: 4px; }
+    .blog-toc::-webkit-scrollbar-track { background: transparent; }
+    .blog-toc::-webkit-scrollbar-thumb { background: var(--color-hairline); border-radius: 2px; }
+  }
+  .toc-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-tertiary);
+    margin-bottom: 0.85rem;
+    padding-left: 0.85rem;
+  }
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--color-hairline);
+  }
+  .toc-list li { margin: 0; }
+  .toc-list a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.45rem 0 0.45rem 0.85rem;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    border-left: 1px solid transparent;
+    margin-left: -1px;
+  }
+  .toc-list a:hover { color: var(--color-ink-muted); }
+  .toc-list a[data-active="true"] {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    flex-shrink: 0;
+  }
+  .toc-list a[data-active="true"] .toc-num { color: var(--color-accent); }
+
+  .blog-content {
+    width: 100%;
+    max-width: 44rem;
+    margin: 0 auto;
+    min-width: 0;
+  }
+  .blog-spacer { display: none; }
+  @media (min-width: 1024px) {
+    .blog-spacer { display: block; width: 200px; flex-shrink: 0; }
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+  }
+  .breadcrumb a {
+    color: var(--color-ink-tertiary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .breadcrumb a:hover { color: var(--color-ink-muted); }
+  .breadcrumb .here { color: var(--color-ink-muted); }
+
+  .post-header { margin-top: 2rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+  }
+  .post-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--color-ink);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .post-header h1 code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-weight: 500;
+  }
+  .lead {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+    margin-top: 1.5rem;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+  }
+  .lead em { color: var(--color-ink); font-style: italic; }
+  .lead code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+  .meta {
+    margin-top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+    flex-wrap: wrap;
+  }
+  .meta-dot {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--color-hairline-strong);
+  }
+
+  .tldr {
+    margin-top: 3rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    position: relative;
+    scroll-margin-top: 5.5rem;
+  }
+  .tldr::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 1.5rem;
+    width: 2.5rem;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
+  .tldr-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .tldr ul li::marker { color: var(--color-ink-tertiary); }
+  .tldr ul li + li { margin-top: 0.5rem; }
+  .tldr strong { color: var(--color-ink); font-weight: 600; }
+  .tldr code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.35em;
+    border-radius: var(--radius-xs);
+  }
+  .tldr em { color: var(--color-ink); font-style: italic; }
+
+  .post-section { margin-top: 4.5rem; scroll-margin-top: 5.5rem; }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: 0.6rem;
+  }
+  .post-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.625rem, 3vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--color-ink);
+    margin: 0 0 1.5rem;
+  }
+  .post-section h2 code {
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-weight: 500;
+  }
+  .post-section h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--color-ink);
+    margin: 2.5rem 0 1rem;
+  }
+  .post-section p {
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    margin: 0 0 1.15em;
+    text-wrap: pretty;
+  }
+  .post-section p:last-child { margin-bottom: 0; }
+  .post-section strong { color: var(--color-ink); font-weight: 600; }
+  .post-section em { color: var(--color-ink); font-style: italic; }
+  .post-section a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .post-section a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post-section code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .post-section pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--color-surface-1);
+    color: var(--color-ink);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+  }
+  .post-section pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .claim-list, .ranked-list {
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    list-style: decimal;
+  }
+  .claim-list li::marker, .ranked-list li::marker {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+  .claim-list li, .ranked-list li { margin-top: 0.6rem; }
+  .claim-list code, .ranked-list code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .comparison-grid {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .comparison-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  }
+  .comparison-col {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.25rem;
+  }
+  .comparison-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-subtle);
+    margin-bottom: 0.65rem;
+  }
+  .comparison-col ul {
+    margin: 0;
+    padding-left: 1.05rem;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+  .comparison-col ul li { margin-top: 0.45rem; }
+  .comparison-col ul li:first-child { margin-top: 0; }
+  .comparison-col ul li::marker { color: var(--color-ink-tertiary); }
+  .comparison-col code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+  }
+  .comparison-col strong { color: var(--color-ink); font-weight: 600; }
+
+  .pull-quote {
+    margin: 2rem 0 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(94, 106, 210, 0.04), transparent);
+    border-left: 2px solid var(--color-accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--color-ink);
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+  .pull-quote code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-style: normal;
+    color: var(--color-ink);
+  }
+
+  .table-wrap {
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+  }
+  .post-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0;
+  }
+  .post-section th {
+    text-align: left;
+    color: var(--color-ink);
+    font-weight: 600;
+    padding: 0.7rem 1rem;
+    background: var(--color-surface-1);
+    border-bottom: 1px solid var(--color-hairline-strong);
+    font-size: 13px;
+  }
+  .post-section td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+    vertical-align: top;
+    color: var(--color-ink-muted);
+  }
+  .post-section tr:last-child td { border-bottom: 0; }
+
+  .takeaways {
+    margin-top: 4rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+  .takeaways-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .takeaways ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+    list-style: decimal;
+  }
+  .takeaways ol li::marker { color: var(--color-accent); font-family: var(--font-mono); font-weight: 500; }
+  .takeaways ol li + li { margin-top: 0.5rem; }
+  .takeaways code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+  }
+
+  .faq-section { margin-top: 4.5rem; }
+  .faq-item {
+    border-top: 1px solid var(--color-hairline);
+    padding: 1.15rem 0;
+  }
+  .faq-item:last-of-type { border-bottom: 1px solid var(--color-hairline); }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-right: 0.25rem;
+    transition: color 0.15s ease;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-q {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .faq-toggle {
+    color: var(--color-ink-tertiary);
+    transition: transform 0.2s ease, color 0.15s ease;
+    flex-shrink: 0;
+    display: inline-flex;
+  }
+  .faq-item[open] .faq-toggle { transform: rotate(180deg); color: var(--color-accent); }
+  .faq-item summary:hover .faq-q { color: var(--color-accent-hover); }
+  .faq-a {
+    margin-top: 0.75rem;
+    color: var(--color-ink-muted);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+  .faq-a p { margin: 0; text-wrap: pretty; }
+
+  .cta-card {
+    margin-top: 4rem;
+    padding: 1.75rem 1.75rem 1.9rem;
+    background:
+      linear-gradient(180deg, rgba(94, 106, 210, 0.06), transparent),
+      var(--color-surface-1);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-lg);
+  }
+  .cta-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.5rem;
+  }
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    margin: 0 0 1.15rem;
+    line-height: 1.2;
+  }
+  .cta-cmd {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    overflow-x: auto;
+  }
+  .cta-cmd .prompt { color: var(--color-accent); }
+  .cta-cmd code {
+    background: transparent;
+    padding: 0;
+    color: var(--color-ink);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .cta-sub {
+    margin: 0.9rem 0 0;
+    color: var(--color-ink-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .cta-sub code {
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+  .cta-sub a { color: var(--color-accent); text-decoration: none; }
+  .cta-sub a:hover { color: var(--color-accent-hover); text-decoration: underline; }
+
+  .post-footer-nav {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 14px;
+  }
+  .footer-back, .footer-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-back:hover, .footer-cta:hover { color: var(--color-ink); }
+  .footer-cta { color: var(--color-accent); }
+  .footer-cta:hover { color: var(--color-accent-hover); }
+</style>

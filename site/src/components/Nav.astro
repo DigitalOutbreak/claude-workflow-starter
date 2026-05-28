@@ -2,12 +2,15 @@
 const version = 'v0.15.8';
 const pathname = Astro.url.pathname;
 const onDocs = pathname.startsWith('/docs');
+const onBlog = pathname.startsWith('/blog');
+const offHome = onDocs || onBlog;
 
 const links = [
-  { href: onDocs ? '/#features' : '#features', label: 'Features' },
-  { href: onDocs ? '/#workflow' : '#workflow', label: 'Workflow' },
-  { href: onDocs ? '/#install' : '#install', label: 'Install' },
+  { href: offHome ? '/#features' : '#features', label: 'Features' },
+  { href: offHome ? '/#workflow' : '#workflow', label: 'Workflow' },
+  { href: offHome ? '/#install' : '#install', label: 'Install' },
   { href: '/docs', label: 'Docs', isDocs: true },
+  { href: '/blog', label: 'Blog', isBlog: true },
 ];
 ---
 
@@ -21,7 +24,8 @@ const links = [
 
     <nav class="hidden md:flex items-center gap-6 text-[14px] text-[var(--color-ink-subtle)]">
       {links.map((l) => {
-        const active = (l as any).isDocs && onDocs;
+        const active =
+          ((l as any).isDocs && onDocs) || ((l as any).isBlog && onBlog);
         return (
           <a
             href={l.href}

@@ -1,0 +1,1534 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Nav from '../../components/Nav.astro';
+import Footer from '../../components/Footer.astro';
+
+const title = 'How /feature keeps your context lean across sessions.';
+const description =
+  "A tour through the six-action lifecycle — spec, load, start, review, explain, complete — and the trick that lets the always-loaded file stay tiny even after fifty shipped features.";
+const date = '2026-05-30';
+const readingMinutes = 11;
+
+const dateFmt = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const toc = [
+  { id: 'tldr', label: 'TL;DR' },
+  { id: 'why-lifecycle', label: 'Why a lifecycle at all', num: '01' },
+  { id: 'six-actions', label: 'The six actions', num: '02' },
+  { id: 'context-flow', label: 'How context flows', num: '03' },
+  { id: 'worked-example', label: 'A worked example', num: '04' },
+  { id: 'why-six', label: 'Why six (not three, not ten)', num: '05' },
+  { id: 'faq', label: 'FAQ' },
+];
+
+const faqs = [
+  {
+    q: "Why isn't this just /feature ship?",
+    a: "Because shipping is the last 10% of the work. The other 90% is figuring out what you're building (spec), getting back into it after a break (load), and confirming you didn't lie to yourself (review). One command would collapse all the checkpoints into one moment where the agent has to be perfect. Six commands means six places where you can catch a mistake cheaply.",
+  },
+  {
+    q: "What if I want to skip review or explain?",
+    a: "Skip them. They're optional. /feature start → /feature complete is a valid path for a small change. The structure is there when you want it; not there when you don't. The non-skippable actions are spec, start, and complete — because those are the ones with irreversible side effects (writing a spec, cutting a branch, merging back).",
+  },
+  {
+    q: "How does this work across sessions?",
+    a: "current-feature.md is auto-imported every session, so the agent always knows what's active. The spec sits in docs/context/features/<slug>-spec.md and gets re-loaded on demand via /feature load. After /feature complete, current-feature.md gets a one-line history entry and the spec stays in the features/ directory as a record. New sessions pick up clean.",
+  },
+  {
+    q: "Does this work with PRs and GitHub flow?",
+    a: "Yes. /feature start cuts the branch with a conventional name (feature/<slug>). /feature explain drafts a commit/PR description from the diff. /feature complete merges back. If your team uses PR review, you'd typically run /feature explain → open PR → wait for approval → /feature complete. The lifecycle slots in around standard git/GitHub flow rather than replacing it.",
+  },
+  {
+    q: "What if I'm working on multiple features at once?",
+    a: "current-feature.md tracks the active one. If you switch contexts, you re-run /feature load <other-slug> to pull the other spec into focus. The lifecycle is single-active by design — parallel features land in trouble because the agent loses track of which spec applies to which diff. Use git worktrees if you really need true parallel work.",
+  },
+  {
+    q: "How big does current-feature.md get over time?",
+    a: "Tiny, by design. Status is one line. Goals are bullets. Notes are short. The history section grows by one line per shipped feature — after fifty features, it's still a few KB. Specs accumulate in docs/context/features/ but those don't auto-load. The always-loaded surface stays small forever.",
+  },
+  {
+    q: "Does this require Claude Code?",
+    a: "No. /feature ships as part of the cross-agent skill scaffold and works in Claude Code, Codex (as $feature), Gemini CLI, and any agent that supports the open skills standard — about fifteen runtimes total. The actions are markdown skills, so they're portable.",
+  },
+  {
+    q: "What if I want a different branching strategy?",
+    a: "The branch name is configurable. The action shape is opinionated — spec then start then complete — but where the branch comes from and where it merges back are project decisions. Some teams use feature/* → main. Some use feature/* → develop → main. /feature accommodates either; you tell it the target.",
+  },
+];
+---
+
+<Layout title={`${title} — workflow`} description={description}>
+  <Nav />
+
+  <main class="blog-shell">
+    <aside class="blog-toc" aria-label="Table of contents">
+      <div class="toc-label">On this page</div>
+      <ul class="toc-list">
+        {
+          toc.map((item) => (
+            <li>
+              <a href={`#${item.id}`} data-toc-link>
+                {item.num && <span class="toc-num">{item.num}</span>}
+                <span class="toc-text">{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </aside>
+
+    <article class="blog-content">
+      <div class="breadcrumb">
+        <a href="/">workflow</a>
+        <span>/</span>
+        <a href="/blog">blog</a>
+        <span>/</span>
+        <span class="here">how-feature-works</span>
+      </div>
+
+      <header class="post-header">
+        <div class="eyebrow">Explainer · The /feature lifecycle</div>
+        <h1>{title}</h1>
+        <p class="lead">
+          A tour through the six-action lifecycle — <code>spec</code>, <code>load</code>,
+          <code>start</code>, <code>review</code>, <code>explain</code>, <code>complete</code> —
+          and the trick that lets the always-loaded file stay tiny even after fifty shipped
+          features.
+        </p>
+        <div class="meta">
+          <time datetime={date}>{dateFmt.format(new Date(date))}</time>
+          <span class="meta-dot"></span>
+          <span>{readingMinutes} min read</span>
+          <span class="meta-dot"></span>
+          <span>by DigitalOutbreak</span>
+        </div>
+      </header>
+
+      <aside id="tldr" class="tldr">
+        <div class="tldr-label">TL;DR</div>
+        <ul>
+          <li><strong>The shape:</strong> six commands — <code>spec</code> → <code>load</code> → <code>start</code> → <code>review</code> → <code>explain</code> → <code>complete</code>. <code>review</code> and <code>explain</code> are optional.</li>
+          <li><strong>The trick:</strong> <code>current-feature.md</code> is auto-imported and stays tiny (status, goals, notes, one-line history). Specs sit on disk in <code>features/</code> and only load on demand.</li>
+          <li><strong>The living doc:</strong> the skill writes to <code>current-feature.md</code> on <code>start</code> and <code>complete</code>. Without the skill it's a static note. With the skill it's a state surface that reflects the actual project, automatically.</li>
+          <li><strong>Reincarnation across sessions:</strong> sessions die (<code>/clear</code>, the context window fills, you close the laptop). The work doesn't. State lives on disk via <code>current-feature.md</code> and the spec, so the next session walks in already knowing exactly where you left off.</li>
+          <li><strong>The result:</strong> after fifty shipped features, the always-loaded surface is still a few KB. You don't pay for old work every session.</li>
+          <li><strong>The enforcement:</strong> <code>/feature complete</code> has gates. The agent's "done" doesn't count until the build runs, the diff is reviewed, and you sign off.</li>
+          <li><strong>The honest part:</strong> the first feature is the slowest because you write the spec. Feature three onward is faster than ad-hoc prompting.</li>
+        </ul>
+      </aside>
+
+      <section id="why-lifecycle" class="post-section">
+        <div class="section-num">01</div>
+        <h2>Why a lifecycle at all</h2>
+        <p>
+          The default way to ship work with an AI agent is: open a chat, describe what you want,
+          watch it write code, run the result, see what breaks, ask for fixes, repeat. That works
+          for trivial tasks and falls apart at anything with more than one moving part.
+        </p>
+
+        <p>
+          The reasons it falls apart are predictable:
+        </p>
+
+        <ul class="claim-list">
+          <li><strong>No contract.</strong> The "spec" lives in your head and the agent's. By turn three, your model of the task and the agent's model have diverged. Whatever ships, neither of you can point at the original definition.</li>
+          <li><strong>No checkpoints.</strong> If the agent gets something wrong in turn two, you don't notice until turn seven, when nothing works and you're three layers deep in fixes for a misunderstanding.</li>
+          <li><strong>No isolation.</strong> Everything happens on the same branch (or worse, no branch). Reverting is a manual git surgery instead of <code>git checkout main</code>.</li>
+          <li><strong>No memory of what happened.</strong> Tomorrow's session starts cold. You re-explain the feature. The agent re-derives the conventions. Sessions don't compound.</li>
+        </ul>
+
+        <p>
+          A lifecycle fixes all four. Each action is a stopping point — a place to see what
+          happened and decide whether to keep going or back out. The structure isn't ceremony.
+          It's where mistakes are easy to catch and cheap to fix.
+        </p>
+
+        <blockquote class="pull-quote">
+          The lifecycle isn't ceremony. It's where the lie meets the compiler.
+        </blockquote>
+
+        <p>Six actions, walked through next.</p>
+      </section>
+
+      <section id="six-actions" class="post-section">
+        <div class="section-num">02</div>
+        <h2>The six actions</h2>
+        <p>
+          Walked through in the order you'd run them. The required actions are <code>spec</code>,
+          <code>start</code>, and <code>complete</code>. The others are optional — they earn their
+          place when you actually need them.
+        </p>
+
+        <div class="lifecycle-flow" aria-label="The six actions of /feature">
+          <div class="flow-step required">
+            <div class="step-num">01</div>
+            <div class="step-cmd">spec</div>
+            <div class="step-tag">required</div>
+          </div>
+          <div class="flow-sep" aria-hidden="true"></div>
+          <div class="flow-step optional">
+            <div class="step-num">02</div>
+            <div class="step-cmd">load</div>
+            <div class="step-tag">on demand</div>
+          </div>
+          <div class="flow-sep" aria-hidden="true"></div>
+          <div class="flow-step required">
+            <div class="step-num">03</div>
+            <div class="step-cmd">start</div>
+            <div class="step-tag">required</div>
+          </div>
+          <div class="flow-sep" aria-hidden="true"></div>
+          <div class="flow-step optional">
+            <div class="step-num">04</div>
+            <div class="step-cmd">review</div>
+            <div class="step-tag">optional</div>
+          </div>
+          <div class="flow-sep" aria-hidden="true"></div>
+          <div class="flow-step optional">
+            <div class="step-num">05</div>
+            <div class="step-cmd">explain</div>
+            <div class="step-tag">optional</div>
+          </div>
+          <div class="flow-sep" aria-hidden="true"></div>
+          <div class="flow-step required">
+            <div class="step-num">06</div>
+            <div class="step-cmd">complete</div>
+            <div class="step-tag">required</div>
+          </div>
+        </div>
+
+        <h3>1 · <code>/feature spec &lt;slug&gt;</code></h3>
+        <p>
+          Interview the agent: goals, non-goals, design decisions, edge cases, definition of done.
+          The output is a markdown file at <code>docs/context/features/&lt;slug&gt;-spec.md</code>.
+        </p>
+        <p>
+          This is the only action where you're talking, not doing. The agent can wander during the
+          interview. Once the spec is written, the contract is locked — every other action anchors
+          against the file, not against memory.
+        </p>
+
+        <h3>2 · <code>/feature load &lt;slug&gt;</code></h3>
+        <p>
+          Reads the spec file back into context. Useful when you've returned to a feature after a
+          break, a context compaction, or switching from another feature.
+        </p>
+        <p>
+          <code>load</code> isn't required every session. If you ran <code>/feature start</code>
+          earlier today and you're still on the same branch, the spec is already loaded.
+          <code>load</code> exists for the case where it isn't.
+        </p>
+
+        <h3>3 · <code>/feature start</code></h3>
+        <p>
+          Cuts a branch — typically <code>feature/&lt;slug&gt;</code>. Updates
+          <code>current-feature.md</code> with the active feature's status, goals, and a pointer
+          to the spec. From this point on, every new session auto-loads
+          <code>current-feature.md</code> and walks in knowing what you're working on.
+        </p>
+        <p>
+          Cutting the branch matters. If the feature goes sideways, you throw the branch away.
+          Cheap to revert — but only if you set up isolation early.
+        </p>
+
+        <h3>4 · <code>/feature review</code></h3>
+        <p>
+          Optional. Runs the <code>code-scanner</code> agent against the current diff. Looks for
+          quality issues, security concerns, performance regressions, and missing tests. Returns a
+          report.
+        </p>
+        <p>
+          Most useful right before <code>complete</code>. Skip it on typo fixes. Run it on
+          anything touching auth, data, or money.
+        </p>
+
+        <h3>5 · <code>/feature explain</code></h3>
+        <p>
+          Optional. Reads the diff against <code>main</code> and drafts a commit message and PR
+          description. Saves the "what did I just do?" overhead when you've context-switched
+          mid-feature.
+        </p>
+        <p>
+          Output is markdown you paste into your PR template. Doesn't merge anything — that's
+          <code>complete</code>'s job.
+        </p>
+
+        <h3>6 · <code>/feature complete</code></h3>
+        <p>
+          The closing gate. Builds. Runs tests. Asks you to sign off if there's a manual check
+          (usually a quick browser test). Then merges, deletes the branch, and writes a one-line
+          history entry to <code>current-feature.md</code>.
+        </p>
+        <p>
+          This is the only action that won't fire until the build passes. The agent can claim
+          "done" all day inside <code>start</code>. <code>complete</code> is where the claim has
+          to survive the build.
+        </p>
+      </section>
+
+      <section id="context-flow" class="post-section">
+        <div class="section-num">03</div>
+        <h2>How context flows through the lifecycle</h2>
+        <p>
+          Three context surfaces are in play across the six actions. Each loads differently:
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Surface</th><th>Where</th><th>When it loads</th><th>Touched by</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Active state</strong></td>
+                <td><code>docs/context/current-feature.md</code></td>
+                <td>Every session (auto-import)</td>
+                <td><code>start</code>, <code>complete</code></td>
+              </tr>
+              <tr>
+                <td><strong>The spec</strong></td>
+                <td><code>docs/context/features/&lt;slug&gt;-spec.md</code></td>
+                <td>On demand (<code>load</code>)</td>
+                <td><code>spec</code>, <code>load</code></td>
+              </tr>
+              <tr>
+                <td><strong>The diff</strong></td>
+                <td>Git working tree</td>
+                <td>When read (<code>review</code>, <code>explain</code>)</td>
+                <td><code>review</code>, <code>explain</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          The trick is the split between the <em>always-loaded</em> file
+          (<code>current-feature.md</code>) and the <em>archived</em> specs
+          (<code>features/*-spec.md</code>). Specs grow without bound — every feature adds another
+          file. But none of them auto-load. They sit on disk waiting for <code>load</code> to pull
+          them in.
+        </p>
+
+        <p>
+          <code>current-feature.md</code>, meanwhile, is structured to stay small. It carries:
+        </p>
+
+        <pre><code># Current Feature
+
+## Status
+[one line: active / paused / blocked]
+
+## Goals
+[bullets — usually 3-5]
+
+## Notes
+[short reminders, current context]
+
+## History
+- 2026-05-28 · leads-dashboard · merged
+- 2026-05-21 · invite-flow · merged
+- 2026-05-14 · billing-portal · merged
+- ...</code></pre>
+
+        <p>
+          History grows by exactly one line per shipped feature. After fifty features, the file is
+          maybe 5 KB. The agent loads this every session and immediately knows the state of the
+          project. Auto-imported context stays cheap forever.
+        </p>
+
+        <blockquote class="pull-quote">
+          The auto-imported file is a pointer. The pointed-at content sits on disk until it's
+          needed. This is the entire trick.
+        </blockquote>
+
+        <p>
+          Compare this to dumping all your specs into <code>AGENTS.md</code>: you'd pay for every
+          historical feature on every session, forever. The cost grows monotonically. The tiered
+          design keeps the per-session cost flat.
+        </p>
+
+        <h3>Why the docs stay <em>living</em></h3>
+
+        <p>
+          One more thing. The reason <code>current-feature.md</code> and <code>backlog.md</code>
+          work as context is that <em>a skill writes to them</em>. Without the skill, they'd be
+          static notes — someone has to remember to update them, eventually doesn't, the docs
+          drift.
+        </p>
+
+        <p>
+          With <code>/feature</code>, <code>start</code> writes the active feature in.
+          <code>complete</code> writes the history entry. The file reflects the actual project,
+          because the skill maintains it as a side effect of the lifecycle. The agent isn't
+          trusted to remember; the lifecycle keeps it honest.
+        </p>
+
+        <blockquote class="pull-quote">
+          Markdown alone is a note. Markdown with a skill writing to it is state.
+        </blockquote>
+
+        <p>
+          That's why skills and context docs aren't competing primitives. They're a pair. Same
+          thing happens with <code>backlog.md</code>: items go in via the spec interview, get
+          removed by <code>complete</code>, the file stays accurate without ceremony. The
+          lifecycle keeps it current so you don't have to.
+        </p>
+
+        <h3>Reincarnation across sessions</h3>
+
+        <p>
+          Here's what happens when the session ends. Every agent session is a fresh instance —
+          its conversation, its memory of what you said, all of it lives in one context window.
+          When you <code>/clear</code>, when the window fills, when you close the laptop — that
+          agent is gone.
+        </p>
+
+        <p>
+          The <em>work</em> isn't. It lives on disk in <code>current-feature.md</code>, the spec,
+          and the branch you cut. None of it depends on the conversation. Start a new session —
+          hours later, days later, different laptop — and the new agent auto-loads
+          <code>current-feature.md</code> and resumes where you left off. Same work. New body.
+        </p>
+
+        <div class="reincarnation-diagram" role="figure" aria-label="Reincarnation across sessions">
+          <div class="rd-sessions">
+            <div class="rd-session">
+              <div class="rd-session-label">Session 1 · Day 1</div>
+              <ul>
+                <li>conversation</li>
+                <li>working memory</li>
+                <li>active diff</li>
+              </ul>
+              <div class="rd-session-fate">dies on /clear</div>
+            </div>
+            <div class="rd-divider" aria-hidden="true">
+              <div class="rd-divider-line"></div>
+              <div class="rd-divider-label">/clear</div>
+            </div>
+            <div class="rd-session">
+              <div class="rd-session-label">Session 2 · Day 2</div>
+              <ul>
+                <li>conversation (fresh)</li>
+                <li>working memory (fresh)</li>
+              </ul>
+              <div class="rd-session-fate">resumes from disk</div>
+            </div>
+          </div>
+          <div class="rd-arrows" aria-hidden="true">
+            <div class="rd-arrow rd-arrow-down"><span class="rd-arrow-glyph">↓</span><span>writes</span></div>
+            <div class="rd-arrow-spacer"></div>
+            <div class="rd-arrow rd-arrow-up"><span class="rd-arrow-glyph">↑</span><span>reads</span></div>
+          </div>
+          <div class="rd-disk">
+            <div class="rd-disk-label">On disk · survives /clear, restarts, days off</div>
+            <div class="rd-disk-files">
+              <div class="rd-file">
+                <div class="rd-file-name">docs/context/current-feature.md</div>
+                <div class="rd-file-desc">status · goals · history — auto-loaded every session</div>
+              </div>
+              <div class="rd-file">
+                <div class="rd-file-name">docs/context/features/leads-spec.md</div>
+                <div class="rd-file-desc">goals · design · edge cases — loaded on demand</div>
+              </div>
+              <div class="rd-file">
+                <div class="rd-file-name">feature/leads (git branch)</div>
+                <div class="rd-file-desc">the working code — safe to revert</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <blockquote class="pull-quote">
+          Each session is a new life. The work is the soul.
+        </blockquote>
+
+        <p>
+          Without the on-disk state, <code>/clear</code> would mean re-explaining the feature from
+          scratch every time. With it, <code>/clear</code> becomes a tool — a way to reset a noisy
+          conversation without losing the work. Reincarnation isn't a side effect. It's the point
+          of keeping state outside the conversation.
+        </p>
+      </section>
+
+      <section id="worked-example" class="post-section">
+        <div class="section-num">04</div>
+        <h2>A worked example: shipping a leads-dashboard feature</h2>
+        <p>
+          A concrete narrative across three sessions, to show what the lifecycle actually feels
+          like.
+        </p>
+
+        <h3>Day 1, morning · Spec</h3>
+        <p>
+          You open a session. The agent walks in already briefed on the project (<code>thesis.md</code>,
+          <code>project-overview.md</code>, <code>coding-standards.md</code>, <code>current-feature.md</code>
+          — all auto-loaded). The current feature is empty.
+        </p>
+        <p>
+          You run <code>/feature spec leads-dashboard</code>. The agent asks questions: what's the
+          primary view, what fields, what filters, what's the conversion event, what's
+          out-of-scope. You answer. The agent writes
+          <code>docs/context/features/leads-dashboard-spec.md</code> and reads it back. You confirm
+          or correct. Spec is locked.
+        </p>
+
+        <h3>Day 1, afternoon · Start and build</h3>
+        <p>
+          You run <code>/feature start</code>. The agent cuts <code>feature/leads-dashboard</code>,
+          updates <code>current-feature.md</code> to show the feature as active, and asks what
+          you'd like to do first.
+        </p>
+        <p>
+          You build for two hours. You stop for lunch. The session ends.
+        </p>
+
+        <h3>Day 2 · Resume</h3>
+        <p>
+          New session. The agent auto-loads the project context plus
+          <code>current-feature.md</code>, which now says "active: leads-dashboard." It knows
+          which branch you're on. You run <code>/feature load</code> to pull the spec back in.
+          Continue building.
+        </p>
+
+        <h3>Day 2, evening · Review</h3>
+        <p>
+          Implementation feels done. You run <code>/feature review</code>. The
+          <code>code-scanner</code> agent runs against the diff and reports two issues: an N+1
+          query in the leads list and a missing input validation in the filter form. You fix both.
+        </p>
+
+        <h3>Day 3 · Explain and complete</h3>
+        <p>
+          You run <code>/feature explain</code>. The agent reads the diff and drafts a PR
+          description: what changed, why, screenshots if relevant, test plan. You paste it into
+          your PR template.
+        </p>
+        <p>
+          PR gets approved. You run <code>/feature complete</code>. The build runs. Tests pass. The
+          agent asks you to confirm the dashboard works in the browser (the manual check). You
+          confirm. The branch merges. <code>current-feature.md</code> updates: status is empty
+          again, history has a new line.
+        </p>
+
+        <h3>Day 4 · New feature</h3>
+        <p>
+          Fresh session. The agent auto-loads <code>current-feature.md</code> and sees the
+          leads-dashboard feature merged yesterday, plus the history of everything before it. The
+          spec sits in <code>features/leads-dashboard-spec.md</code> if anyone wants to look. The
+          active state is empty. You start the next thing.
+        </p>
+
+        <p>
+          Through the whole flow, the agent never re-explained the project, never re-derived your
+          conventions, never lost track of what was active. Each session opened with the right
+          context already in place. That's what the lifecycle pays for.
+        </p>
+      </section>
+
+      <section id="why-six" class="post-section">
+        <div class="section-num">05</div>
+        <h2>Why six, not three, not ten</h2>
+        <p>
+          Why not collapse to two commands — <code>/feature start</code> and <code>/feature
+          ship</code>? Because each separation is a checkpoint. Checkpoints are cheap. Being wrong
+          without one is expensive.
+        </p>
+
+        <div class="comparison-grid">
+          <div class="comparison-col">
+            <div class="comparison-label">If you merged actions</div>
+            <ul>
+              <li><code>spec</code> + <code>start</code>: spec gets written, branch cuts immediately. No chance to refine the contract before isolation.</li>
+              <li><code>review</code> + <code>complete</code>: review fires automatically. Now it's mandatory, and small changes are slower.</li>
+              <li><code>explain</code> + <code>complete</code>: PR description and merge happen together. No room to edit the description first.</li>
+            </ul>
+          </div>
+          <div class="comparison-col">
+            <div class="comparison-label">Why they're separate</div>
+            <ul>
+              <li><code>spec</code> alone lets you re-read the spec, fix things, run it again before any code happens.</li>
+              <li><code>review</code> alone makes it optional. Skip it for typo fixes; run it for auth changes.</li>
+              <li><code>explain</code> alone gives you a draft to edit before <code>complete</code> commits anything.</li>
+            </ul>
+          </div>
+        </div>
+
+        <p>
+          Going the other direction — could there be ten actions? Sure. You could split
+          <code>start</code> into "cut branch" and "set state." You could split
+          <code>complete</code> into "merge," "delete branch," "write history." But each split
+          should earn its place by exposing a real choice. "Cut branch but don't set state" isn't a
+          choice anyone makes. The current splits all expose real choices.
+        </p>
+
+        <p>
+          Six is the number where each action is a real decision point and none is ceremony. Fewer
+          would collapse decisions you care about. More would add ones you don't.
+        </p>
+      </section>
+
+      <aside class="takeaways">
+        <div class="takeaways-label">Five things to remember</div>
+        <ol>
+          <li>Six actions: <code>spec</code>, <code>load</code>, <code>start</code>, <code>review</code>, <code>explain</code>, <code>complete</code>. Three are required; three are optional.</li>
+          <li><code>current-feature.md</code> auto-loads every session and stays tiny. Specs sit on disk and load on demand.</li>
+          <li>The lifecycle keeps per-session context flat as features accumulate. Old work doesn't tax new work.</li>
+          <li><code>/feature complete</code> won't fire until gates pass. The agent's "done" has to survive the build.</li>
+          <li>First feature pays for the structure. Feature three is faster than ad-hoc prompting.</li>
+        </ol>
+      </aside>
+
+      <section id="faq" class="post-section faq-section">
+        <div class="section-num">FAQ</div>
+        <h2>Questions people have asked</h2>
+        {
+          faqs.map((faq) => (
+            <details class="faq-item">
+              <summary>
+                <span class="faq-q">{faq.q}</span>
+                <span class="faq-toggle" aria-hidden="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="faq-a"><p>{faq.a}</p></div>
+            </details>
+          ))
+        }
+      </section>
+
+      <aside class="cta-card">
+        <div class="cta-eyebrow">Try the lifecycle</div>
+        <h3 class="cta-title">Six actions, one tiny auto-loaded file.</h3>
+        <div class="cta-cmd">
+          <span class="prompt">$</span>
+          <code>npx skills add DigitalOutbreak/workflow -g</code>
+        </div>
+        <p class="cta-sub">
+          Then <code>/workflow-init</code> in any project to scaffold the docs.
+          <code>/feature spec</code> ships the first feature. See the
+          <a href="/docs">docs</a> for the full reference.
+        </p>
+      </aside>
+
+      <nav class="post-footer-nav">
+        <a href="/blog" class="footer-back">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          All posts
+        </a>
+        <a href="/docs" class="footer-cta">
+          Read the docs
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </nav>
+    </article>
+
+    <div class="blog-spacer" aria-hidden="true"></div>
+  </main>
+
+  <Footer />
+
+  <script is:inline>
+    (function () {
+      const links = Array.from(document.querySelectorAll('[data-toc-link]'));
+      if (!links.length) return;
+      const sections = links
+        .map((link) => {
+          const id = link.getAttribute('href').slice(1);
+          return { link, el: document.getElementById(id) };
+        })
+        .filter((s) => s.el);
+      function update() {
+        const triggerLine = window.scrollY + window.innerHeight * 0.3;
+        let active = sections[0];
+        for (const s of sections) {
+          if (s.el.offsetTop <= triggerLine) active = s;
+        }
+        links.forEach((l) => l.removeAttribute('data-active'));
+        active.link.setAttribute('data-active', 'true');
+      }
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => { update(); ticking = false; });
+          ticking = true;
+        }
+      }, { passive: true });
+      update();
+    })();
+  </script>
+</Layout>
+
+<style>
+  .blog-shell {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  @media (min-width: 1024px) {
+    .blog-shell {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 3rem;
+      padding: 4.5rem 1.5rem 8rem;
+    }
+  }
+
+  .blog-toc { display: none; }
+  @media (min-width: 1024px) {
+    .blog-toc {
+      display: block;
+      width: 200px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 4.75rem;
+      align-self: flex-start;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      padding: 0.25rem 0 1rem;
+    }
+    .blog-toc::-webkit-scrollbar { width: 4px; }
+    .blog-toc::-webkit-scrollbar-track { background: transparent; }
+    .blog-toc::-webkit-scrollbar-thumb { background: var(--color-hairline); border-radius: 2px; }
+  }
+  .toc-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-tertiary);
+    margin-bottom: 0.85rem;
+    padding-left: 0.85rem;
+  }
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 1px solid var(--color-hairline);
+  }
+  .toc-list li { margin: 0; }
+  .toc-list a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.45rem 0 0.45rem 0.85rem;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    border-left: 1px solid transparent;
+    margin-left: -1px;
+  }
+  .toc-list a:hover { color: var(--color-ink-muted); }
+  .toc-list a[data-active="true"] {
+    color: var(--color-accent);
+    border-left-color: var(--color-accent);
+  }
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    flex-shrink: 0;
+  }
+  .toc-list a[data-active="true"] .toc-num { color: var(--color-accent); }
+
+  .blog-content {
+    width: 100%;
+    max-width: 44rem;
+    margin: 0 auto;
+    min-width: 0;
+  }
+  .blog-spacer { display: none; }
+  @media (min-width: 1024px) {
+    .blog-spacer { display: block; width: 200px; flex-shrink: 0; }
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+  }
+  .breadcrumb a {
+    color: var(--color-ink-tertiary);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .breadcrumb a:hover { color: var(--color-ink-muted); }
+  .breadcrumb .here { color: var(--color-ink-muted); }
+
+  .post-header { margin-top: 2rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+  }
+  .post-header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    color: var(--color-ink);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .post-header h1 code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-weight: 500;
+  }
+  .lead {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+    margin-top: 1.5rem;
+    letter-spacing: -0.005em;
+    text-wrap: pretty;
+  }
+  .lead em { color: var(--color-ink); font-style: italic; }
+  .lead code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+  .meta {
+    margin-top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-tertiary);
+    flex-wrap: wrap;
+  }
+  .meta-dot {
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--color-hairline-strong);
+  }
+
+  .tldr {
+    margin-top: 3rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+    position: relative;
+    scroll-margin-top: 5.5rem;
+  }
+  .tldr::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 1.5rem;
+    width: 2.5rem;
+    height: 2px;
+    background: var(--color-accent);
+    border-radius: 1px;
+  }
+  .tldr-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .tldr ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    list-style: disc;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .tldr ul li::marker { color: var(--color-ink-tertiary); }
+  .tldr ul li + li { margin-top: 0.5rem; }
+  .tldr strong { color: var(--color-ink); font-weight: 600; }
+  .tldr code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.35em;
+    border-radius: var(--radius-xs);
+  }
+  .tldr em { color: var(--color-ink); font-style: italic; }
+
+  .post-section { margin-top: 4.5rem; scroll-margin-top: 5.5rem; }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: 0.6rem;
+  }
+  .post-section h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.625rem, 3vw, 2rem);
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--color-ink);
+    margin: 0 0 1.5rem;
+  }
+  .post-section h2 code {
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-weight: 500;
+  }
+  .post-section h3 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+    color: var(--color-ink);
+    margin: 2.5rem 0 1rem;
+  }
+  .post-section h3 code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+    font-weight: 500;
+  }
+  .post-section p {
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    margin: 0 0 1.15em;
+    text-wrap: pretty;
+  }
+  .post-section p:last-child { margin-bottom: 0; }
+  .post-section strong { color: var(--color-ink); font-weight: 600; }
+  .post-section em { color: var(--color-ink); font-style: italic; }
+  .post-section a {
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .post-section a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post-section code:not(pre code) {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .post-section pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--color-surface-1);
+    color: var(--color-ink);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 1.25rem 0;
+  }
+  .post-section pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+  }
+
+  /* Lifecycle stepper */
+  .lifecycle-flow {
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  @media (min-width: 768px) {
+    .lifecycle-flow {
+      flex-direction: row;
+      align-items: stretch;
+      gap: 0.4rem;
+    }
+  }
+  .flow-step {
+    flex: 1;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 0.9rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    position: relative;
+  }
+  .flow-step.required {
+    border-color: rgba(94, 106, 210, 0.4);
+    background: linear-gradient(180deg, rgba(94, 106, 210, 0.04), transparent), var(--color-surface-1);
+  }
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    letter-spacing: 0.08em;
+  }
+  .flow-step.required .step-num { color: var(--color-accent); }
+  .step-cmd {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--color-ink);
+    letter-spacing: -0.005em;
+  }
+  .step-cmd::before {
+    content: '/feature ';
+    color: var(--color-ink-tertiary);
+    font-weight: 400;
+  }
+  .step-tag {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-tertiary);
+    margin-top: 0.25rem;
+  }
+  .flow-step.required .step-tag { color: var(--color-accent); }
+  .flow-sep {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink-tertiary);
+    width: auto;
+    height: 0.85rem;
+  }
+  .flow-sep::before {
+    content: '↓';
+    font-size: 13px;
+    line-height: 1;
+  }
+  @media (min-width: 768px) {
+    .flow-sep {
+      width: 0.85rem;
+      height: auto;
+    }
+    .flow-sep::before {
+      content: '→';
+    }
+  }
+
+  /* Reincarnation diagram */
+  .reincarnation-diagram {
+    margin: 2rem 0 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .rd-sessions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  @media (min-width: 640px) {
+    .rd-sessions { grid-template-columns: 1fr auto 1fr; gap: 0; }
+  }
+  .rd-session {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 0.95rem 1.05rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 0;
+  }
+  .rd-session-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .rd-session ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--color-ink-muted);
+    line-height: 1.55;
+  }
+  .rd-session ul li { padding: 0; margin: 0; }
+  .rd-session ul li::before {
+    content: '· ';
+    color: var(--color-ink-tertiary);
+  }
+  .rd-session-fate {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--color-hairline);
+    letter-spacing: 0.04em;
+  }
+  .rd-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0;
+    position: relative;
+    min-width: 0;
+  }
+  .rd-divider-line {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--color-hairline-strong) 0,
+      var(--color-hairline-strong) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+    height: 1px;
+    width: 100%;
+    left: 0;
+    right: 0;
+    top: 50%;
+    bottom: auto;
+  }
+  @media (min-width: 640px) {
+    .rd-divider {
+      padding: 0 0.85rem;
+      min-width: 80px;
+    }
+    .rd-divider-line {
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--color-hairline-strong) 0,
+        var(--color-hairline-strong) 4px,
+        transparent 4px,
+        transparent 8px
+      );
+      width: 1px;
+      height: calc(100% - 1rem);
+      top: 0.5rem;
+      bottom: 0.5rem;
+      left: 50%;
+      right: auto;
+      margin: 0;
+    }
+  }
+  .rd-divider-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--color-canvas);
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .rd-arrows {
+    display: none;
+  }
+  @media (min-width: 640px) {
+    .rd-arrows {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0;
+      padding: 0.15rem 0 0.4rem;
+    }
+    .rd-arrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .rd-arrow-down { color: var(--color-ink-subtle); }
+    .rd-arrow-up { color: var(--color-accent); }
+    .rd-arrow-glyph { font-size: 14px; line-height: 1; }
+    .rd-arrow-spacer { min-width: 80px; }
+  }
+  .rd-disk {
+    background:
+      linear-gradient(180deg, rgba(94, 106, 210, 0.04), transparent),
+      var(--color-surface-1);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-md);
+    padding: 0.95rem 1.05rem 1.05rem;
+  }
+  .rd-disk-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .rd-disk-files {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  @media (min-width: 768px) {
+    .rd-disk-files { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+  }
+  .rd-file {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.85rem 0.75rem;
+  }
+  .rd-file-name {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--color-ink);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    word-break: break-all;
+  }
+  .rd-file-desc {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--color-ink-tertiary);
+    line-height: 1.5;
+  }
+
+  .claim-list, .ranked-list {
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 16.5px;
+    line-height: 1.65;
+    list-style: decimal;
+  }
+  .claim-list li::marker, .ranked-list li::marker {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+  }
+  .claim-list li, .ranked-list li { margin-top: 0.6rem; }
+  .claim-list code, .ranked-list code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+  }
+
+  .comparison-grid {
+    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .comparison-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  }
+  .comparison-col {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    padding: 1.15rem 1.25rem;
+  }
+  .comparison-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-subtle);
+    margin-bottom: 0.65rem;
+  }
+  .comparison-col ul {
+    margin: 0;
+    padding-left: 1.05rem;
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--color-ink-muted);
+  }
+  .comparison-col ul li { margin-top: 0.45rem; }
+  .comparison-col ul li:first-child { margin-top: 0; }
+  .comparison-col ul li::marker { color: var(--color-ink-tertiary); }
+  .comparison-col code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+  }
+  .comparison-col strong { color: var(--color-ink); font-weight: 600; }
+
+  .pull-quote {
+    margin: 2rem 0 1.5rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(180deg, rgba(94, 106, 210, 0.04), transparent);
+    border-left: 2px solid var(--color-accent);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--color-ink);
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+  .pull-quote code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+    font-style: normal;
+    color: var(--color-ink);
+  }
+
+  .table-wrap {
+    margin-top: 1.25rem;
+    overflow-x: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+  }
+  .post-section table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    margin: 0;
+  }
+  .post-section th {
+    text-align: left;
+    color: var(--color-ink);
+    font-weight: 600;
+    padding: 0.7rem 1rem;
+    background: var(--color-surface-1);
+    border-bottom: 1px solid var(--color-hairline-strong);
+    font-size: 13px;
+  }
+  .post-section td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--color-hairline);
+    vertical-align: top;
+    color: var(--color-ink-muted);
+  }
+  .post-section tr:last-child td { border-bottom: 0; }
+
+  .takeaways {
+    margin-top: 4rem;
+    padding: 1.5rem 1.5rem 1.65rem;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-lg);
+  }
+  .takeaways-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+  }
+  .takeaways ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--color-ink-muted);
+    font-size: 15px;
+    line-height: 1.55;
+    list-style: decimal;
+  }
+  .takeaways ol li::marker { color: var(--color-accent); font-family: var(--font-mono); font-weight: 500; }
+  .takeaways ol li + li { margin-top: 0.5rem; }
+  .takeaways code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    color: var(--color-ink);
+    background: var(--color-surface-2);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-xs);
+  }
+
+  .faq-section { margin-top: 4.5rem; }
+  .faq-item {
+    border-top: 1px solid var(--color-hairline);
+    padding: 1.15rem 0;
+  }
+  .faq-item:last-of-type { border-bottom: 1px solid var(--color-hairline); }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-right: 0.25rem;
+    transition: color 0.15s ease;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-q {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .faq-toggle {
+    color: var(--color-ink-tertiary);
+    transition: transform 0.2s ease, color 0.15s ease;
+    flex-shrink: 0;
+    display: inline-flex;
+  }
+  .faq-item[open] .faq-toggle { transform: rotate(180deg); color: var(--color-accent); }
+  .faq-item summary:hover .faq-q { color: var(--color-accent-hover); }
+  .faq-a {
+    margin-top: 0.75rem;
+    color: var(--color-ink-muted);
+    font-size: 15.5px;
+    line-height: 1.6;
+  }
+  .faq-a p { margin: 0; text-wrap: pretty; }
+
+  .cta-card {
+    margin-top: 4rem;
+    padding: 1.75rem 1.75rem 1.9rem;
+    background:
+      linear-gradient(180deg, rgba(94, 106, 210, 0.06), transparent),
+      var(--color-surface-1);
+    border: 1px solid var(--color-hairline-strong);
+    border-radius: var(--radius-lg);
+  }
+  .cta-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.5rem;
+  }
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    margin: 0 0 1.15rem;
+    line-height: 1.2;
+  }
+  .cta-cmd {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--color-canvas);
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--color-ink);
+    overflow-x: auto;
+  }
+  .cta-cmd .prompt { color: var(--color-accent); }
+  .cta-cmd code {
+    background: transparent;
+    padding: 0;
+    color: var(--color-ink);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .cta-sub {
+    margin: 0.9rem 0 0;
+    color: var(--color-ink-subtle);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .cta-sub code {
+    background: var(--color-surface-2);
+    padding: 0.1em 0.4em;
+    border-radius: var(--radius-xs);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+  }
+  .cta-sub a { color: var(--color-accent); text-decoration: none; }
+  .cta-sub a:hover { color: var(--color-accent-hover); text-decoration: underline; }
+
+  .post-footer-nav {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    font-size: 14px;
+  }
+  .footer-back, .footer-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--color-ink-subtle);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .footer-back:hover, .footer-cta:hover { color: var(--color-ink); }
+  .footer-cta { color: var(--color-accent); }
+  .footer-cta:hover { color: var(--color-accent-hover); }
+</style>
